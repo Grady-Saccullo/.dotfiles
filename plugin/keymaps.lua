@@ -4,13 +4,17 @@ local kmap = vim.keymap.set
 local telescope = require('telescope.builtin')
 kmap('n', '<leader>?', telescope.oldfiles, { desc = '[?] Find recently opened files' })
 kmap('n', '<leader><space>', telescope.buffers, { desc = '[ ] Find existing buffers' })
-kmap('n', '<leader>/', function()
-	-- You can pass additional configuration to telescope to change theme, layout, etc.
-	telescope.current_buffer_fuzzy_find(require('telescope.themes').get_dropdown {
-		winblend = 10,
-		previewer = false,
-	})
-end, { desc = '[/] Fuzzily search in current buffer' })
+kmap(
+	'n',
+	'<leader>/',
+	function()
+		telescope.current_buffer_fuzzy_find(require('telescope.themes').get_dropdown {
+			winblend = 10,
+			previewer = false,
+		})
+	end,
+	{ desc = '[/] Fuzzily search in current buffer' }
+)
 kmap('n', '<leader>gf', telescope.git_files, { desc = 'Search [G]it [F]iles' })
 kmap('n', '<leader>sf', telescope.find_files, { desc = '[S]earch [F]iles' })
 kmap('n', '<leader>sh', telescope.help_tags, { desc = '[S]earch [H]elp' })
@@ -19,8 +23,7 @@ kmap('n', '<leader>sg', telescope.live_grep, { desc = '[S]earch by [G]rep' })
 kmap('n', '<leader>sd', telescope.diagnostics, { desc = '[S]earch [D]iagnostics' })
 kmap('n', '<leader>sr', telescope.resume, { desc = '[S]earch [R]esume' })
 
-
--- LSP keymaps --
+-- Diagnostic keymaps --
 kmap('n', '[d', vim.diagnostic.goto_prev, { desc = 'Go to previous diagnostic message' })
 kmap('n', ']d', vim.diagnostic.goto_next, { desc = 'Go to next diagnostic message' })
 kmap('n', '<leader>e', vim.diagnostic.open_float, { desc = 'Open floating diagnostic message' })

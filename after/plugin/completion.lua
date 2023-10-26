@@ -3,8 +3,6 @@ local cmp = require('cmp')
 local luasnip = require('luasnip')
 
 luasnip.config.setup({})
-
-
 cmp.setup({
 	enabled = true,
 	snippet = {
@@ -48,6 +46,7 @@ cmp.setup({
 	}),
 	experimental = {
 		native_menu = false,
+		ghost_text = true,
 	}
 
 })
