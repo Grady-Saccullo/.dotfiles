@@ -15,5 +15,9 @@ return {
 		config = function()
 			require('xbase').setup({})
 		end
+	},
+	{
+		'j-hui/fidget.nvim',
+		opts = {},
 	}
 }
