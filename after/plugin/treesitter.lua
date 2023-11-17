@@ -6,7 +6,9 @@ require('nvim-treesitter.configs').setup({
 		"json",
 		"lua",
 		"typescript",
-		"tsx"
+		"tsx",
+		"python",
+		"swift"
 	},
 	modules = {},
 	auto_install = false,

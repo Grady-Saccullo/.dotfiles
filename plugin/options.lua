@@ -2,6 +2,7 @@ local o = vim.opt
 
 -- Leftside --
 o.relativenumber = true
+o.number = true
 
 o.showcmd = true
 o.splitright = true

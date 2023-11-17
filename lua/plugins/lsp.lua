@@ -8,5 +8,12 @@ return {
 	'williamboman/mason.nvim',
 	'williamboman/mason-lspconfig.nvim',
 	'folke/neodev.nvim',
-	'jose-elias-alvarez/nvim-lsp-ts-utils'
+	'jose-elias-alvarez/nvim-lsp-ts-utils',
+	{
+		'xbase-lab/xbase',
+		build = 'make install',
+		config = function()
+			require('xbase').setup({})
+		end
+	}
 }

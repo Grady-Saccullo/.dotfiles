@@ -1,6 +1,7 @@
 return {
 	{
 		'github/copilot.vim',
-		event = "InsertEnter",
+		-- Not sure i dig this... kinda annoying and would rather slower initial start
+		-- event = "InsertEnter",
 	}
 }

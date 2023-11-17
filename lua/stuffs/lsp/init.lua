@@ -50,15 +50,21 @@ local custom_attach = function(client, bufnr)
 		print(vim.inspect(vim.lsp.buf.list_workspace_folders()))
 	end, '[W]orkspace [L]ist Folders')
 
+
 	vim.api.nvim_buf_create_user_command(bufnr, 'Format', function(_)
 		vim.lsp.buf.format()
 	end, { desc = 'Format current buffer with LSP' })
 
 
-	-- TODO: setup changing this cmd depending on file type
-	nmap('<leader>fn', function()
-		vim.cmd('Neoformat prettier')
-	end, '[F]ormat [N]eoformat')
+	nmap('<leader>f', function()
+		if client.name == 'sourcekit' then
+			vim.cmd('Neoformat swiftformat')
+		elseif client.name == 'tsserver' then
+			vim.cmd('Neoformat prettier')
+		else
+			vim.lsp.buf.format()
+		end
+	end, '[F]ormat')
 end
 
 
@@ -80,6 +86,29 @@ local servers = {
 			custom_attach(client, bufnr)
 		end,
 		root_dir = lspconfig.util.root_pattern('.git')
+	},
+	gopls = {
+		cmd = { 'gopls', 'serve' },
+		root_dir = lspconfig.util.root_pattern('go.mod', '.git'),
+		settings = {
+			gopls = {
+				hints = {
+					assignVariableTypes = true,
+					compositeLiteralFields = true,
+					compositeLiteralTypes = true,
+					constantValues = true,
+					functionTypeParameters = true,
+					parameterNames = true,
+					rangeVariableTypes = true,
+				},
+			},
+		},
+	},
+	yamlls = {},
+	pyright = {},
+	sourcekit = {
+		cmd = { '/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/sourcekit-lsp' }
+
 	},
 }
 
