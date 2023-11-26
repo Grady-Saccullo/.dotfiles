@@ -1,3 +1,6 @@
 [submodule "configs/nvim"]
 	path = configs/nvim
 	url = https://github.com/Grady-Saccullo/nvim
+[submodule "voze"]
+	path = voze
+	url = https://github.com/Grady-Saccullo/voze
