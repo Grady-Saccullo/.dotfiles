@@ -1,5 +1,9 @@
+
+dir=$(dirname $0)
+
 if [[ $(uname) == "Darwin" ]]; then
-	source "$PWD/apps-macos.zsh"
+	echo "Root: macOS detected"
+	source "$dir/apps-macos.zsh"
 else
 	echo "Unsupported OS"
 	exit 1

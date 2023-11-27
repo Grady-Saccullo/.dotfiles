@@ -3,4 +3,4 @@
 	url = https://github.com/Grady-Saccullo/nvim
 [submodule "voze"]
 	path = voze
-	url = https://github.com/Grady-Saccullo/voze
+	url = https://github.com/Grady-Saccullo/.dotfiles-voze
