@@ -13,7 +13,9 @@ return {
 		'xbase-lab/xbase',
 		build = 'make install',
 		config = function()
-			require('xbase').setup({})
+			require('xbase').setup({
+				log_level = vim.log.levels.DEBUG,
+			})
 		end
 	},
 	{

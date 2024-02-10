@@ -55,7 +55,6 @@ local custom_attach = function(client, bufnr)
 		vim.lsp.buf.format()
 	end, { desc = 'Format current buffer with LSP' })
 
-
 	nmap('<leader>f', function()
 		if client.name == 'sourcekit' then
 			vim.cmd('Neoformat swiftformat')
@@ -69,6 +68,7 @@ end
 
 
 local servers = {
+	bashls = {},
 	lua_ls = {
 		Lua = {
 			workspace = { checkThirdParty = false },
@@ -106,15 +106,32 @@ local servers = {
 	},
 	yamlls = {},
 	pyright = {},
-	sourcekit = {
-		cmd = { '/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/sourcekit-lsp' }
-
+	html = {},
+	cssls = {},
+	ocamllsp = {},
+	angularls = {},
+	jdtls = {},
+	sqlls = {
+		root_dir = function()
+			return vim.loop.cwd()
+		end,
+		cmd = { 'sql-language-server', 'up', '--method', 'stdio', '-d', 'true' },
 	},
+	sourcekit = {
+		-- cmd = { '/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/sourcekit-lsp' },
+		cmd = {
+			'xcrun',
+			'sourcekit-lsp',
+			'--log-level',
+			'debug',
+		},
+		root_dir = lspconfig.util.root_pattern('*.xcodeproj', '*.xcworkspace', 'Package.swift', '.git', 'project.yml'),
+	}
 }
 
 require('mason').setup()
 require('mason-lspconfig').setup({
-	ensure_installed = { 'lua_ls' }
+	ensure_installed = { 'lua_ls', 'bashls', 'sqlls' }
 })
 
 local capabilities = vim.lsp.protocol.make_client_capabilities()
@@ -141,6 +158,19 @@ end
 for server, config in pairs(servers) do
 	setup_server(server, config)
 end
+
+
+vim.filetype.add {
+	extension = {
+		zsh = 'sh',
+		sh = 'sh',
+	},
+	filename = {
+		['.zshrc'] = 'sh',
+		['.zshenv'] = 'sh',
+		['.zsh'] = 'sh',
+	}
+}
 
 return {
 	on_attach = custom_attach,

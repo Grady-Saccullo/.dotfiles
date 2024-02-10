@@ -25,3 +25,7 @@ o.shiftwidth = 4
 o.softtabstop = 4
 
 o.mouse = 'a'
+
+-- Spellcheck --
+o.spelllang = 'en_us'
+o.spell = true

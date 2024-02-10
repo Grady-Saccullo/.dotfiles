@@ -23,6 +23,11 @@ kmap('n', '<leader>sg', telescope.live_grep, { desc = '[S]earch by [G]rep' })
 kmap('n', '<leader>sd', telescope.diagnostics, { desc = '[S]earch [D]iagnostics' })
 kmap('n', '<leader>sr', telescope.resume, { desc = '[S]earch [R]esume' })
 
+-- Harpoon --
+local harpoon = require('harpoon')
+kmap('n', '<leader>ha', function() harpoon:list():append() end, { desc = '[H]arpoon [A]dd current file to harpoon' })
+kmap('n', '<leader>hs', function() harpoon.ui:toggle_quick_menu(harpoon:list()) end, { desc = '[H]arpoon [S]how quick menu' })
+
 -- Diagnostic keymaps --
 kmap('n', '[d', vim.diagnostic.goto_prev, { desc = 'Go to previous diagnostic message' })
 kmap('n', ']d', vim.diagnostic.goto_next, { desc = 'Go to next diagnostic message' })

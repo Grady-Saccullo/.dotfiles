@@ -1,5 +1,30 @@
 return {
 	'nvim-lua/plenary.nvim',
+	-- {
+	-- 	'sainnhe/gruvbox-material',
+	-- 	config = function(_, opts)
+	-- 		vim.opt.termguicolors = true
+	-- 		vim.opt.background = 'dark'
+	-- 		-- vim.g.everforest_background = 'hard'
+	-- 		vim.cmd('colorscheme gruvbox-material')
+	-- 	end,
+	-- },
+	-- {
+	-- 	"catppuccin/nvim",
+	-- 	name = "catppuccin",
+	-- 	priority = 1000,
+	-- 	opts = {
+	-- 		flavour = "macchiato",
+	-- 		color_overrides = {
+	-- 			all = {
+	-- 			}
+	-- 		}
+	-- 	},
+	-- 	config = function(_, opts)
+	-- 		require('catppuccin').setup(opts)
+	-- 		vim.cmd('colorscheme catppuccin')
+	-- 	end,
+	-- }
 	{
 		'rebelot/kanagawa.nvim',
 		opts = {
@@ -28,8 +53,9 @@ return {
 		},
 		priority = 1000,
 		config = function(_, opts)
+			vim.opt.termguicolors = true
 			require('kanagawa').setup(opts)
-			vim.cmd('colorscheme kanagawa-dragon')
+			vim.cmd('colorscheme kanagawa-wave')
 		end,
 	}
 }
