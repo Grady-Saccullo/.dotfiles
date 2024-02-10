@@ -4,3 +4,6 @@
 [submodule "voze"]
 	path = voze
 	url = https://github.com/Grady-Saccullo/.dotfiles-voze
+[submodule "brewup"]
+	path = brewup
+	url = https://github.com/Grady-Saccullo/.dotfiles-brewup
