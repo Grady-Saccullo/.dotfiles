@@ -25,10 +25,6 @@ brew "wget"
 ## Apps ##
 cask "docker"
 cask "gitkraken"
-cask "insomnia"
-cask "iterm2"
-cask "postman"
-cask "datagrip"
 cask "fig"
 
 ## Build Stuff/Deps##
