@@ -36,7 +36,6 @@ run "Homebrew" "brew" "curl -fsSL https://raw.githubusercontent.com/Homebrew/ins
 run "Stow" "stow" "brew install -q stow"
 
 
-# move to ../configs and run stow
 cd ./configs || exit
 stow -nv -t ~/ *
 
