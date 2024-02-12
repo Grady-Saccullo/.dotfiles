@@ -1,3 +1,4 @@
+
 # Install all necessary deps which need to be installed via curl
 printf "Setting up initial tooling\n"
 
@@ -6,7 +7,7 @@ printf "Setting up initial tooling\n"
 # $1: name of the tool
 # $2: bool value to check if the tool is installed
 # $3: command to run to install the tool
-# $4: additional args to pass to the command
+# $4: optional args to run post install command
 run() {
 	printf "%s: Checking install... " "$1"
 
@@ -28,12 +29,19 @@ run() {
 
 run "Xcode" "xcode-select" "xcode-select --install"
 
-run "Homebrew" "brew" "curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh"
-
-run "Lua" "luad" "brew install -q lua"
-
-run "Luarocks" "luarocks" "brew install -q luarocks"
-
 run "Nix" "nix" "curl -L https://nixos.org/nix/install" "--darwin-use-unencrypted-nix-store-volume"
 
-/bin/bash -c "lua ./configs.lua"
+run "Homebrew" "brew" "curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh"
+
+run "Stow" "stow" "brew install -q stow"
+
+
+# move to ../configs and run stow
+cd ./configs || exit
+stow -nv -t ~/ *
+
+cd .. || exit
+
+cd ./repos || exit
+stow -nv -t ~/ .
+
