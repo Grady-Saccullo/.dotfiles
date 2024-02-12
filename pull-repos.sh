@@ -1,4 +1,3 @@
-## list of paths to repos to pull
 repos=(
 	"configs/nvim/.config/nvim"
 	"repos/personal"
@@ -8,7 +7,6 @@ repos=(
 
 
 dir=$(pwd)
-# pull all repos
 for repo in "${repos[@]}"; do
 	printf "Pulling %s\n" "$repo"
 	cd "$dir/$repo" || exit
