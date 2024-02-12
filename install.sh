@@ -43,5 +43,5 @@ stow -nv -t ~/ *
 cd .. || exit
 
 cd ./repos || exit
-stow -nv -t ~/ .
+stow -v -t ~/ .
 
