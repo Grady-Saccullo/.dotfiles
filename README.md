@@ -2,4 +2,5 @@
 
 ## Folders
 - `/configs`: app configs
-- `/install`: scripts to get things goin
+- `/repos`: repos/submods to pull down into home dir
+- `/install.sh`: get things going
