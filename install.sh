@@ -35,13 +35,15 @@ run "Homebrew" "brew" "curl -fsSL https://raw.githubusercontent.com/Homebrew/ins
 
 run "Stow" "stow" "brew install -q stow"
 
-git submodule update --recursive
 
+printf "Setting up configs"
 cd ./configs || exit
-stow -nv -t ~/ *
+stow -v -t ~/ *
+printf " -> ✅\n"
 
 cd .. || exit
 
+printf "Setting up repos"
 cd ./repos || exit
 stow -v -t ~/ .
-
+printf " -> ✅\n"
