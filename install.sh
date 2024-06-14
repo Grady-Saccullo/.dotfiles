@@ -35,10 +35,9 @@ run "Homebrew" "brew" "curl -fsSL https://raw.githubusercontent.com/Homebrew/ins
 
 run "Stow" "stow" "brew install -q stow"
 
-
 printf "Setting up configs"
 cd ./configs || exit
-stow -v -t ~/ *
+stow -v -t ~/ ./*
 printf " -> ✅\n"
 
 cd .. || exit
