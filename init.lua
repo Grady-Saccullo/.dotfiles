@@ -1,5 +1,5 @@
 -- Setup Globals --
-require('stuffs.globals')
+require('configs.globals')
 
 -- Lazy setup --
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"

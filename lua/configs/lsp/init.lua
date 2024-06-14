@@ -15,6 +15,20 @@ if not telescope then
 	return
 end
 
+local templ_format = function()
+	local bufnr = vim.api.nvim_get_current_buf()
+	local filename = vim.api.nvim_buf_get_name(bufnr)
+	local cmd = "templ fmt " .. vim.fn.shellescape(filename)
+
+	vim.fn.jobstart(cmd, {
+		on_exit = function()
+			if vim.api.nvim_get_current_buf() == bufnr then
+				vim.cmd('e!')
+			end
+		end,
+	})
+end
+
 local custom_attach = function(client, bufnr)
 	if client.name == "copilot" then
 		return
@@ -50,12 +64,16 @@ local custom_attach = function(client, bufnr)
 		print(vim.inspect(vim.lsp.buf.list_workspace_folders()))
 	end, '[W]orkspace [L]ist Folders')
 
-
 	vim.api.nvim_buf_create_user_command(bufnr, 'Format', function(_)
 		vim.lsp.buf.format()
 	end, { desc = 'Format current buffer with LSP' })
 
 	nmap('<leader>f', function()
+		if vim.bo.filetype == 'templ' then
+			templ_format()
+			return
+		end
+
 		if client.name == 'sourcekit' then
 			vim.cmd('Neoformat swiftformat')
 		elseif client.name == 'tsserver' then
@@ -65,6 +83,7 @@ local custom_attach = function(client, bufnr)
 		end
 	end, '[F]ormat')
 end
+
 
 
 local servers = {
@@ -106,11 +125,12 @@ local servers = {
 	},
 	yamlls = {},
 	pyright = {},
-	html = {},
+	html = {
+		filetypes = { "html", "templ" }
+	},
 	cssls = {},
 	ocamllsp = {},
 	angularls = {},
-	jdtls = {},
 	sqlls = {
 		root_dir = function()
 			return vim.loop.cwd()
@@ -118,15 +138,30 @@ local servers = {
 		cmd = { 'sql-language-server', 'up', '--method', 'stdio', '-d', 'true' },
 	},
 	sourcekit = {
-		-- cmd = { '/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/sourcekit-lsp' },
 		cmd = {
 			'xcrun',
 			'sourcekit-lsp',
 			'--log-level',
 			'debug',
 		},
-		root_dir = lspconfig.util.root_pattern('*.xcodeproj', '*.xcworkspace', 'Package.swift', '.git', 'project.yml'),
-	}
+		root_dir = lspconfig.util.root_pattern(
+			"*.xcodeproj",
+			"*.xcworkspace",
+			"Package.swift",
+			".git",
+			"project.yml",
+			"Project.swift"
+		),
+	},
+	kotlin_language_server = {},
+	nil_ls = {},
+	dockerls = {},
+	jsonls = {},
+	zls = {},
+	templ = {},
+	htmx = {
+		filetypes = { "html", "templ" }
+	},
 }
 
 require('mason').setup()
@@ -170,6 +205,9 @@ vim.filetype.add {
 		['.zshenv'] = 'sh',
 		['.zsh'] = 'sh',
 	}
+}
+vim.filetype.add {
+	extension = { templ = 'templ' }
 }
 
 return {

@@ -4,10 +4,12 @@ local o = vim.opt
 o.relativenumber = true
 o.number = true
 
+
+o.inccommand = "split"
+
 o.showcmd = true
 o.splitright = true
 o.splitbelow = true
-
 
 -- Turn back on if using Neovide
 -- o.smoothscroll = true
@@ -15,7 +17,7 @@ o.splitbelow = true
 -- Indenting --
 o.autoindent = true
 o.cindent = true
-o.wrap = true
+-- o.wrap = true
 o.breakindent = true
 o.linebreak = true
 
