@@ -10,7 +10,6 @@
 	home-manager.inputs.nixpkgs.follows = "nixpkgs";
   };
 
-  #outputs = inputs @ { self, ... }:
   outputs = {
   	self,
 	home-manager,
@@ -31,6 +30,7 @@
 				{
 					home-manager.users.hackerman = import ./home.nix;
 					users.users.hackerman.home = "/Users/hackerman";
+					home-manager.extraSpecialArgs = { inherit inputs outputs; };
 				}
 			];
 		  };
