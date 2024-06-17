@@ -1,4 +1,4 @@
-{ pkgs, ...}:
+{ pkgs, nixpkgs-unstable, ...}:
 
 {
 	home.stateVersion = "24.05";
@@ -7,13 +7,10 @@
 		jq
 		htop
 		neovim
-		# lua
-		# sqlite
-		# turso
 	];
 
 	imports = [
-		(import ./tools/tools.nix { inherit pkgs; })
+		(import ./programs/programs.nix { inherit pkgs nixpkgs-unstable; })
 	];
 
 	programs = {

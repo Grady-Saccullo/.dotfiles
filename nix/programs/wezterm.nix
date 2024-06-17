@@ -1,4 +1,4 @@
-{ ...}:
+{ ... }:
 {
 	xdg.configFile = {
 		"wezterm/colors".source = ../../configs/wezterm/.config/wezterm/colors;
