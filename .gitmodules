@@ -1,15 +1,12 @@
-[submodule "conf"]
-	path = conf
-	url = https://github.com/Grady-Saccullo/nvim
 [submodule "configs/nvim/.config/nvim"]
 	path = configs/nvim/.config/nvim
 	url = https://github.com/Grady-Saccullo/nvim
-[submodule "repos/work/voze"]
-	path = repos/work/voze
-	url = https://github.com/Grady-Saccullo/.dotfiles-voze
 [submodule "repos/personal"]
 	path = repos/personal
 	url = https://github.com/Grady-Saccullo/.dotfiles-personal
+[submodule "repos/work/voze"]
+	path = repos/work/voze
+	url = https://github.com/Grady-Saccullo/.dotfiles-voze
 [submodule "repos/work/seer"]
 	path = repos/work/seer
 	url = https://github.com/Grady-Saccullo/.dotfiles-seer
