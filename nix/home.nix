@@ -1,12 +1,9 @@
+{ pkgs, outputs, ... }:
 {
-	pkgs,
-	outputs,
-	... 
-}: {
 	home.stateVersion = "24.05";
 
 	home.packages = with pkgs; [
-		unstable.jq
+		jq
 		htop
 		neovim
 	];
@@ -21,9 +18,9 @@
 		};
 	};
 
-	#imports = [
-	#	(import ./programs/programs.nix { inherit inputs; })
-	#];
+	imports = [
+		(import ./programs/programs.nix { inherit pkgs; })
+	];
 
 	programs = {
 		zsh = {

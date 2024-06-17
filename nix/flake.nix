@@ -18,7 +18,7 @@
   } @ inputs: let
   	inherit (self) outputs;
   in {
-  	overlays = import ./overlays { inherit inputs; };
+  	overlays = import ./overlays.nix { inherit inputs; };
 
 	  darwinConfigurations = {
 		  "Hackermans-MacBook-Pro-2" = darwin.lib.darwinSystem {
