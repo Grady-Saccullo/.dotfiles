@@ -5,9 +5,15 @@
 		home-manager
 	];
 
-	environment.darwinConfig = "$HOME/.dotfiles";
+	environment.darwinConfig = "$HOME/.dotfiles/nix";
 
 	services.nix-daemon.enable = true;
+
+	programs = {
+		zsh = {
+			enable = true;
+		};
+	};
 
 	nix = {
 		package = pkgs.nix;
