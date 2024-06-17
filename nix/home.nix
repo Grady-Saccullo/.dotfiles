@@ -13,19 +13,8 @@
 	];
 
 	imports = [
-		./tools/tools.nix
+		(import ./tools/tools.nix { inherit pkgs; })
 	];
-
-	# xdg.configFile = {
-	# 	"wezterm/colors".source = ../configs/wezterm/.config/wezterm/colors;
-	# 	"wezterm/colors".recursive = true; 
-	# };
-	# home.file = {
-	# 	".config/wezterm/colors" = {
-	# 		source = builtins.readDir ../configs/wezterm/.config/wezterm/colors;
-	# 		target = "source";
-	# 	};
-	# };
 
 	programs = {
 		zsh = {
