@@ -1,7 +1,8 @@
-{ pkgs, ...}:
+@inputs{ inputs }:
 {
 	imports = [
 		./wezterm.nix
-		(import ./tmux.nix { inherit pkgs; })
+		(import ./tmux.nix { inherit inputs; })
+		(import ./neovim.nix { inherit inputs; })
 	];
 }

@@ -1,17 +1,26 @@
-{ pkgs, nixpkgs-unstable, ...}:
-
+{ pkgs, outputs, ... }:
 {
 	home.stateVersion = "24.05";
 
 	home.packages = with pkgs; [
-		jq
+		unstable.jq
 		htop
 		neovim
 	];
 
-	imports = [
-		(import ./programs/programs.nix { inherit pkgs nixpkgs-unstable; })
-	];
+
+	nixpkgs = {
+		overlays = [
+			outputs.overlays.unstable-packages
+		];
+		config = {
+			allowUnfree = true;
+		};
+	};
+
+	#imports = [
+	#	(import ./programs/programs.nix { inherit inputs; })
+	#];
 
 	programs = {
 		zsh = {
