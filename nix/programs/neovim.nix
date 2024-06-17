@@ -1,6 +1,6 @@
 { pkgs, ...}:
 {
-	xdg.configFile."nvim".source = ../../configs/nvim/.config/nvim;
+	xdg.configFile."nvim".source = ../../configs/nvim/.config/nvim/lua;
 	programs = {
 		neovim = {
 			enable = true;
