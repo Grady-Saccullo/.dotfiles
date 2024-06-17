@@ -44,23 +44,13 @@
 			};
 		};
 
-		# wezterm = {
+		wezterm = {
+			enable = true;
+			extraConfig = builtins.readFile "../configs/wezterm/.config/wezterm/wezterm.lua";
+		};
+		#
+		# tmux = {
 		# 	enable = true;
 		# };
-		#
-		tmux = {
-			enable = true;
-
-			extraConfig = 
-
-			plugins = with pkgs.tmuxPlugins; [
-				{
-					plugin = resurrect;
-					extraConfig = "set -g @resurrect-strategy-nvim 'session'";
-				}
-				continuum
-				tmux-fzf
-			];
-		};
 	};
 }

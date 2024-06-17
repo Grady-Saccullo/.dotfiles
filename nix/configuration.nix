@@ -10,12 +10,11 @@
 	nix = {
 		package = pkgs.nix;
 		settings = {
-			"extra-experimental-features" = [ "nix-command" "falkes" ];
+			"extra-experimental-features" = [
+				"nix-command"
+				"flakes"
+			];
 		};
-	};
-
-	programs = {
-		zsh.enable = true;
 	};
 
 	system.stateVersion = 4;
@@ -27,6 +26,12 @@
 
 		casks = [
 			"discord"
+			"betterdisplay"
+			"docker"
+			"brave-browser"
+			"soundsource"
+			"spotify"
+			"slack"
 		];
 	};
 }

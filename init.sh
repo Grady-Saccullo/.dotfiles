@@ -29,20 +29,16 @@ run() {
 
 run "Xcode" "xcode-select" "xcode-select --install"
 
-run "Nix" "nix" "curl -L https://nixos.org/nix/install" "--darwin-use-unencrypted-nix-store-volume"
+run "Nix" "nix" "curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix" "| sh -s -- install"
 
-run "Homebrew" "brew" "curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh"
-
-run "Stow" "stow" "brew install -q stow"
-
-printf "Setting up configs"
-cd ./configs || exit
-stow -v -t ~/ */
-printf " -> ✅\n"
-
-cd .. || exit
-
-printf "Setting up repos"
-cd ./repos || exit
-stow -v -t ~/ .
-printf " -> ✅\n"
+#printf "Setting up configs"
+#cd ./configs || exit
+#stow -v -t ~/ */
+#printf " -> ✅\n"
+#
+#cd .. || exit
+#
+#printf "Setting up repos"
+#cd ./repos || exit
+#stow -v -t ~/ .
+#printf " -> ✅\n"

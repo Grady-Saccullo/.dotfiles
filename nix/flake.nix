@@ -16,7 +16,7 @@
 			system = "aarch64-darwin";
 			specialArgs = { inherit inputs; };
 			modules = [
-				./configuration.nix
+				./hosts/mac-os.nix
 				inputs.home-manager.darwinModules.home-manager
 				{
 					home-manager.users.hackerman = import ./home.nix;
