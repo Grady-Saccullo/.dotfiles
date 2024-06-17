@@ -13,7 +13,7 @@
 	];
 
 	imports = [
-		./tools/wezterm.nix
+		./tools/tools.nix
 	];
 
 	# xdg.configFile = {
@@ -58,23 +58,6 @@
 			delta = {
 				enable = true;
 			};
-		};
-
-		# wezterm = {
-		# 	enable = true;
-		# 	extraConfig = builtins.readFile ../configs/wezterm/.config/wezterm/wezterm.lua;
-		# };
-
-		tmux = {
-			enable = true;
-			extraConfig = builtins.readFile ../configs/tmux/.tmux.conf;
-			plugins = with pkgs.tmuxPlugins; [
-				continuum
-				{
-					plugin = resurrect;
-					extraConfig = "set -g @resurrect-strategy-nvim 'session'";
-				}
-			];
 		};
 	};
 }
