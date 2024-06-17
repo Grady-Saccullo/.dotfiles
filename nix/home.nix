@@ -5,6 +5,8 @@
 	home.packages = with pkgs; [
 		jq
 		htop
+		ripgrep
+		stow
 	];
 
 

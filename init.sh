@@ -25,20 +25,17 @@ run() {
 	printf "\n"
 }
 
+./sync.sh
+
 # Need to get some tools installed before we can do anything else
 
 run "Xcode" "xcode-select" "xcode-select --install"
 
 run "Nix" "nix" "curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix" "| sh -s -- install"
 
-#printf "Setting up configs"
-#cd ./configs || exit
-#stow -v -t ~/ */
-#printf " -> ✅\n"
-#
-#cd .. || exit
-#
-#printf "Setting up repos"
-#cd ./repos || exit
-#stow -v -t ~/ .
-#printf " -> ✅\n"
+run ./nix/sync.sh
+
+printf "Setting up repos"
+cd ./repos || exit
+stow -v -t ~/ .
+printf " -> ✅\n"
