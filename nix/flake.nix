@@ -28,6 +28,7 @@
 				./hosts/mac-os/configuration.nix
 				home-manager.darwinModules.home-manager
 				{
+					home-manager.useGlobalPkgs = true;
 					home-manager.users.hackerman = import ./home.nix;
 					users.users.hackerman.home = "/Users/hackerman";
 					home-manager.extraSpecialArgs = { inherit inputs outputs; };

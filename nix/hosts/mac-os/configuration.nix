@@ -1,4 +1,4 @@
-{ pkgs, outputs, ... }: 
+{ pkgs, ... }: 
 {
 	imports = [
 		./homebrew.nix
@@ -18,12 +18,12 @@
 		home-manager
 	];
 
-	environment.darwinConfig = "$HOME/.dotfiles/nix";
+	environment.darwinConfig = "$HOME/.dotfiles/nix/hosts/mac-os/configuration.nix";
 
 	services.nix-daemon.enable = true;
 
 	nix = {
-		# package = pkgs.nix;
+		package = pkgs.nix;
 		settings = {
 			"extra-experimental-features" = [
 				"nix-command"
