@@ -1,8 +1,8 @@
 { ... }:
 {
-	xdg.configFile = {
-		"wezterm/colors".source = ../../configs/wezterm/.config/wezterm/colors;
-		"wezterm/colors".recursive = true; 
+	xdg.configFile."wezterm/colors" = {
+		source = ../../configs/wezterm/.config/wezterm/colors;
+		recursive = true; 
 	};
 
 	programs = {

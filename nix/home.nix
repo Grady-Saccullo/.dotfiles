@@ -7,8 +7,8 @@
 		htop
 		ripgrep
 		stow
+		tree
 	];
-
 
 	nixpkgs = {
 		overlays = [
@@ -28,12 +28,16 @@
 			enable = true;
 
 			shellAliases = {
-				#vim  "nvim";
 				l = "ls -la";
 			};
 
 			oh-my-zsh = {
 				enable = true;
+
+				plugins = [
+					"git"
+				];
+				theme = "robbyrussell";
 			};
 		};
 

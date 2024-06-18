@@ -2,10 +2,10 @@
   description = "Personal Config";
 
   inputs = {
-    	nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-24.05-darwin";
-    	nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
-    	darwin.url = "github:LnL7/nix-darwin";
-    	darwin.inputs.nixpkgs.follows = "nixpkgs";
+	nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-24.05-darwin";
+	nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+	darwin.url = "github:LnL7/nix-darwin";
+	darwin.inputs.nixpkgs.follows = "nixpkgs";
 	home-manager.url = "github:nix-community/home-manager/release-24.05";
 	home-manager.inputs.nixpkgs.follows = "nixpkgs";
   };
@@ -18,7 +18,7 @@
   } @ inputs: let
   	inherit (self) outputs;
   in {
-  	overlays = import ./overlays.nix { inherit inputs; };
+	  overlays = import ./overlays.nix { inherit inputs; };
 
 	  darwinConfigurations = {
 		  "Hackermans-MacBook-Pro-2" = darwin.lib.darwinSystem {

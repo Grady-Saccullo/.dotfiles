@@ -1,10 +1,11 @@
 # Dotty Files
 
 ## Scripts
-- `/install`: get things going
+- `/init`: initial setup
 - `/sync`: sync submodules
 
 ## Folders
-- `/configs`: app configs
-- `/repos`: repos/submods to pull down into home dir
+- `/nix`: all things nix related
+- `/configs`: app configs used by nix
+- `/repos`: repos/submods to pull down into home directory
 
