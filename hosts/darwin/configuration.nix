@@ -4,10 +4,6 @@
 		./homebrew.nix
 	];
 
-	# environment.systemPackages = with pkgs; [
-	# 	home-manager
-	# ];
-
 	environment.darwinConfig = "$HOME/.dotfiles/hosts/darwin/configuration.nix";
 
 	services.nix-daemon.enable = true;
@@ -33,8 +29,10 @@
 	system.keyboard.enableKeyMapping = true;
 	system.keyboard.remapCapsLockToEscape = true;
 
-	system.defaults.NSGlobalDomain."com.apple.keyboard.fnState" = true;
+	system.defaults.NSGlobalDomain."com.apple.keyboard.fnState" = false;
 	system.defaults.trackpad.TrackpadThreeFingerDrag = true;
+
+	system.defaults.dock.autohide = true;
 
 	security.pam.enableSudoTouchIdAuth = true;
 
