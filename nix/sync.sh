@@ -1,1 +1,1 @@
-darwin-rebuild switch --flake "$HOME/.dotfiles/nix"?submodules=1
+darwin-rebuild switch --flake .?submodules=1

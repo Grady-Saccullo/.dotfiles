@@ -13,7 +13,16 @@
 	services.nix-daemon.enable = true;
 
 	nix = {
-		package = pkgs.nix;
+		# dont want to use unstable here as there seems to be a bug with
+		# <flake>?submodules=1
+		# need to look into this and possible open pr
+		package = pkgs.nixVersions.latest;
+		gc = {
+			user = "root";
+			automatic = true;
+			interval = { Weekday = 0; Hour = 2; Minute = 0; };
+			options = "--delete-older-than 30d";
+		};
 		settings = {
 			"extra-experimental-features" = [
 				"nix-command"

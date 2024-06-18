@@ -1,9 +1,5 @@
 { pkgs, ... }:
 {
-	imports = [
-		(import ./programs/_programs.nix { inherit pkgs; })
-	];
-
 	home.stateVersion = "24.05";
 
 	home.packages = with pkgs; [
@@ -15,4 +11,7 @@
 	];
 
 	programs.home-manager.enable = true;
+	imports = [
+		(import ./programs/_programs.nix { inherit pkgs; })
+	];
 }
