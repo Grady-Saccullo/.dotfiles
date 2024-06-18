@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ pkgs, inputs, ... }:
 {
 	home.stateVersion = "24.05";
 
@@ -12,6 +12,6 @@
 
 	programs.home-manager.enable = true;
 	imports = [
-		(import ./programs/_programs.nix { inherit pkgs; })
+		(import ./programs/_programs.nix { inherit pkgs inputs; })
 	];
 }

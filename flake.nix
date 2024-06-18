@@ -8,6 +8,11 @@
 	darwin.inputs.nixpkgs.follows = "nixpkgs";
 	home-manager.url = "github:nix-community/home-manager/release-24.05";
 	home-manager.inputs.nixpkgs.follows = "nixpkgs";
+	submoduleNvim = {
+		type = "git";
+		flake = false;
+		url = "file://configs/nvim/.config/nvim?submodules=2";
+	};
   };
 
   outputs = {

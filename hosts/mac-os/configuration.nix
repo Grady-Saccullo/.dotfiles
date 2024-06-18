@@ -8,7 +8,7 @@
 		home-manager
 	];
 
-	environment.darwinConfig = "$HOME/.dotfiles/nix/hosts/mac-os/configuration.nix";
+	environment.darwinConfig = "$HOME/.dotfiles/hosts/mac-os/configuration.nix";
 
 	services.nix-daemon.enable = true;
 

@@ -78,7 +78,24 @@
         "darwin": "darwin",
         "home-manager": "home-manager",
         "nixpkgs": "nixpkgs",
-        "nixpkgs-unstable": "nixpkgs-unstable"
+        "nixpkgs-unstable": "nixpkgs-unstable",
+        "submoduleNvim": "submoduleNvim"
+      }
+    },
+    "submoduleNvim": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1718344504,
+        "narHash": "sha256-GlG5jQaMZR7Ghczhj1Tz847mdmxTbi7fYhT8NIyPsgY=",
+        "ref": "refs/heads/main",
+        "rev": "9f78e5c208aafba988b1f4a803eab191001dbb41",
+        "revCount": 11,
+        "type": "git",
+        "url": "file:///Users/hackerman/.dotfiles/nix/../configs/nvim/.config/nvim?submodules=2"
+      },
+      "original": {
+        "type": "git",
+        "url": "file:///Users/hackerman/.dotfiles/nix/../configs/nvim/.config/nvim?submodules=2"
       }
     }
   },

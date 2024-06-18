@@ -1,41 +1,13 @@
+# we need to manually handle installing nix-darwin due to having nvim as a submodule.
 
-# Install all necessary deps which need to be installed via curl
-printf "Setting up initial tooling\n"
+nix-channel --add https://github.com/LnL7/nix-darwin/archive/master.tar.gz darwin
+nix-channel --add https://nixos.org/channels/nixpkgs-unstable
 
-# run: checks if a tool is installed, and if not, installs it using a command
-# args:
-# $1: name of the tool
-# $2: bool value to check if the tool is installed
-# $3: command to run to install the tool
-# $4: optional args to run post install command
-run() {
-	printf "%s: Checking install... " "$1"
+nix-channel --update
 
-	eval "which $2 > /dev/null"
-	installed=$?
+export NIX_PATH=darwin-config=$HOME/.dotfiles/hosts/mac-os/configuration.nix:$HOME/.nix-defexpr/channels:$NIX_PATH
 
-	if [ "$installed" = 0 ]; then
-		printf "✅"
-	else
-		printf "⏳"
-		/bin/bash -c "$($3) $4"
-		printf " -> ✅"
-	fi
+$(nix-build '<darwin>' -A system --no-out-link)/sw/bin/darwin-rebuild build switch --flake .
+$(nix-build '<darwin>' -A system --no-out-link)/sw/bin/darwin-rebuild switch --flake  .
 
-	printf "\n"
-}
-
-./sync.sh
-
-# Need to get some tools installed before we can do anything else
-
-run "Xcode" "xcode-select" "xcode-select --install"
-
-run "Nix" "nix" "curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix" "| sh -s -- install"
-
-run ./nix/sync.sh
-
-printf "Setting up repos"
-cd ./repos || exit
-stow -v -t ~/ .
-printf " -> ✅\n"
+. /etc/static/bashrc

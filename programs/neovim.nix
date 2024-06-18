@@ -1,6 +1,6 @@
-{ pkgs, ...}:
+{ pkgs, inputs, ...}:
 {
-	xdg.configFile."nvim".source = ../../configs/nvim/.config/nvim;
+	xdg.configFile."nvim".source = inputs.submoduleNvim;
 
 	programs = {
 		neovim = {

@@ -3,7 +3,7 @@
 	programs = {
 		tmux = {
 			enable = true;
-			extraConfig = builtins.readFile ../../configs/tmux/.tmux.conf;
+			extraConfig = builtins.readFile ../configs/tmux/.tmux.conf;
 			plugins = with pkgs.tmuxPlugins; [
 				continuum
 				tmux-fzf
