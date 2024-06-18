@@ -17,6 +17,11 @@
 	...
   } @ inputs: let
   	inherit (self) outputs;
+
+	nixpkgsConf = {
+		config = { allowUnfree = true; };
+		overlays = [self.overlays.unstable-packages];
+	};
   in {
 	  overlays = import ./overlays.nix { inherit inputs; };
 
@@ -28,7 +33,9 @@
 				./hosts/mac-os/configuration.nix
 				home-manager.darwinModules.home-manager
 				{
+					nixpkgs = nixpkgsConf;
 					home-manager.useGlobalPkgs = true;
+					home-manager.useUserPackages = true;
 					home-manager.users.hackerman = import ./home.nix;
 					users.users.hackerman.home = "/Users/hackerman";
 					home-manager.extraSpecialArgs = { inherit inputs outputs; };

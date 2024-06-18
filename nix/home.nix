@@ -1,4 +1,4 @@
-{ pkgs, outputs, ... }:
+{ pkgs, ... }:
 {
 	imports = [
 		(import ./programs/_programs.nix { inherit pkgs; })
@@ -14,12 +14,5 @@
 		tree
 	];
 
-	nixpkgs = {
-		overlays = [
-			outputs.overlays.unstable-packages
-		];
-		config = {
-			allowUnfree = true;
-		};
-	};
+	programs.home-manager.enable = true;
 }
