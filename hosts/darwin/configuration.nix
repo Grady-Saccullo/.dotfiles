@@ -4,18 +4,15 @@
 		./homebrew.nix
 	];
 
-	environment.systemPackages = with pkgs; [
-		home-manager
-	];
+	# environment.systemPackages = with pkgs; [
+	# 	home-manager
+	# ];
 
-	environment.darwinConfig = "$HOME/.dotfiles/hosts/mac-os/configuration.nix";
+	environment.darwinConfig = "$HOME/.dotfiles/hosts/darwin/configuration.nix";
 
 	services.nix-daemon.enable = true;
 
 	nix = {
-		# dont want to use unstable here as there seems to be a bug with
-		# <flake>?submodules=1
-		# need to look into this and possible open pr
 		package = pkgs.nixVersions.latest;
 		gc = {
 			user = "root";

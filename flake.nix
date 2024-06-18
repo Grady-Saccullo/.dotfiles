@@ -8,10 +8,12 @@
 	darwin.inputs.nixpkgs.follows = "nixpkgs";
 	home-manager.url = "github:nix-community/home-manager/release-24.05";
 	home-manager.inputs.nixpkgs.follows = "nixpkgs";
+	# TODO: refactor this into an overlay for reuse across systems
 	submoduleNvim = {
 		type = "git";
 		flake = false;
-		url = "file://configs/nvim/.config/nvim?submodules=2";
+		url = "file:///Users/hackerman/.dotfiles/configs/nvim/.config/nvim";
+		submodules = true;
 	};
   };
 
@@ -35,7 +37,7 @@
 			system = "aarch64-darwin";
 			specialArgs = { inherit inputs outputs; };
 			modules = [
-				./hosts/mac-os/configuration.nix
+				./hosts/darwin/configuration.nix
 				home-manager.darwinModules.home-manager
 				{
 					nixpkgs = nixpkgsConf;

@@ -90,12 +90,14 @@
         "ref": "refs/heads/main",
         "rev": "9f78e5c208aafba988b1f4a803eab191001dbb41",
         "revCount": 11,
+        "submodules": true,
         "type": "git",
-        "url": "file:///Users/hackerman/.dotfiles/nix/../configs/nvim/.config/nvim?submodules=2"
+        "url": "file:///Users/hackerman/.dotfiles/configs/nvim/.config/nvim"
       },
       "original": {
+        "submodules": true,
         "type": "git",
-        "url": "file:///Users/hackerman/.dotfiles/nix/../configs/nvim/.config/nvim?submodules=2"
+        "url": "file:///Users/hackerman/.dotfiles/configs/nvim/.config/nvim"
       }
     }
   },
