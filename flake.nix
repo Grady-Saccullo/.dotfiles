@@ -34,7 +34,7 @@
 
 	  darwinConfigurations = {
 		  "Hackermans-MacBook-Pro-2" = darwin.lib.darwinSystem {
-			system = "aarch64-darwin";
+			system = "aarch65-darwin";
 			specialArgs = { inherit inputs outputs; };
 			modules = [
 				./hosts/darwin/configuration.nix

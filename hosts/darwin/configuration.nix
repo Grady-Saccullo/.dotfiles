@@ -24,15 +24,40 @@
 		};
 	};
 
-	system.stateVersion = 4;
+	system = {
+		stateVersion = 4;
 
-	system.keyboard.enableKeyMapping = true;
-	system.keyboard.remapCapsLockToEscape = true;
+		defaults = {
+			dock = {
+				autohide = true;
+			};
 
-	system.defaults.NSGlobalDomain."com.apple.keyboard.fnState" = false;
-	system.defaults.trackpad.TrackpadThreeFingerDrag = true;
+			finder = {
+				AppleShowAllFiles = true;
+				QuitMenuItem = true;
+				_FXShowPosixPathInTitle = true;
+			};
 
-	system.defaults.dock.autohide = true;
+			LaunchServices = {
+				LSQuarantine = true;
+			};
+
+			NSGlobalDomain = {
+				"com.apple.keyboard.fnState" = true;
+				# I am a weirdo and like the natural scroll direction... don't ask
+				"com.apple.swipescrolldirection" = true;
+			};
+
+			trackpad = {
+				TrackpadThreeFingerDrag = true;
+			};
+		};
+
+		keyboard = {
+			enableKeyMapping = true;
+			remapCapsLockToEscape = true;
+		};
+	};
 
 	security.pam.enableSudoTouchIdAuth = true;
 
