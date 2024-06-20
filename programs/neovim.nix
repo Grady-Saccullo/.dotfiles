@@ -1,6 +1,9 @@
-{ pkgs, inputs, ...}:
+{ pkgs, config, ...}:
 {
-	xdg.configFile."nvim".source = inputs.submoduleNvim;
+	xdg.configFile."nvim" = {
+		source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.dotfiles/configs/nvim/.config/nvim";
+		recursive = true;
+	};
 
 	programs = {
 		neovim = {

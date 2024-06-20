@@ -8,13 +8,6 @@
 	darwin.inputs.nixpkgs.follows = "nixpkgs";
 	home-manager.url = "github:nix-community/home-manager/release-24.05";
 	home-manager.inputs.nixpkgs.follows = "nixpkgs";
-	# TODO: refactor this into an overlay for reuse across systems
-	submoduleNvim = {
-		type = "git";
-		flake = false;
-		url = "file:///Users/hackerman/.dotfiles/configs/nvim/.config/nvim";
-		submodules = true;
-	};
   };
 
   outputs = {
@@ -34,7 +27,7 @@
 
 	  darwinConfigurations = {
 		  "Hackermans-MacBook-Pro-2" = darwin.lib.darwinSystem {
-			system = "aarch65-darwin";
+			system = "aarch64-darwin";
 			specialArgs = { inherit inputs outputs; };
 			modules = [
 				./hosts/darwin/configuration.nix
