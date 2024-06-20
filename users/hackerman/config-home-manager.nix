@@ -25,6 +25,7 @@
 		ripgrep
 		stow
 		tree
+		discord
 	];
 
 	home.sessionVariables = {

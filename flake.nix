@@ -17,12 +17,8 @@
   };
 
   outputs = { self, nixpkgs, home-manager, darwin, ... } @ inputs: let
-	  overlays = import ./overlays.nix { inherit inputs; };
-  
-		# nixpkgsConf = {
-		# 	config = { allowUnfree = true; };
-		# 	overlays = [self.overlays.unstable-packages];
-		# };
+	  overlays = import ./overlays { inherit inputs; };
+
 	  mkConfig = import ./lib/mk-config.nix {
 		  inherit overlays nixpkgs inputs;
 	  };
@@ -31,22 +27,5 @@
 		  system = "aarch64-darwin";
 		  user = "hackerman";
 	  };
-	  # darwinConfigurations = {
-		 #  "Hackermans-MacBook-Pro-2" = darwin.lib.darwinSystem {
-			# system = "aarch64-darwin";
-			# specialArgs = { inherit inputs outputs; };
-			# modules = [
-			# 	./hosts/darwin/configuration.nix
-			# 	home-manager.darwinModules.home-manager
-			# 	{
-			# 		nixpkgs = nixpkgsConf;
-			# 		home-manager.useGlobalPkgs = true;
-			# 		home-manager.users.hackerman = import ./home.nix;
-			# 		users.users.hackerman.home = "/Users/hackerman";
-			# 		home-manager.extraSpecialArgs = { inherit inputs outputs; };
-			# 	}
-			# ];
-		 #  };
-	  # };
   };
 }

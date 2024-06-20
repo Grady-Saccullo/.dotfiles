@@ -27,10 +27,12 @@ in systemFn rec {
 			nixpkgs.overlays = [
 				overlays.unstable-packages
 			];
+
+			nixpkgs.config = { allowUnfree = true; };
 		}
 
-		#machineConfig
-		#userOSConfig
+		machineConfig
+		userOSConfig
 
 		HMModule.home-manager {
 			home-manager.useGlobalPkgs = true;

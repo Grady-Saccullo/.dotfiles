@@ -1,9 +1,8 @@
 # nix-darwin base config for all macos machines
 { config, pkgs, ... }:
 {
+	nix.useDaemon = true;
 	nix = {
-		useDaemon = true;
-
 		extraOptions = ''
 			experimental-features = nix-command flakes
 		'';
@@ -23,7 +22,7 @@
 
 	environment.shells = with pkgs; [ bashInteractive zsh ];
 
-	environment.darwinConfig = "$HOME/.dotfiles/machines/macos.nix";
+	# environment.darwinConfig = "$HOME/.dotfiles/machines/macos.nix";
 
 	system = {
 		stateVersion = 4;
