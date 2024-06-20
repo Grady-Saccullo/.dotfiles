@@ -2,7 +2,7 @@
   description = "Personal nix config";
 
   inputs = {
-	nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-24.05";
+	nixpkgs.url = "github:NixOS/nixpkgs/nixos-24.05";
 	nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
 
 	home-manager = {
@@ -19,15 +19,15 @@
   outputs = { self, nixpkgs, home-manager, darwin, ... } @ inputs: let
 	  overlays = import ./overlays.nix { inherit inputs; };
   
-		nixpkgsConf = {
-			config = { allowUnfree = true; };
-			overlays = [self.overlays.unstable-packages];
-		};
+		# nixpkgsConf = {
+		# 	config = { allowUnfree = true; };
+		# 	overlays = [self.overlays.unstable-packages];
+		# };
 	  mkConfig = import ./lib/mk-config.nix {
 		  inherit overlays nixpkgs inputs;
 	  };
   in {
-	  darwinConfigurations.Hackermans-MacBook-Pro-2 = mkConfig "macos" {
+	  darwinConfigurations.mbp = mkConfig "macos" {
 		  system = "aarch64-darwin";
 		  user = "hackerman";
 	  };

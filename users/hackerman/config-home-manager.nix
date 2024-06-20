@@ -15,7 +15,7 @@
 
 	xdg.enable = true;
 
-	home.package = with pkgs;  [
+	home.packages = with pkgs;  [
 		asciinema #TODO explore asciinema
 		bat
 		gh

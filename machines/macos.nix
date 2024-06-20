@@ -23,6 +23,8 @@
 
 	environment.shells = with pkgs; [ bashInteractive zsh ];
 
+	environment.darwinConfig = "$HOME/.dotfiles/machines/macos.nix";
+
 	system = {
 		stateVersion = 4;
 

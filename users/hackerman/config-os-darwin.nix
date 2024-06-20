@@ -1,7 +1,13 @@
 { ... }:
 {
+
+	users.users.hackerman = {
+		home = "/Users/hackerman";
+	};
+
 	system = {
 		stateVersion = 4;
+		checks.verifyNixPath = false;
 
 		defaults = {
 			dock = {

@@ -43,27 +43,27 @@
     },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1718529426,
-        "narHash": "sha256-cPj5XeZm0rS0elg6HcLPNKXonAydlejJt20LIHZt6kk=",
+        "lastModified": 1718717462,
+        "narHash": "sha256-qddfQLMaWR2gxfEzUM/zFZVK6H1kTv9WBQSBQxbP3MU=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "fed2354854f6da852a12e8e59e4414de794771f9",
+        "rev": "938aa157bbd6e3c6fd7dcb77998b1f92c2ad1631",
         "type": "github"
       },
       "original": {
         "owner": "NixOS",
-        "ref": "nixpkgs-24.05-darwin",
+        "ref": "nixos-24.05",
         "repo": "nixpkgs",
         "type": "github"
       }
     },
     "nixpkgs-unstable": {
       "locked": {
-        "lastModified": 1718606988,
-        "narHash": "sha256-pmjP5ePc1jz+Okona3HxD7AYT0wbrCwm9bXAlj08nDM=",
+        "lastModified": 1718870667,
+        "narHash": "sha256-jab3Kpc8O1z3qxwVsCMHL4+18n5Wy/HHKyu1fcsF7gs=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "38d3352a65ac9d621b0cd3074d3bef27199ff78f",
+        "rev": "9b10b8f00cb5494795e5f51b39210fed4d2b0748",
         "type": "github"
       },
       "original": {
@@ -78,26 +78,7 @@
         "darwin": "darwin",
         "home-manager": "home-manager",
         "nixpkgs": "nixpkgs",
-        "nixpkgs-unstable": "nixpkgs-unstable",
-        "submoduleNvim": "submoduleNvim"
-      }
-    },
-    "submoduleNvim": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1718344504,
-        "narHash": "sha256-GlG5jQaMZR7Ghczhj1Tz847mdmxTbi7fYhT8NIyPsgY=",
-        "ref": "refs/heads/main",
-        "rev": "9f78e5c208aafba988b1f4a803eab191001dbb41",
-        "revCount": 11,
-        "submodules": true,
-        "type": "git",
-        "url": "file:///Users/hackerman/.dotfiles/configs/nvim/.config/nvim"
-      },
-      "original": {
-        "submodules": true,
-        "type": "git",
-        "url": "file:///Users/hackerman/.dotfiles/configs/nvim/.config/nvim"
+        "nixpkgs-unstable": "nixpkgs-unstable"
       }
     }
   },
