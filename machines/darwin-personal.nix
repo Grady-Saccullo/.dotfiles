@@ -1,7 +1,9 @@
 # nix-darwin base config for personal
-{ config, pkgs, ... }:
-user:
+{ user, machine-specific-imports }:
+{ pkgs, ... }:
 {
+	imports = machine-specific-imports;
+
 	nix.useDaemon = true;
 	nix = {
 		extraOptions = ''
@@ -11,18 +13,6 @@ user:
 
 	users.users.${user} = {
 		home = "/Users/${user}";
-	};
-
-	programs.zsh = {
-		enable = true;
-
-		shellInit = ''
-			# Nix
-			if [ -e '/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh' ]; then
-			  . '/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh'
-			fi
-			# End Nix
-		'';
 	};
 
 	environment.shells = with pkgs; [ bashInteractive zsh ];

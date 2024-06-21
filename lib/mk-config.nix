@@ -12,15 +12,18 @@ configType:
 }:
 
 let
-	darwin = nixpkgs.lib.strings.hasSuffix "-darwin" system;
-	machineConfig = ../machines/darwin-${configType}.nix;
-	
-	# userOSConfig = ../users/${user}/config-os-${if darwin then "darwin" else "nixos" }.nix;
-	# HMConfig = ../users/${user}/config-home-manager.nix;
-	HMConfig = ../modules/${configType}/${if darwin then "darwin" else "${system}"};
+	isDarwin = nixpkgs.lib.strings.hasSuffix "-darwin" system;
+	modulePath = ../modules/${configType}/${if isDarwin then "darwin" else "${system}"};
 
-	systemFn = if darwin then inputs.darwin.lib.darwinSystem else nixpkgs.lib.nixosSystem;
-	HMModule = if darwin then inputs.home-manager.darwinModules else inputs.home-manager.nixosModules;
+	machineConfig = import ../machines/darwin-${configType}.nix;
+	machine-specific-imports = builtins.filter builtins.pathExists [
+		./${modulePath}/machine-specific.nix
+	];
+	
+	HMConfig = import ./${modulePath}/home-manager.nix;
+
+	systemFn = if isDarwin then inputs.darwin.lib.darwinSystem else nixpkgs.lib.nixosSystem;
+	HMModule = if isDarwin then inputs.home-manager.darwinModules else inputs.home-manager.nixosModules;
 in systemFn rec {
 	inherit system;
 
@@ -33,15 +36,13 @@ in systemFn rec {
 			nixpkgs.config = { allowUnfree = true; };
 		}
 
-		(machineConfig user)
+		(machineConfig { inherit user machine-specific-imports; } )
 		# userOSConfig
 
 		HMModule.home-manager {
 			home-manager.useGlobalPkgs = true;
 			home-manager.useUserPackages = true;
-			home-manager.users.${user} = import HMConfig user {
-				inputs = inputs;
-			};
+			home-manager.users.${user} = HMConfig;
 		}
 
 		{

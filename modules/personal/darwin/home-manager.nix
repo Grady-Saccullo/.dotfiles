@@ -1,16 +1,8 @@
 { pkgs, ... }:
-user:
 {
-	users.users.${user} = {
-		home = "/Users/${user}";
-	};
-
 	imports = [
 		../../shared/configs
-		./homebrew.nix
 	];
-
-
 
 	# TODO: look into home manager state version
 	home.stateVersion = "24.05";
@@ -27,6 +19,7 @@ user:
 		ripgrep
 		stow
 		tree
+
 		discord
 	];
 
