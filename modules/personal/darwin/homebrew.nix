@@ -4,13 +4,14 @@
 		enable = true;
 
 		casks = [
-			"discord"
+			# "discord"
 			"betterdisplay"
-			"docker"
-			"brave-browser"
+			# "docker"
+			# "brave-browser"
 			"soundsource"
-			"spotify"
+			# "spotify"
 			"slack"
+			"utm"
 		];
 	};
 }
