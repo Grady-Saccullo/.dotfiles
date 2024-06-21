@@ -1,11 +1,16 @@
 # nix-darwin base config for personal
 { config, pkgs, ... }:
+user:
 {
 	nix.useDaemon = true;
 	nix = {
 		extraOptions = ''
 			experimental-features = nix-command flakes
 		'';
+	};
+
+	users.users.${user} = {
+		home = "/Users/${user}";
 	};
 
 	programs.zsh = {

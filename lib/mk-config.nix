@@ -1,7 +1,7 @@
 { nixpkgs, overlays, inputs }:
 
-# e.g. macos
-systemName:
+# e.g. personal
+configType:
 
 # settings specific to each system
 {
@@ -12,10 +12,12 @@ systemName:
 }:
 
 let
-	darwin =  nixpkgs.lib.strings.hasSuffix "-darwin" system;
-	machineConfig = ../machines/darwin-${systemName}.nix;
-	userOSConfig = ../users/${user}/config-os-${if darwin then "darwin" else "nixos" }.nix;
-	HMConfig = ../users/${user}/config-home-manager.nix;
+	darwin = nixpkgs.lib.strings.hasSuffix "-darwin" system;
+	machineConfig = ../machines/darwin-${configType}.nix;
+	
+	# userOSConfig = ../users/${user}/config-os-${if darwin then "darwin" else "nixos" }.nix;
+	# HMConfig = ../users/${user}/config-home-manager.nix;
+	HMConfig = ../modules/${configType}/${if darwin then "darwin" else "${system}"};
 
 	systemFn = if darwin then inputs.darwin.lib.darwinSystem else nixpkgs.lib.nixosSystem;
 	HMModule = if darwin then inputs.home-manager.darwinModules else inputs.home-manager.nixosModules;
@@ -31,13 +33,13 @@ in systemFn rec {
 			nixpkgs.config = { allowUnfree = true; };
 		}
 
-		machineConfig
-		userOSConfig
+		(machineConfig user)
+		# userOSConfig
 
 		HMModule.home-manager {
 			home-manager.useGlobalPkgs = true;
 			home-manager.useUserPackages = true;
-			home-manager.users.${user} = import HMConfig {
+			home-manager.users.${user} = import HMConfig user {
 				inputs = inputs;
 			};
 		}
@@ -45,7 +47,7 @@ in systemFn rec {
 		{
 			config._module.args = {
 				currentSystem = system;
-				currentSystemName = systemName;
+				currentConfigType = configType;
 				currentSystemUser = user;
 				inputs = inputs;
 			};

@@ -30,16 +30,19 @@
 
   outputs = { self, nixpkgs, home-manager, darwin, ... } @ inputs: let
 	  overlays = import ./overlays { inherit inputs; };
+		# TODO: create builder to make these consistent and easy refactoring
 		darwinSystems = [
 			{
 				system = "aarch64-darwin";
-				type = "personal";
+				config = "personal";
+				user = "hackerman";
 			}
 		];
 		linuxSystems = [
 			{
 				system = "aarch64-linux";
-				type = "personal";
+				config = "personal";
+				user = "hackerman";
 			}
 		];
 		extractedSystems = map (s: s.system) (darwinSystems ++ linuxSystems);
@@ -59,13 +62,13 @@
 	  };
   in {
 	  devShells =  allSystems devShell;
-	  darwinConfigurations = nixpkgs.lib.genAttrs (map (s: s.type) darwinSystems) (type:
+	  darwinConfigurations = nixpkgs.lib.genAttrs (map (s: s.config) darwinSystems) (config:
 			let 
-				config = builtins.elemAt (builtins.filter (s: s.type == type) darwinSystems) 0;
+				cfg = builtins.elemAt (builtins.filter (s: s.config == config) darwinSystems) 0;
 			in
-			  mkConfig config.type {
-				  system = config.system;
-				  user = "hackerman";
+			  mkConfig cfg.config {
+				  system = cfg.system;
+				  user = cfg.user;
 			  }
 		);
 	  # darwinConfigurations.mbp = mkConfig "macos" {
