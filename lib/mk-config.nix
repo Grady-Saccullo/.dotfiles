@@ -1,57 +1,80 @@
 { nixpkgs, overlays, inputs }:
-
-# e.g. personal
-configType:
-
-# settings specific to each system
-{
-	# aarch64-darwin, aarch64-linux etc etc
-	system,
-	# user name for a given system,
-	user
-}:
-
+config:
 # TODO: create path builder for imports
 
 let
-	isDarwin = nixpkgs.lib.strings.hasSuffix "-darwin" system;
+	make-config = import ./mk-system-config.nix;
+	config-lib = import ./mk-config-helpers.nix;
 
-	machineConfig = import ../machines/darwin-${configType}.nix;
+	machine-config = import ../machines/${config.platform}-${config.type}.nix;
 	machine-specific-imports = builtins.filter builtins.pathExists [
-		../modules/${configType}/${if isDarwin then "darwin" else "${system}"}/machine-specific.nix
+		../modules/${config.type}/${config.platform}/machine-specific.nix
 	];
+	machine-module = machine-config {
+		inherit machine-specific-imports;
+		user = config.user;
+	};
 	
-	HMConfig = import ../modules/${configType}/${if isDarwin then "darwin" else "${system}"}/home-manager.nix;
+	home-manager-config = import ../modules/${config.type}/${config.platform}/home-manager.nix;
 
-	systemFn = if isDarwin then inputs.darwin.lib.darwinSystem else nixpkgs.lib.nixosSystem;
-	HMModule = if isDarwin then inputs.home-manager.darwinModules else inputs.home-manager.nixosModules;
-in systemFn rec {
-	inherit system;
-
-	modules = [
-		{
-			nixpkgs.overlays = [
-				overlays.unstable-packages
-			];
-
-			nixpkgs.config = { allowUnfree = true; };
-		}
-
-		(machineConfig { inherit user machine-specific-imports; } )
-
-		HMModule.home-manager {
+	home-manager-module = if config.platform == "darwin" then
+			inputs.home-manager.darwinModules.home-manager {
 			home-manager.useGlobalPkgs = true;
 			home-manager.useUserPackages = true;
-			home-manager.users.${user} = HMConfig;
+			home-manager.users.${config.user} = home-manager-config;
 		}
+		else if config.platform == "nixos" then 
+			inputs.home-manager.nixosModules.home-manager {
+			home-manager.useGlobalPkgs = true;
+			home-manager.useUserPackages = true;
+			home-manager.users.${config.user} = home-manager-config;
+		}
+		else 
+			home-manager-config;
 
-		{
-			config._module.args = {
-				currentSystem = system;
-				currentConfigType = configType;
-				currentSystemUser = user;
-				inputs = inputs;
+	system = config-lib.systemFromConfig config;
+	out = if config.platform == "darwin" then 
+			inputs.darwin.lib.darwinSystem make-config { inherit nixpkgs overlays inputs; } {
+				inherit machine-module home-manager-module;
+				base-inherits = { inherit system; };
+			}
+		else if config == "nixos" then
+			nixpkgs.lib.nixosSystem make-config { inherit nixpkgs overlays inputs; } {
+				inherit machine-module home-manager-module;
+				base-inherits = { inherit system; };
+			}
+		else
+			make-config { inherit nixpkgs overlays inputs; } {
+				inherit machine-module home-manager-module;
 			};
-		}
-	];
-}
+in out
+# in systemFn rec {
+# 	inherit system;
+#
+# 	modules = [
+# 		{
+# 			nixpkgs.overlays = [
+# 				overlays.unstable-packages
+# 			];
+#
+# 			nixpkgs.config = { allowUnfree = true; };
+# 		}
+#
+# 		(machineConfig { inherit user machine-specific-imports; } )
+#
+# 		HMModule.home-manager {
+# 			home-manager.useGlobalPkgs = true;
+# 			home-manager.useUserPackages = true;
+# 			home-manager.users.${user} = HMConfig;
+# 		}
+#
+# 		{
+# 			config._module.args = {
+# 				currentSystem = system;
+# 				currentConfigType = configType;
+# 				currentSystemUser = user;
+# 				inputs = inputs;
+# 			};
+# 		}
+# 	];
+# }
