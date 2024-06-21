@@ -26,6 +26,8 @@
 		stow
 		tree
 		discord
+		
+		# brave
 	];
 
 	home.sessionVariables = {

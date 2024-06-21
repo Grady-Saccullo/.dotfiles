@@ -13,7 +13,7 @@ systemName:
 
 let
 	darwin =  nixpkgs.lib.strings.hasSuffix "-darwin" system;
-	machineConfig = ../machines/${systemName}.nix;
+	machineConfig = ../machines/darwin-${systemName}.nix;
 	userOSConfig = ../users/${user}/config-os-${if darwin then "darwin" else "nixos" }.nix;
 	HMConfig = ../users/${user}/config-home-manager.nix;
 

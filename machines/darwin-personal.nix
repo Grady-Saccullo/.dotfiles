@@ -1,4 +1,4 @@
-# nix-darwin base config for all macos machines
+# nix-darwin base config for personal
 { config, pkgs, ... }:
 {
 	nix.useDaemon = true;
