@@ -11,16 +11,17 @@ configType:
 	user
 }:
 
+# TODO: create path builder for imports
+
 let
 	isDarwin = nixpkgs.lib.strings.hasSuffix "-darwin" system;
-	modulePath = ../modules/${configType}/${if isDarwin then "darwin" else "${system}"};
 
 	machineConfig = import ../machines/darwin-${configType}.nix;
 	machine-specific-imports = builtins.filter builtins.pathExists [
-		./${modulePath}/machine-specific.nix
+		../modules/${configType}/${if isDarwin then "darwin" else "${system}"}/machine-specific.nix
 	];
 	
-	HMConfig = import ./${modulePath}/home-manager.nix;
+	HMConfig = import ../modules/${configType}/${if isDarwin then "darwin" else "${system}"}/home-manager.nix;
 
 	systemFn = if isDarwin then inputs.darwin.lib.darwinSystem else nixpkgs.lib.nixosSystem;
 	HMModule = if isDarwin then inputs.home-manager.darwinModules else inputs.home-manager.nixosModules;
@@ -37,7 +38,6 @@ in systemFn rec {
 		}
 
 		(machineConfig { inherit user machine-specific-imports; } )
-		# userOSConfig
 
 		HMModule.home-manager {
 			home-manager.useGlobalPkgs = true;
