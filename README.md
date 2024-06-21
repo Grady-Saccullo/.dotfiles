@@ -1,8 +1,8 @@
 # Dotty Files
 
 This config is highly dependent on nix. A lot of inspiration for this setup came
-from [https://github.com/dustinlyons/nixos-config/tree/main](dustinlyons/nixos-config)
-and [https://github.com/mitchellh/nixos-config/tree/main](mitchellh/nixos-config).
+from [dustinlyons/nixos-config](https://github.com/dustinlyons/nixos-config/tree/main)
+and [mitchellh/nixos-config](https://github.com/mitchellh/nixos-config/tree/main).
 
 The goal of the setup is to allow for easily creating new config types for a given machine.
 This does mean following the code can be a bit tricky.
