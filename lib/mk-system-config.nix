@@ -1,6 +1,7 @@
 { nixpkgs, overlays, inputs }:
 {
-	base-inherits ? {},
+	base-inherits,
+	system,
 	config,
 	machine-module,
 	manager-module,

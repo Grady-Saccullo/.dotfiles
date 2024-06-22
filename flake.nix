@@ -33,7 +33,7 @@
 		overlays = import ./overlays { inherit inputs; };
 		# TODO: create builder to make these consistent and easy refactoring
 		darwinSystems = [
-			config-lib.makeSystemConfig "darwin" "aarch64" "personal" "hackerman"
+			(config-lib.makeSystemConfig "darwin" "aarch64" "personal" "hackerman")
 			# {
 			# 	platform = "darwin";
 			# 	architecture = "aarch64";
@@ -42,7 +42,7 @@
 			# }
 		];
 		genericLinuxSystems = [
-			config-lib.makeSystemConfig "generic-linux" "aarch64" "personal" "hackerman"
+			(config-lib.makeSystemConfig "generic-linux" "aarch64" "personal" "hackerman")
 			# {
 			# 	platform = "generic-linux";
 			# 	architecture = "aarch64";
@@ -51,7 +51,7 @@
 			# }
 		];
 		nixosSystems = [
-			config-lib.makeSystemConfig "nixos" "aarch64" "personal" "hackerman"
+			(config-lib.makeSystemConfig "nixos" "aarch64" "personal" "hackerman")
 			# {
 			# 	platform = "nixos";
 			# 	architecture = "aarch64";
@@ -76,7 +76,7 @@
 	  };
   in {
 	  devShells = iterSystems devShell;
-	  darwinConfigurations = config-lib.genSystemConfig darwinSystems mkConfig;
+	  darwinConfigurations =  config-lib.genSystemConfig darwinSystems mkConfig;
 	  nixosConfigurations = config-lib.genSystemConfig nixosSystems mkConfig;
 	  homeManagerConfigurations = config-lib.genSystemConfig genericLinuxSystems mkConfig;
 	 #  darwinConfigurations = nixpkgs.lib.genAttrs (map (s: s.config) darwinSystems) (config:
