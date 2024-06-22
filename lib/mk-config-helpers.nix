@@ -1,6 +1,6 @@
 { nixpkgs }:
 let
-	makeSystemConfig = p: a: c: u: 
+	makeSystemConfig = p: a: t: u: 
 		let 
 			# Technically could make this dynamic by reading dirs but too much effort right now
 			allowed-platforms = [ "darwin" "generic-linux" "nixos" ];
@@ -16,7 +16,7 @@ let
 		{
 			platform = p;
 			architecture = a;
-			type = p;
+			type = t;
 			user = u;
 		};
 
@@ -27,9 +27,12 @@ let
 
 	hashSystemConfig = cfg: "${cfg.platform}-${cfg.architecture}-${cfg.type}-${cfg.user}";
 
-	genSystemConfig = systems: make: nixpkgs.lib.genAttrs (map (s: s.type) systems) (config:
+	genSystemConfig = systems: make: nixpkgs.lib.genAttrs (map (s: s.type) systems) (type:
 		let 
-			cfg = builtins.elemAt (builtins.filter (c: hashSystemConfig c == hashSystemConfig config) systems) 0;
+			cfg = builtins.elemAt (
+				# builtins.filter (c: hashSystemConfig c == hashSystemConfig config)
+				builtins.filter (c: c.type == type)
+				systems) 0;
 		in
 		  make cfg
 	);

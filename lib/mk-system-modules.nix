@@ -1,12 +1,10 @@
 { nixpkgs, overlays, inputs }:
 {
-	base-inherits,
 	system,
 	config,
-	machine-module,
-	manager-module,
+	extra-modules ? []
 }: {
-	inherit base-inherits;
+	inherit system;
 
 	modules = [
 		{
@@ -17,9 +15,6 @@
 			nixpkgs.config = { allowUnfree = true; };
 		}
 
-		machine-module
-		manager-module
-
 		{
 			config._module.args = {
 				currentConfigType = config.type;
@@ -27,5 +22,5 @@
 				inputs = inputs;
 			};
 		}
-	];
+	] ++ extra-modules;
 }

@@ -76,9 +76,9 @@
 	  };
   in {
 	  devShells = iterSystems devShell;
-	  darwinConfigurations =  config-lib.genSystemConfig darwinSystems mkConfig;
-	  nixosConfigurations = config-lib.genSystemConfig nixosSystems mkConfig;
-	  homeManagerConfigurations = config-lib.genSystemConfig genericLinuxSystems mkConfig;
+	  darwinConfigurations = config-lib.genSystemConfig darwinSystems mkConfig;
+	  # nixosConfigurations = (config-lib.genSystemConfig nixosSystems) mkConfig;
+	  # homeManagerConfigurations = config-lib.genSystemConfig genericLinuxSystems mkConfig;
 	 #  darwinConfigurations = nixpkgs.lib.genAttrs (map (s: s.config) darwinSystems) (config:
 		# 	let 
 		# 		cfg = builtins.elemAt (builtins.filter (s: s.config == config) darwinSystems) 0;
