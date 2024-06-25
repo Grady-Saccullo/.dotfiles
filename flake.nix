@@ -25,28 +25,42 @@
     homebrew-cask = {
       url = "github:homebrew/homebrew-cask";
       flake = false;
-    }; 
+    };
   };
 
   outputs = { self, nixpkgs, home-manager, darwin, ... } @ inputs: let
-	  overlays = import ./overlays { inherit inputs; };
+		config-lib = import ./lib/mk-config-helpers.nix { inherit nixpkgs; };
+		overlays = import ./overlays { inherit inputs; };
 		# TODO: create builder to make these consistent and easy refactoring
 		darwinSystems = [
-			{
-				system = "aarch64-darwin";
-				config = "personal";
-				user = "hackerman";
-			}
+			(config-lib.makeSystemConfig "darwin" "aarch64" "personal" "hackerman")
+			# {
+			# 	platform = "darwin";
+			# 	architecture = "aarch64";
+			# 	config = "personal";
+			# 	user = "hackerman";
+			# }
 		];
-		linuxSystems = [
-			{
-				system = "aarch64-linux";
-				config = "personal";
-				user = "hackerman";
-			}
+		genericLinuxSystems = [
+			(config-lib.makeSystemConfig "generic-linux" "aarch64" "personal" "hackerman")
+			# {
+			# 	platform = "generic-linux";
+			# 	architecture = "aarch64";
+			# 	config = "personal";
+			# 	user = "hackerman";
+			# }
 		];
-		extractedSystems = map (s: s.system) (darwinSystems ++ linuxSystems);
-		allSystems = fn: nixpkgs.lib.genAttrs extractedSystems fn;
+		nixosSystems = [
+			(config-lib.makeSystemConfig "nixos" "aarch64" "personal" "hackerman")
+			# {
+			# 	platform = "nixos";
+			# 	architecture = "aarch64";
+			# 	config = "personal";
+			# 	user = "hackerman";
+			# }
+		];
+		extractedSystems = map config-lib.systemFromConfig (darwinSystems ++ genericLinuxSystems ++ nixosSystems);
+		iterSystems = fn: nixpkgs.lib.genAttrs extractedSystems fn;
 
 	  mkConfig = import ./lib/mk-config.nix {
 		  inherit overlays nixpkgs inputs;
@@ -61,19 +75,27 @@
 		  };
 	  };
   in {
-	  devShells =  allSystems devShell;
-	  darwinConfigurations = nixpkgs.lib.genAttrs (map (s: s.config) darwinSystems) (config:
-			let 
-				cfg = builtins.elemAt (builtins.filter (s: s.config == config) darwinSystems) 0;
-			in
-			  mkConfig cfg.config {
-				  system = cfg.system;
-				  user = cfg.user;
-			  }
-		);
-	  # darwinConfigurations.mbp = mkConfig "macos" {
-		 #  system = "aarch64-darwin";
-		 #  user = "hackerman";
-	  # };
+	  devShells = iterSystems devShell;
+	  darwinConfigurations = config-lib.genSystemConfig darwinSystems mkConfig;
+	  # nixosConfigurations = (config-lib.genSystemConfig nixosSystems) mkConfig;
+	  # homeManagerConfigurations = config-lib.genSystemConfig genericLinuxSystems mkConfig;
+	 #  darwinConfigurations = nixpkgs.lib.genAttrs (map (s: s.config) darwinSystems) (config:
+		# 	let 
+		# 		cfg = builtins.elemAt (builtins.filter (s: s.config == config) darwinSystems) 0;
+		# 	in
+		# 	  mkConfig cfg.config cfg
+		# );
+	 #  nixosConfigurations = nixpkgs.lib.genAttrs (map (s: s.config) nixosSystems) (config:
+		# 	let 
+		# 		cfg = builtins.elemAt (builtins.filter (s: s.config == config) nixosSystems) 0;
+		# 	in
+		# 	  mkConfig cfg.config cfg
+		# );
+	 #  homeManagerConfigurations = nixpkgs.lib.genAttrs (map (s: s.config) genericLinuxSystems) (config:
+		# 	let 
+		# 		cfg = builtins.elemAt (builtins.filter (s: s.config == config) genericLinuxSystems) 0;
+		# 	in
+		# 	  mkConfig cfg.config cfg
+		# );
   };
 }
