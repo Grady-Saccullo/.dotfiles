@@ -1,13 +1,25 @@
 NIX_SYSTEM_NAME ?= personal
 
+UNAME := $(shell uname)
+
 switch:
-	set -x
-	nix build --extra-experimental-features nix-command --extra-experimental-features flakes "$$(pwd)#darwinConfigurations.${NIX_SYSTEM_NAME}.system"
-	./result/sw/bin/darwin-rebuild switch --flake "$$(pwd)#${NIX_SYSTEM_NAME}"
+ifeq ($(UNAME), Darwin)
+	nix build \
+		--extra-experimental-features 'nix-command flakes' \
+		"$$(pwd)#darwinConfigurations.${NIX_SYSTEM_NAME}.system"
+	 ./result/sw/bin/darwin-rebuild --flake "$$(pwd)#${NIX_SYSTEM_NAME}"
+else
+	@echo "not implemented ${UNAME}"
+endif
 
-
-test:
-	set -x
-	nix build --show-trace --verbose --extra-experimental-features nix-command --extra-experimental-features flakes "$$(pwd)#darwinConfigurations.${NIX_SYSTEM_NAME}.system"
-	./result/sw/bin/darwin-rebuild test --flake "$$(pwd)#${NIX_SYSTEM_NAME}"
-
+check:
+ifeq ($(UNAME), Darwin)
+	nix build \
+		--show-trace \
+		--verbose \
+		--extra-experimental-features 'nix-command flakes' \
+		"$$(pwd)#darwinConfigurations.${NIX_SYSTEM_NAME}.system"
+	 ./result/sw/bin/darwin-rebuild check --flake "$$(pwd)#${NIX_SYSTEM_NAME}"
+else
+	@echo "not implemented ${UNAME}"
+endif

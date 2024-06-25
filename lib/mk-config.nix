@@ -1,25 +1,23 @@
 { nixpkgs, overlays, inputs, ... }:
-config:
-# TODO: create path builder for imports
 
+config:
+
+# TODO refactor this. much of this can be reused/simplified, but it works for now while figuring out multiple systems
 let
 	mk-system-modules = import ./mk-system-modules.nix { inherit nixpkgs overlays inputs; };
 	config-lib = import ./mk-config-helpers.nix { inherit nixpkgs; };
 
 	machine-config = import ../machines/${config.platform}-${config.type}.nix;
-	mk-modules-path = p: ../modules/${config.type}/${config.platform}${p};
 
 	machine-specific-imports = builtins.filter builtins.pathExists [
-		import (mk-modules-path /machine-specific.nix)
-		# ../modules/${config.type}/${config.platform}/machine-specific.nix
+		../modules/${config.type}/${config.platform}/machine-specific.nix
 	];
 	machine-module = machine-config {
 		inherit machine-specific-imports;
 		user = config.user;
 	};
 	
-	home-manager-config = import (mk-modules-path /home-manager.nix);
-	# home-manager-config = import ../modules/${config.type}/${config.platform}/home-manager.nix;
+	home-manager-config = import ../modules/${config.type}/${config.platform}/home-manager.nix;
 
 	home-manager-module = if config.platform == "darwin" then
 		[
