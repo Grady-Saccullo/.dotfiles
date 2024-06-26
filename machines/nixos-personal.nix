@@ -36,7 +36,7 @@
 	services.xserver = {
 		enable = true;
 		xkb.layout = "us";
-		dpi = 300;
+		dpi = 220;
 	};
 
 	services.desktopManager.plasma6.enable = true;
