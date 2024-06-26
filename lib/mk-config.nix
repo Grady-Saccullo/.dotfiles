@@ -49,7 +49,7 @@ let
 				(machine-module)
 			] ++ home-manager-module;
 		})
-	else if config == "nixos" then
+	else if config.platform == "nixos" then
 		nixpkgs.lib.nixosSystem (mk-system-modules {
 			inherit config system;
 			extra-modules = [

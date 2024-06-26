@@ -1,6 +1,6 @@
 { pkgs, config, ... }:
 let 
-	configDir = "${config.home.homeDirectory}/.dotfiles/configs/nvim/.config/nvim";
+	configDir = /home/hackerman/.dotfiles/configs/nvim/.config/nvim;
 in {
 	xdg.configFile."nvim" = {
 		source = config.lib.file.mkOutOfStoreSymlink configDir;
