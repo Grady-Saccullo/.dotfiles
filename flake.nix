@@ -53,7 +53,7 @@
     nixosSystems = [
       (helpers.mkSystemConfig {
         system = "aarch64-linux";
-        configName = "nixos";
+        configName = "nixos-vm-fusion";
         configType = "personal";
         user = "hackerman";
       })

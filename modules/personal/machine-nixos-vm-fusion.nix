@@ -1,6 +1,6 @@
 {...}: {
   imports = [
     ./machine-base.nix
-    ../../machines/nixos.nix
+    ../../machines/nixos-vm-fusion.nix
   ];
 }

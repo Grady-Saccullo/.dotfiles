@@ -1,44 +1,40 @@
 {
-  user,
-  machine-specific-imports,
-}: {pkgs, ...}: {
+  pkgs,
+  systemConfig,
+  ...
+}: {
+  system.statVersion = "24.05";
+
   nix = {
+    package = pkgs.nixVersion.latest;
     extraOptions = ''
       experimental-features = nix-command flakes
     '';
   };
 
-  users.users.${user} = {
-    home = "/home/${user}";
+  users.users.${systemConfig.user} = {
+    home = "/home/${systemConfig.user}";
     isNormalUser = true;
     extraGroups = ["wheel"];
     shell = pkgs.zsh;
   };
 
-  programs.zsh.enable = true;
-
-  boot.kernelPackages = pkgs.linuxPackages_latest;
-
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
   boot.loader.efi.efiSysMountPoint = "/boot";
 
+  boot.kernelPackages = pkgs.linuxPackages_latest;
   boot.initrd.availableKernelModules = ["xhci_pci" "uhci_hcd" "virtio_pci" "usbhid" "usb_storage" "sr_mod"];
-
-  environment.shells = with pkgs; [bashInteractive zsh];
 
   fileSystems."/" = {
     device = "/dev/disk/by-partlabel/root";
   };
+
   fileSystems."/boot" = {
     device = "/dev/disk/by-partlabel/EFI";
   };
 
-  services.xserver = {
-    enable = true;
-    xkb.layout = "us";
-    dpi = 220;
-  };
+  environment.shells = with pkgs; [bashInteractive zsh];
 
-  services.desktopManager.plasma6.enable = true;
+  services.sudo.wheelNeedsPassword = false;
 }

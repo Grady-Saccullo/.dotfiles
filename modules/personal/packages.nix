@@ -3,20 +3,21 @@
 in
   with pkgs;
     [
+      alejandra
       asciinema
       bat
+      btop
       gh
-      htop
       jq
       nodejs_22
       ripgrep
       tree
-      alejandra
     ]
     ++ (lib.optionals isLinux [
+      # additional packages
       git-credential-oauth
-      spice-vdagent
 
+      # gui packages
       brave
       firefox
       spotify
