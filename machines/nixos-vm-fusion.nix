@@ -17,9 +17,9 @@
     xkb.layout = "us";
   };
 
-  services.desktopManager.defaultSession = "plasma";
-  services.desktopManager.sddm.enable = true;
-  services.desktopManager.sddm.enableHidpi = true;
-  services.desktopManager.sddm.theme = "breeze-dark";
+  services.displayManager.defaultSession = "plasma";
+  services.displayManager.sddm.enable = true;
+  services.displayManager.sddm.enableHidpi = true;
+  services.displayManager.sddm.theme = "breeze-dark";
   services.desktopManager.plasma6.enable = true;
 }
