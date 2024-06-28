@@ -1,5 +1,5 @@
 {
-  description = "Personal nix config";
+  description = "Nix system manager";
 
   inputs = {
 	nixpkgs.url = "github:NixOS/nixpkgs/nixos-24.05";
@@ -31,6 +31,7 @@
   outputs = { self, nixpkgs, home-manager, darwin, ... } @ inputs: let
 		config-lib = import ./lib/mk-config-helpers.nix { inherit nixpkgs; };
 		overlays = import ./overlays { inherit inputs; };
+
 		darwinSystems = [
 			(config-lib.mkSystemConfig {
 				system = "aarch64-darwin";
@@ -38,14 +39,6 @@
 				configType = "personal";
 				user = "hackerman";
 			})
-		];
-		genericLinuxSystems = [
-			(config-lib.mkSystemConfig {
-				system = "aarch64-linux";
-				configName = "fedora";
-				configType = "personal";
-				user = "hackerman";
-			 })
 		];
 		nixosSystems = [
 			(config-lib.mkSystemConfig {
@@ -55,7 +48,20 @@
 				user = "hackerman";
 			 })
 		];
-		all-systems = map (cfg: cfg.system) (darwinSystems ++ genericLinuxSystems ++ nixosSystems);
+		genericLinuxSystems = [
+			(config-lib.mkSystemConfig {
+				system = "aarch64-linux";
+				configName = "fedora";
+				configType = "personal";
+				user = "hackerman";
+			 })
+		];
+
+		all-systems = map (cfg: cfg.system) (
+			darwinSystems ++
+			nixosSystems ++
+			genericLinuxSystems
+		);
 		iterSystems = fn: nixpkgs.lib.genAttrs all-systems fn;
 
 	  mkConfig = import ./lib/mk-config.nix {

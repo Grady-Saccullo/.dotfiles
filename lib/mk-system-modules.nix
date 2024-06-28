@@ -1,11 +1,10 @@
 { nixpkgs, overlays, inputs }:
 {
-	system,
 	systemConfig,
 	extra-modules ? []
-}: {
-	inherit system;
-
+}: 
+{
+	system = systemConfig.system;
 	modules = [
 		{
 			nixpkgs.overlays = [

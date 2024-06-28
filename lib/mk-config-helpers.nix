@@ -1,14 +1,15 @@
 { nixpkgs }:
 let
-	mkSystemConfig = { system, configType, configName, user }:
-		{
-			system = system;
-			configType = configType;
-			configName = configName;
-			user = user;
-		};
+	mkSystemConfig = { system, configType, configName, user }: {
+		system = system;
+		configType = configType;
+		configName = configName;
+		user = user;
+	};
 
-	hashSystemConfig = cfg: "${cfg.platform}-${cfg.architecture}-${cfg.type}-${cfg.user}";
+	hashSystemConfig = cfg: "${cfg.system}-${cfg.configType}-${cfg.configName}-${cfg.user}";
+
+	configShortName = cfg: "${cfg.configType}-${cfg.configName}";
 
 	genSystemConfig = systems: make: nixpkgs.lib.genAttrs (map (s: s.configType) systems) (configType:
 		let 
