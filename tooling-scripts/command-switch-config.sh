@@ -73,7 +73,7 @@ function command_switch_config() {
 	set_nix_config "$config_name"
 
 	run_for_system \
-		_switch_config_darwin \
-		_switch_config_nixos \
-		_switch_config_generic_linux
+		_command_switch_config_darwin \
+		_command_switch_config_nixos \
+		_command_switch_config_generic_linux
 }
