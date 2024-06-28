@@ -5,51 +5,53 @@ source "$SCRIPT_DIR/lib/prompt-yes-no.sh"
 
 # LOCAL FILE USE ONLY
 #
-# Switch the config for darwin system type
-function _command_switch_config_darwin() {
+# Test the config for darwin system type
+function _command_test_config_darwin() {
 	local config_name
 	config_name="$(read_nix_config)"
 
 	nix build \
+		--show-trace \
+		--verbose \
 		--extra-experimental-features 'nix-command flakes' \
 		"$(pwd)#darwinConfigurations.$config_name.system"
 
-	./result/sw/bin/darwin-rebuild switch --flake "$(pwd)#$config_name"
+	./result/sw/bin/darwin-rebuild check --flake "$(pwd)#$config_name"
 }
 
 
 # LOCAL FILE USE ONLY
 #
-# Switch the config for nixos system type
-function _command_switch_config_nixos() {
+# Test the config for nixos system type
+function _command_test_config_nixos() {
 	local config_name
 	config_name="$(read_nix_config)"
 
-	sudo nixos-rebuild switch --flake "$(pwd)#$config_name"
+	sudo nixos-rebuild test --flake "$(pwd)#$config_name"
 }
 
 # LOCAL FILE USE ONLY
 #
-# Switch the config for generic linux system type
-function _command_switch_config_generic_linux() {
+# Test the config for generic linux system type
+function _command_test_config_generic_linux() {
 	local config_name
 	config_name="$(read_nix_config)"
 	echo "NOT YET IMPLEMENTED: generic linux"
 	exit 1
 }
 
-# Switch to a specified Nix configuration or use the current one
+# Test to a specified Nix configuration or use the current one
 #
-# This function handles switching between Nix configurations. It can use
+# This function handles testing Nix configurations. It can use
 # the currently set configuration or a new one specified as an argument.
 # If no argument is provided, it prompts the user to confirm using the 
 # current configuration.
 #
 # Usage:
-#   command_switch_config [config_name]
+#   command_test_config [config_name]
 #
 # Arguments:
-#   $1 - config_name (optional): The name of the Nix configuration to switch to
+#   $1 - config_name (optional): The name of the Nix configuration to test to
 #
 # Returns:
 #	void
@@ -57,7 +59,7 @@ function _command_switch_config_generic_linux() {
 # Exit Status:
 #   1 if the user decides not to proceed with the current config when no argument is provided
 #
-function command_switch_config() {
+function command_test_config() {
 	local config_name
 	config_name="$(read_nix_config)"
 
@@ -73,7 +75,7 @@ function command_switch_config() {
 	set_nix_config "$config_name"
 
 	run_for_system \
-		_command_switch_config_darwin \
-		_command_switch_config_nixos \
-		_command_switch_config_generic_linux
+		_command_test_config_darwin \
+		_command_test_config_nixos \
+		_command_test_config_generic_linux
 }
