@@ -32,31 +32,31 @@
 		config-lib = import ./lib/mk-config-helpers.nix { inherit nixpkgs; };
 		overlays = import ./overlays { inherit inputs; };
 		darwinSystems = [
-			(config-lib.makeSystemConfig {
-				platform = "darwin";
-				arch = "aarch64";
-				type = "personal";
+			(config-lib.mkSystemConfig {
+				system = "aarch64-darwin";
+				configName = "darwin";
+				configType = "personal";
 				user = "hackerman";
 			})
 		];
 		genericLinuxSystems = [
-			(config-lib.makeSystemConfig {
-				platform = "generic-linux";
-				arch = "aarch64";
-				type = "personal";
+			(config-lib.mkSystemConfig {
+				system = "aarch64-linux";
+				configName = "fedora";
+				configType = "personal";
 				user = "hackerman";
 			 })
 		];
 		nixosSystems = [
-			(config-lib.makeSystemConfig {
-				platform = "nixos";
-				arch = "aarch64";
-				type = "personal";
+			(config-lib.mkSystemConfig {
+				system = "aarch64-linux";
+				configName = "nixos";
+				configType = "personal";
 				user = "hackerman";
-			})
+			 })
 		];
-		extractedSystems = map config-lib.systemFromConfig (darwinSystems ++ genericLinuxSystems ++ nixosSystems);
-		iterSystems = fn: nixpkgs.lib.genAttrs extractedSystems fn;
+		all-systems = map (cfg: cfg.system) (darwinSystems ++ genericLinuxSystems ++ nixosSystems);
+		iterSystems = fn: nixpkgs.lib.genAttrs all-systems fn;
 
 	  mkConfig = import ./lib/mk-config.nix {
 		  inherit overlays nixpkgs inputs;

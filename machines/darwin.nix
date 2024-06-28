@@ -1,9 +1,6 @@
 # nix-darwin base config for personal
-{ user, extra-imports }:
-{ pkgs, ... }:
+{ pkgs, systemConfig, ... }:
 {
-	imports = extra-imports;
-
 	nix.useDaemon = true;
 	nix = {
 		extraOptions = ''
@@ -11,13 +8,11 @@
 		'';
 	};
 
-	users.users.${user} = {
-		home = "/Users/${user}";
+	users.users.${systemConfig.user} = {
+		home = "/Users/${systemConfig.user}";
 	};
 
 	environment.shells = with pkgs; [ bashInteractive zsh ];
-
-	# environment.darwinConfig = "$HOME/.dotfiles/machines/macos.nix";
 
 	system = {
 		stateVersion = 4;
