@@ -3,10 +3,9 @@
   systemConfig,
   ...
 }: {
-  system.statVersion = "24.05";
+  system.stateVersion = "24.05";
 
   nix = {
-    package = pkgs.nixVersion.latest;
     extraOptions = ''
       experimental-features = nix-command flakes
     '';
@@ -36,5 +35,5 @@
 
   environment.shells = with pkgs; [bashInteractive zsh];
 
-  services.sudo.wheelNeedsPassword = false;
+  security.sudo.wheelNeedsPassword = false;
 }

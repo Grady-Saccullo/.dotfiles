@@ -64,7 +64,7 @@ Contains overlays, specifically only need package overlays for now so there is o
 a default.nix file in there.
 
 ### `/tooling-scripts`
-Contains helper bash cli for switching and checking configs. Pulling down git repos
+Contains helper bash cli for switching and testing configs. Pulling down git repos
 and more. This is still a wip, but so far has been better to live with as compared
 to using a Makefile. Also just wanted to build a small bash cli as it's been a while
 since I've done one.
