@@ -21,7 +21,7 @@ let
 		};
 
 	systemFromConfig = cfg: let
-		p = if cfg.platform == "generic-linux" then "linux" else cfg.platform;
+		p = if cfg.platform == "darwin" then "darwin" else "linux";
 	in
 		"${cfg.architecture}-${p}";
 

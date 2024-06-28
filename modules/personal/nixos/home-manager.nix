@@ -1,4 +1,4 @@
-{ pkgs, config, ... }:
+{ pkgs, ... }:
 {
 	imports = [
 		../../shared/programs
@@ -11,9 +11,11 @@
 
 	home.packages = pkgs.callPackage ./home-packages.nix {};
 
-	home.file = import ../shared/home-files.nix { inherit config; };
+	home.file = import ../shared/home-files.nix;
 
 	home.sessionVariables = {
 		EDITOR = "vim";
 	};
+
+	programs.zsh.enable = true;
 }

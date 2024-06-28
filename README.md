@@ -5,31 +5,42 @@ from [dustinlyons/nixos-config](https://github.com/dustinlyons/nixos-config/tree
 and [mitchellh/nixos-config](https://github.com/mitchellh/nixos-config/tree/main).
 
 The goal of the setup is to allow for easily creating new config types for a given machine.
-This does mean following the code can be a bit tricky.
+This does mean the code can be a bit tricky to follow.
 
 
-## `/configs`
+## Getting Started
+
+- Install nix/use nixos
+- Create a nix shell with necessary tooling for initial setup: `nix-shell -p gnumake git vim --command "export PS1='\n\[\033[1;32m\][SETUP-SHELL:\w]\$\[\033[0m\] '; exec bash"`.
+- Run setup
+- Pull submodules down
+- Run setup again to link config repos to config locations
+
+
+## Project Structure
+
+### `/configs`
 Contains my configs for tooling which I want to maintain outside nix. Although this does
 not follow the "nix way", I personally prefer this. Specifically I like having neovim in
-its own repo. This was a paint point initial, but eventually got it working as I wanted.
+its own repo. This was a pain point initially, but eventually got it working as I wanted.
 
 
-## `/lib`
+### `/lib`
 Contains helper functions for nix.
 
 
-## `/machines`
+### `/machines`
 Contains machine related nix configs. The naming scheme is very import here as we import
 files dynamically via name. eg `darwin-personal.nix` is pulled in when the personal config
 for a darwin os is desired. Eventually this will contain more configs such as `rbp-dev.nix`,
 `linux-personal.nix` and `linux-dev.nix`.
 
 
-## `/modules/shared` (WIP)
+### `/modules/shared` (WIP)
 Contains shared configs for all environments.
 
 
-## `/modules/<config-type>/<platform>` (WIP)
+### `/modules/<config-type>/<platform>` (WIP)
 Contains all files related to a given config type for a given platform.
 
 There is a "special" file in here called `machine-specific.nix`. This file gets injected
@@ -39,5 +50,5 @@ on top of the system. Anything which modifies the underlying system (machine) sh
 `/machine`.
 
 
-## `/overlays` (WIP)
+### `/overlays` (WIP)
 Contains shared overlays nix.
