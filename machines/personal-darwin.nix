@@ -1,8 +1,8 @@
 # nix-darwin base config for personal
-{ user, machine-specific-imports }:
+{ user, extra-imports }:
 { pkgs, ... }:
 {
-	imports = machine-specific-imports;
+	imports = extra-imports;
 
 	nix.useDaemon = true;
 	nix = {
