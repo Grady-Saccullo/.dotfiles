@@ -6,7 +6,7 @@ source "$SCRIPT_DIR/lib/prompt-yes-no.sh"
 # LOCAL FILE USE ONLY
 #
 # Switch the config for darwin system type
-function _switch_config_darwin() {
+function _command_switch_config_darwin() {
 	local config_name
 	config_name="$(read_nix_config)"
 	nix build \
@@ -21,7 +21,7 @@ function _switch_config_darwin() {
 # LOCAL FILE USE ONLY
 #
 # Switch the config for nixos system type
-function _switch_config_nixos() {
+function _command_switch_config_nixos() {
 	local config_name
 	config_name="$(read_nix_config)"
 	echo "NOT YET IMPLEMENTED: nixos"
@@ -31,7 +31,7 @@ function _switch_config_nixos() {
 # LOCAL FILE USE ONLY
 #
 # Switch the config for generic linux system type
-function _switch_config_generic_linux() {
+function _command_switch_config_generic_linux() {
 	local config_name
 	config_name="$(read_nix_config)"
 	echo "NOT YET IMPLEMENTED: generic linux"
@@ -57,7 +57,7 @@ function _switch_config_generic_linux() {
 # Exit Status:
 #   1 if the user decides not to proceed with the current config when no argument is provided
 #
-function switch_config() {
+function command_switch_config() {
 	local config_name
 	config_name="$(read_nix_config)"
 

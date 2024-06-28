@@ -39,11 +39,11 @@
     darwin,
     ...
   } @ inputs: let
-    config-lib = import ./lib/mk-config-helpers.nix {inherit nixpkgs;};
+    helpers = import ./lib/helpers.nix {inherit nixpkgs;};
     overlays = import ./overlays {inherit inputs;};
 
     darwinSystems = [
-      (config-lib.mkSystemConfig {
+      (helpers.mkSystemConfig {
         system = "aarch64-darwin";
         configName = "darwin";
         configType = "personal";
@@ -51,7 +51,7 @@
       })
     ];
     nixosSystems = [
-      (config-lib.mkSystemConfig {
+      (helpers.mkSystemConfig {
         system = "aarch64-linux";
         configName = "nixos";
         configType = "personal";
@@ -59,7 +59,7 @@
       })
     ];
     genericLinuxSystems = [
-      (config-lib.mkSystemConfig {
+      (helpers.mkSystemConfig {
         system = "aarch64-linux";
         configName = "fedora";
         configType = "personal";
@@ -91,8 +91,8 @@
     };
   in {
     devShells = iterSystems devShell;
-    darwinConfigurations = config-lib.genSystemConfig darwinSystems mkConfig;
-    nixosConfigurations = config-lib.genSystemConfig nixosSystems mkConfig;
-    homeManagerConfigurations = config-lib.genSystemConfig genericLinuxSystems mkConfig;
+    darwinConfigurations = helpers.genSystemConfig darwinSystems mkConfig;
+    nixosConfigurations = helpers.genSystemConfig nixosSystems mkConfig;
+    homeManagerConfigurations = helpers.genSystemConfig genericLinuxSystems mkConfig;
   };
 }
