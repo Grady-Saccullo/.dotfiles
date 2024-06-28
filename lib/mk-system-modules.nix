@@ -8,7 +8,7 @@
 	modules = [
 		{
 			nixpkgs.overlays = [
-				overlays.unstable-packages
+				overlays.packages
 			];
 
 			nixpkgs.config = {

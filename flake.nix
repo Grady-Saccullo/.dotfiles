@@ -10,14 +10,18 @@
 		inputs.nixpkgs.follows = "nixpkgs";
 	};
 
+	# formatting
+	alejandra = {
+		url = "github:kamadorueda/alejandra/3.0.0";
+		inputs.nixpkgs.follows = "nixpkgs-unstable";
+	};
+
 	# darwin specific inputs
 	darwin = {
 		url = "github:LnL7/nix-darwin";
 		inputs.nixpkgs.follows = "nixpkgs";
 	};
-	nix-homebrew = {
-		url = "github:zhaofengli-wip/nix-homebrew";
-	};
+	nix-homebrew.url = "github:zhaofengli-wip/nix-homebrew";
     homebrew-core = {
       url = "github:homebrew/homebrew-core";
       flake = false;

@@ -1,6 +1,6 @@
 { pkgs, config, ... }:
 let 
-	home-packages = pkgs.callPackage ./packages.nix {};
+	home-packages = pkgs.callPackage ./packages.nix { };
 	home-file = import ./file.nix { inherit config; };
 in {
 	imports = [
