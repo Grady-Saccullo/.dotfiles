@@ -1,23 +1,23 @@
 { nixpkgs }:
 let
-	makeSystemConfig = p: a: t: u: 
+	makeSystemConfig = { platform, arch, type, user }:
 		let 
 			# Technically could make this dynamic by reading dirs but too much effort right now
 			allowed-platforms = [ "darwin" "generic-linux" "nixos" ];
-			valid-platform = builtins.elem p allowed-platforms;
+			valid-platform = builtins.elem platform allowed-platforms;
 			allowed-aarchs = [ "aarch64" ];
-			valid-aarch = builtins.elem a allowed-aarchs;
+			valid-aarch = builtins.elem arch allowed-aarchs;
 		in 
 			if !valid-platform then 
-				throw "Invalid platform: ${p}. Allowed values are: ${builtins.concatStringsSep ", " allowed-platforms}."
+				throw "Invalid platform: ${platform}. Allowed values are: ${builtins.concatStringsSep ", " allowed-platforms}."
 			else if !valid-aarch then
-				throw "Invalid architecture: ${a}. Allowed values are: ${builtins.concatStringsSep ", " allowed-aarchs}."
+				throw "Invalid architecture: ${arch}. Allowed values are: ${builtins.concatStringsSep ", " allowed-aarchs}."
 			else
 		{
-			platform = p;
-			architecture = a;
-			type = t;
-			user = u;
+			platform = platform;
+			architecture = arch;
+			type = type;
+			user = user;
 		};
 
 	systemFromConfig = cfg: let
