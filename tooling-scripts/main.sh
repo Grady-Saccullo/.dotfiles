@@ -15,6 +15,7 @@ function print_usage() {
 	echo "Commands:"
 	echo "	switch <config name>"
 	echo "	check <config name> [--verbose]"
+	echo "	format"
 }
 
 
