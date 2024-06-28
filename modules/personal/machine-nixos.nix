@@ -1,7 +1,6 @@
-{ ... }:
-{
-	imports = [
-		./machine-base.nix
-		../../machines/nixos.nix
-	];
+{...}: {
+  imports = [
+    ./machine-base.nix
+    ../../machines/nixos.nix
+  ];
 }
