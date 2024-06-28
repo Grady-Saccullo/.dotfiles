@@ -1,5 +1,10 @@
 { ... }:
 {
+	imports = [
+		./machine-base.nix
+		../../machines/darwin.nix
+	];
+
 	homebrew = {
 		enable = true;
 
@@ -12,6 +17,7 @@
 			"soundsource"
 			"spotify"
 			"utm"
+			"vmware-fusion"
 		];
 	};
 }

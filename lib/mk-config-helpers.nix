@@ -1,41 +1,39 @@
 { nixpkgs }:
 let
-	makeSystemConfig = { platform, arch, type, user }:
-		let 
-			# Technically could make this dynamic by reading dirs but too much effort right now
-			allowed-platforms = [ "darwin" "generic-linux" "nixos" ];
-			valid-platform = builtins.elem platform allowed-platforms;
-			allowed-aarchs = [ "aarch64" ];
-			valid-aarch = builtins.elem arch allowed-aarchs;
-		in 
-			if !valid-platform then 
-				throw "Invalid platform: ${platform}. Allowed values are: ${builtins.concatStringsSep ", " allowed-platforms}."
-			else if !valid-aarch then
-				throw "Invalid architecture: ${arch}. Allowed values are: ${builtins.concatStringsSep ", " allowed-aarchs}."
-			else
-		{
-			platform = platform;
-			architecture = arch;
-			type = type;
-			user = user;
-		};
+	mkSystemConfig = { system, configType, configName, user }: {
+		system = system;
+		configType = configType;
+		configName = configName;
+		user = user;
+	};
 
-	systemFromConfig = cfg: let
-		p = if cfg.platform == "darwin" then "darwin" else "linux";
-	in
-		"${cfg.architecture}-${p}";
+	configShortName = cfg: "${cfg.configType}-${cfg.configName}";
 
-	hashSystemConfig = cfg: "${cfg.platform}-${cfg.architecture}-${cfg.type}-${cfg.user}";
+	genSystemConfig = systems: make:
+	let
+		systemInfo = map (cfg: {
+				shortName = configShortName cfg;
+				config = cfg;
+		}) systems;
 
-	genSystemConfig = systems: make: nixpkgs.lib.genAttrs (map (s: s.type) systems) (type:
-		let 
-			cfg = builtins.elemAt (
-				# builtins.filter (c: hashSystemConfig c == hashSystemConfig config)
-				builtins.filter (c: c.type == type)
-				systems) 0;
-		in
-		  make cfg
-	);
+		systemByName = nixpkgs.lib.listToAttrs (map (
+			item: { name = item.shortName; value = item.config; }
+		) systemInfo);
+
+		allNames = builtins.attrNames systemByName;
+
+		findConfig = name:
+			let
+				matches = builtins.filter (s: s.shortName == name) systemInfo;
+			in
+				if builtins.length matches > 0 then
+					(builtins.head matches).config
+				else
+					throw "No configuration found for ${name}";
+	in 
+		nixpkgs.lib.genAttrs allNames (name:
+			let cfg = findConfig name; in make cfg
+		);
 in {
-	inherit makeSystemConfig systemFromConfig hashSystemConfig genSystemConfig;
+	inherit mkSystemConfig genSystemConfig;
 }

@@ -1,11 +1,10 @@
 { nixpkgs, overlays, inputs }:
 {
-	system,
-	config,
+	systemConfig,
 	extra-modules ? []
-}: {
-	inherit system;
-
+}: 
+{
+	system = systemConfig.system;
 	modules = [
 		{
 			nixpkgs.overlays = [
@@ -20,8 +19,7 @@
 
 		{
 			config._module.args = {
-				currentConfigType = config.type;
-				currentSystemUser = config.user;
+				inherit systemConfig;
 				inputs = inputs;
 			};
 		}
