@@ -62,3 +62,12 @@ eg `personal`. These specific machine configs can then pull in the base machine 
 ### `/overlays`
 Contains overlays, specifically only need package overlays for now so there is only
 a default.nix file in there.
+
+### `/tooling-scripts`
+Contains helper bash cli for switching and checking configs. Pulling down git repos
+and more. This is still a wip, but so far has been better to live with as compared
+to using a Makefile. Also just wanted to build a small bash cli as it's been a while
+since I've done one.
+
+To use the cli run `./tooling-scripts/main.sh`. Might alias this as some point in the
+future to allow for easier usage, but for now this is fine.
