@@ -7,17 +7,18 @@ let
 	mk-system-modules = import ./mk-system-modules.nix { inherit nixpkgs overlays inputs; };
 	config-lib = import ./mk-config-helpers.nix { inherit nixpkgs; };
 
-	machine-config = import ../machines/${config.platform}-${config.type}.nix;
+	machine-config = import ../machines/${config.type}-${config.platform}.nix;
 
-	machine-specific-imports = builtins.filter builtins.pathExists [
-		../modules/${config.type}/${config.platform}/machine-specific.nix
+	machine-extra-imports = builtins.filter builtins.pathExists [
+		../modules/${config.type}/machine.nix
+		../modules/${config.type}/machine-${config.platform}.nix
 	];
 	machine-module = machine-config {
-		inherit machine-specific-imports;
+		extra-imports = machine-extra-imports;
 		user = config.user;
 	};
 	
-	home-manager-config = import ../modules/${config.type}/${config.platform}/home-manager.nix;
+	home-manager-config = import ../modules/${config.type}/home-manager.nix;
 
 	home-manager-module = if config.platform == "darwin" then
 		[
