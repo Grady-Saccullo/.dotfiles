@@ -6,6 +6,7 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 export SCRIPT_DIR
 
 source "$SCRIPT_DIR/command-switch-config.sh"
+source "$SCRIPT_DIR/command-format.sh"
 source "$SCRIPT_DIR/lib/system.sh"
 
 
@@ -28,7 +29,10 @@ function main() {
 
 	case "$command" in
 		switch)
-			switch_config "$@"
+			command_switch_config "$@"
+			;;
+		format)
+			command_format "$@"
 			;;
 		*)
 			echo "Error: command not found"

@@ -21,9 +21,11 @@
       }
 
       {
+        # expose inputs and systemConfig globally so
+        # we have access to them with ease in other
+        # files
         config._module.args = {
-          inherit systemConfig;
-          inputs = inputs;
+          inherit systemConfig inputs;
         };
       }
     ]
