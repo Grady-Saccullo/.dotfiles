@@ -5,8 +5,9 @@ set -euo pipefail
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 export SCRIPT_DIR
 
-source "$SCRIPT_DIR/command-switch-config.sh"
 source "$SCRIPT_DIR/command-format.sh"
+source "$SCRIPT_DIR/command-switch-config.sh"
+source "$SCRIPT_DIR/command-test-config.sh"
 source "$SCRIPT_DIR/lib/system.sh"
 
 
@@ -14,7 +15,7 @@ function print_usage() {
 	echo "Usage: $0 <command> [options]"
 	echo "Commands:"
 	echo "	switch <config name>"
-	echo "	check <config name> [--verbose]"
+	echo "	test <config name>"
 	echo "	format"
 }
 
@@ -31,6 +32,10 @@ function main() {
 	case "$command" in
 		switch)
 			command_switch_config "$@"
+			;;
+
+		test)
+			command_test_config "$@"
 			;;
 		format)
 			command_format "$@"
