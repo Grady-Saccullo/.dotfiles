@@ -1,21 +1,24 @@
-{ pkgs, config, ... }:
-let 
-	configDir = "${config.home.homeDirectory}/.dotfiles/configs/nvim/.config/nvim";
+{
+  pkgs,
+  config,
+  ...
+}: let
+  configDir = "${config.home.homeDirectory}/.dotfiles/configs/nvim/.config/nvim";
 in {
-	xdg.configFile."nvim" = {
-		source = config.lib.file.mkOutOfStoreSymlink configDir;
-		recursive = true;
-	};
+  xdg.configFile."nvim" = {
+    source = config.lib.file.mkOutOfStoreSymlink configDir;
+    recursive = true;
+  };
 
-	programs = {
-		neovim = {
-			enable = true;
-			package = pkgs.unstable.neovim-unwrapped;
+  programs = {
+    neovim = {
+      enable = true;
+      package = pkgs.unstable.neovim-unwrapped;
 
-			withPython3 = true;
+      withPython3 = true;
 
-			viAlias = true;
-			vimAlias = true;
-		};
-	};
+      viAlias = true;
+      vimAlias = true;
+    };
+  };
 }
