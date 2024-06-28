@@ -38,9 +38,25 @@ function _switch_config_generic_linux() {
 	exit 1
 }
 
-# Switch the current config for the system
+# Switch to a specified Nix configuration or use the current one
 #
-# Note: This will always set the nix config file
+# This function handles switching between Nix configurations. It can use
+# the currently set configuration or a new one specified as an argument.
+# If no argument is provided, it prompts the user to confirm using the 
+# current configuration.
+#
+# Usage:
+#   switch_config [config_name]
+#
+# Arguments:
+#   $1 - config_name (optional): The name of the Nix configuration to switch to
+#
+# Returns:
+#	void
+#
+# Exit Status:
+#   1 if the user decides not to proceed with the current config when no argument is provided
+#
 function switch_config() {
 	local config_name
 	config_name="$(read_nix_config)"

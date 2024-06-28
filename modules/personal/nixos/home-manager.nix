@@ -1,7 +1,7 @@
 { pkgs, ... }:
 {
 	imports = [
-		../../shared/configs
+		../../shared/programs
 	];
 
 	# TODO: look into home manager state version
@@ -9,24 +9,9 @@
 
 	xdg.enable = true;
 
-	home.packages = with pkgs;  [
-		asciinema #TODO explore asciinema
-		bat
-		gh
-		htop
-		jq
-		nodejs_22
-		ripgrep
-		stow
-		tree
-		git-credential-oauth
-		spice-vdagent
+	home.packages = pkgs.callPackage ./home-packages.nix {};
 
-		gnumake
-		brave
-		firefox
-		spotify
-	];
+	home.file = import ../shared/home-files.nix;
 
 	home.sessionVariables = {
 		EDITOR = "vim";

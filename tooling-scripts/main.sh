@@ -16,6 +16,7 @@ function print_usage() {
 	echo "	check <config name> [--verbose]"
 }
 
+
 function main() {
 	if [ $# -eq 0 ]; then
 		print_usage

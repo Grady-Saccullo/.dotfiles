@@ -6,7 +6,7 @@
 # Usage:
 #   is_nixos
 #
-# Returns:
+# Returns (int):
 #   0 if the system is NixOS
 #   1 if the system is not NixOS or if /etc/os-release doesn't exist
 #
@@ -33,8 +33,8 @@ function is_nixos() {
 # Usage:
 #   current_system
 #
-# Returns:
-#   Prints the kernel name to stdout. Common values include:
+# Returns (stdout):
+#   Prints the kernel name. Common values include:
 #   - "Linux" for Linux-based systems
 #   - "Darwin" for macOS
 #   - "FreeBSD" for FreeBSD systems
@@ -58,12 +58,13 @@ function current_os() {
 # Run appropriate function based on the system type. Function will
 # exit 1 if no match found.
 #
-# Usage: run_for_system <darwin_func> <nixos_func> <generic_linux_func>
+# Usage:
+#	run_for_system <darwin_func> <nixos_func> <generic_linux_func>
 #
 # Parameters:
-#   $1 - Function to run for Darwin (macOS) systems
-#   $2 - Function to run for NixOS systems
-#   $3 - Function to run for generic Linux systems
+#   $1 - darwin function: Function to run for Darwin (macOS) systems
+#   $2 - nixos_function: Function to run for NixOS systems
+#   $3 - generic_linux_function: Function to run for generic Linux systems
 #
 # Returns:
 #	void
@@ -75,9 +76,7 @@ function current_os() {
 #		setup_generic_linux
 #
 function run_for_system() {
-	local os
-	os=$(current_os)
-	case "$os" in
+	case $(current_os) in
 		Darwin)
 			$1
 			;;

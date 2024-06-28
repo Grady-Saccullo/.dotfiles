@@ -1,7 +1,7 @@
-{ pkgs, ... }:
+{ pkgs, config, ... }:
 {
 	imports = [
-		../../shared/configs
+		../../shared/programs
 	];
 
 	# TODO: look into home manager state version
@@ -9,19 +9,9 @@
 
 	xdg.enable = true;
 
-	home.packages = with pkgs;  [
-		asciinema #TODO explore asciinema
-		bat
-		gh
-		htop
-		jq
-		nodejs_22
-		ripgrep
-		stow
-		tree
+	home.packages = pkgs.callPackage ./home-packages.nix {};
 
-		discord
-	];
+	home.file = import ../shared/home-files.nix { inherit config; };
 
 	home.sessionVariables = {
 		EDITOR = "vim";

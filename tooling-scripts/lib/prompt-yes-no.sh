@@ -7,7 +7,7 @@
 #   prompt_yes_no "Do you want to continue?"
 #
 # Arguments:
-#   $1 - The prompt message to display to the user
+#   $1 - prompt: The message to display to the user
 #
 # Returns:
 #   0 user answered yes

@@ -7,7 +7,7 @@
 #   set_nix_config <config_name>
 #
 # Arguments:
-#   $1 - The name of the Nix configuration to set
+#   $1 - config_name: The name of the Nix configuration to set
 #
 # Output:
 #   Writes the configuration name to ./.nix-config-name

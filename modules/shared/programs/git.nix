@@ -17,8 +17,8 @@
 			};
 
 			extraConfig = {
-      				credential.helper = "oauth";
-    			};
+				credential.helper = "oauth";
+    		};
 		};
 	};
 }
