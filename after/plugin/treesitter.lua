@@ -1,20 +1,29 @@
+local parsers_path = vim.g.treesitter_parsers_path
 require('nvim-treesitter.configs').setup({
-	ensure_installed = {
-		"go",
-		"html",
-		"javascript",
-		"json",
-		"lua",
-		"typescript",
-		"tsx",
-		"python",
-		"swift"
-	},
+	-- IF NIX
+	-- ensure_installed = {},
+	-- ELSE
+	-- ensure_installed = {
+	-- 	"go",
+	-- 	"html",
+	-- 	"javascript",
+	-- 	"json",
+	-- 	"lua",
+	-- 	"typescript",
+	-- 	"tsx",
+	-- 	"python",
+	-- 	"swift"
+	-- },
+	ensure_installed = {},
+	parser_install_dir = parsers_path,
 	modules = {},
 	auto_install = false,
 	ignore_install = {},
 	sync_install = false,
-	highlight = { enable = true, additional_vim_regex_highlighting = false },
+	highlight = {
+		enable = true,
+		additional_vim_regex_highlighting = false
+	},
 	indent = { enable = true },
 	incremental_selection = {
 		enable = true,

@@ -31,5 +31,13 @@ require("lazy").setup("plugins", {
 			start = "🚀",
 			task = "📌",
 		}
+	};
+	dev = {
+		path = "~/.local/share/nvim/nix/",
+		fallback = false
 	}
 })
+
+-- IF NIX: nix will create this file which will
+-- append the contents of treesitter parsers
+require('configs.nix')

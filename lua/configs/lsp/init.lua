@@ -131,12 +131,7 @@ local servers = {
 	cssls = {},
 	ocamllsp = {},
 	angularls = {},
-	sqlls = {
-		root_dir = function()
-			return vim.loop.cwd()
-		end,
-		cmd = { 'sql-language-server', 'up', '--method', 'stdio', '-d', 'true' },
-	},
+	sqls = {},
 	sourcekit = {
 		cmd = {
 			'xcrun',
@@ -153,7 +148,6 @@ local servers = {
 			"Project.swift"
 		),
 	},
-	kotlin_language_server = {},
 	nil_ls = {},
 	dockerls = {},
 	jsonls = {},
@@ -162,11 +156,31 @@ local servers = {
 	htmx = {
 		filetypes = { "html", "templ" }
 	},
+	rust_analyzer = {
+		settings = {
+			-- check = {
+			-- 	command = "cluippy";
+			-- },
+			diagnostics = {
+				enable = true;
+			}
+		}
+	}
 }
+
+local lsp_names = {}
+
+
+for name, _ in pairs(servers) do
+	table.insert(lsp_names, name)
+end
 
 require('mason').setup()
 require('mason-lspconfig').setup({
-	ensure_installed = { 'lua_ls', 'bashls', 'sqlls' }
+	-- IF NIX: 
+	ensure_installed = {}
+	-- ELSE:
+	-- ensure_installed = lsp_names
 })
 
 local capabilities = vim.lsp.protocol.make_client_capabilities()
