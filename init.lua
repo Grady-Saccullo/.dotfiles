@@ -1,5 +1,6 @@
 -- Setup Globals --
 require('configs.globals')
+require('configs.nix')
 
 -- Lazy setup --
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
@@ -31,5 +32,9 @@ require("lazy").setup("plugins", {
 			start = "🚀",
 			task = "📌",
 		}
+	};
+	dev = {
+		path = "~/.local/share/nvim/nix/",
+		fallback = false
 	}
 })
