@@ -17,9 +17,5 @@ in {
 
   home.file = home-file;
 
-  home.sessionVariables = {
-    EDITOR = "vim";
-  };
-
   xdg.enable = true;
 }

@@ -12,6 +12,7 @@ in
       nodejs_22
       ripgrep
       tree
+      unstable.zig
     ]
     ++ (lib.optionals isLinux [
       # additional packages
