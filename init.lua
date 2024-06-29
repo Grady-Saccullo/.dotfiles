@@ -1,6 +1,5 @@
 -- Setup Globals --
 require('configs.globals')
-require('configs.nix')
 
 -- Lazy setup --
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
@@ -38,3 +37,7 @@ require("lazy").setup("plugins", {
 		fallback = false
 	}
 })
+
+-- IF NIX: nix will create this file which will
+-- append the contents of treesitter parsers
+require('configs.nix')
