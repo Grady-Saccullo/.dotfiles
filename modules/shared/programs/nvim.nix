@@ -5,21 +5,23 @@
 }: let
   configDir = "${config.home.homeDirectory}/.dotfiles/configs/nvim/.config/nvim";
 
-  treesitterPlugins = pkgs.vimPlugins.nvim-treesitter.withPlugins (p: [
-    p.bash
-    p.dockerfile
-    p.go
-    p.css
-    p.html
-    p.json
-    p.lua
-    p.nix
-    p.ocaml
-    p.python
-    p.rust
-    p.swift
-    p.tsx
-    p.typescript
+  treesitterPlugins = pkgs.vimPlugins.nvim-treesitter.withPlugins (p: with p; [
+    angular
+    bash
+    css
+    dockerfile
+    go
+    html
+    json
+    lua
+    nix
+    ocaml
+    python
+    rust
+    swift
+    tsx
+    typescript
+    zig
   ]);
 
   treesitterParsers = pkgs.symlinkJoin {
@@ -53,17 +55,21 @@ in {
 
     extraPackages = with pkgs.unstable; [
       # lsp made available only to nvim
+      docker-compose-language-service
       gopls
       htmx-lsp
       lua-language-server
       nil
+      nodePackages.typescript-language-server
       ocamlPackages.lsp
       pyright
       rust-analyzer
       sourcekit-lsp
       sqls
       templ
+      typescript
       vscode-langservers-extracted
+      yaml-language-server
       zls
     ];
   };

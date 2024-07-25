@@ -15,9 +15,9 @@
         enable = true;
       };
 
-      extraConfig = {
-        credential.helper = "oauth";
-      };
+      # extraConfig = {
+      #   credential.helper = "oauth";
+      # };
     };
   };
 }

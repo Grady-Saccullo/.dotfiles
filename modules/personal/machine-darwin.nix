@@ -17,6 +17,7 @@
       "spotify"
       "utm"
       "vmware-fusion"
+      "wireshark"
     ];
   };
 }

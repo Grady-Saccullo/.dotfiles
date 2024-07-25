@@ -4,7 +4,9 @@
   systemConfig,
   ...
 }: {
+
   nix.useDaemon = true;
+
   nix = {
     extraOptions = ''
       experimental-features = nix-command flakes
