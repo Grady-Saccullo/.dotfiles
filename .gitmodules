@@ -10,3 +10,6 @@
 [submodule "repos/work/seer"]
 	path = repos/work/seer
 	url = https://github.com/Grady-Saccullo/.dotfiles-seer
+[submodule "repos/krinkle"]
+	path = repos/krinkle
+	url = https://github.com/Grady-Saccullo/.dotfiles-krinkle
