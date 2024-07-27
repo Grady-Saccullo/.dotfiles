@@ -21,6 +21,7 @@
     swift
     tsx
     typescript
+    yaml
     zig
   ]);
 
