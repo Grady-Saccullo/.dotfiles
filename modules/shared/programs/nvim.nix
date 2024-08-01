@@ -12,7 +12,9 @@
     dockerfile
     go
     html
+    java
     json
+    kotlin
     lua
     nix
     ocaml
