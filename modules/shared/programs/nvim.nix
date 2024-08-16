@@ -19,6 +19,7 @@
     nix
     ocaml
     python
+    regex
     rust
     swift
     tsx
@@ -58,11 +59,14 @@ in {
 
     extraPackages = with pkgs.unstable; [
       # lsp made available only to nvim
+      delve
       docker-compose-language-service
       gopls
       htmx-lsp
+      kotlin-language-server
       lua-language-server
       nil
+      nodePackages.bash-language-server
       nodePackages.typescript-language-server
       ocamlPackages.lsp
       pyright
