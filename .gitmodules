@@ -1,6 +1,3 @@
-[submodule "configs/nvim/.config/nvim"]
-	path = configs/nvim/.config/nvim
-	url = https://github.com/Grady-Saccullo/nvim
 [submodule "repos/personal"]
 	path = repos/personal
 	url = https://github.com/Grady-Saccullo/.dotfiles-personal
