@@ -1,7 +1,19 @@
 local neodev = vim.F.npcall(require, "neodev")
 if neodev then
-	neodev.setup({})
+	neodev.setup({
+		library = {
+			plugins = { "nvim-dap-ui" },
+			types = true
+		},
+	})
 end
+
+
+require('java').setup()
+-- local java = vim.F.npcall(require, "java")
+-- if java then
+-- 	return
+-- end
 
 local lspconfig = vim.F.npcall(require, "lspconfig")
 if not lspconfig then
@@ -123,14 +135,19 @@ local servers = {
 			},
 		},
 	},
-	yamlls = {},
+	yamlls = {
+		settings = {
+			schemas = {}
+		}
+	},
 	pyright = {},
 	html = {
 		filetypes = { "html", "templ" }
 	},
 	cssls = {},
 	ocamllsp = {},
-	angularls = {},
+	-- leaving out until i write a overlay for this
+	-- angularls = {},
 	sqls = {},
 	sourcekit = {
 		cmd = {
@@ -150,8 +167,31 @@ local servers = {
 	},
 	nil_ls = {},
 	dockerls = {},
+	kotlin_language_server = {},
 	jsonls = {},
-	zls = {},
+	jdtls = {
+		settings = {
+			java = {
+			  configuration = {
+				runtimes = {
+				  {
+					name = "JavaSE-11",
+					path = os.getenv("JAVA_HOME"),
+					default = true
+				  },
+				  {
+					name = "JavaSE-17",
+					path = os.getenv("JAVA_HOME"),
+					default = false
+				  }
+				}
+			  }
+			}
+		}
+	},
+	zls = {
+		enable_build_on_save = true,
+	},
 	templ = {},
 	htmx = {
 		filetypes = { "html", "templ" }
@@ -165,11 +205,18 @@ local servers = {
 				enable = true;
 			}
 		}
+	},
+	ruby_lsp = {
+		mason = false,
+		-- cmd = { 'ruby-lsp-wrapper' },
+		init_options = {
+			formatter = 'standard',
+			linters = { 'standard' },
+		}
 	}
 }
 
 local lsp_names = {}
-
 
 for name, _ in pairs(servers) do
 	table.insert(lsp_names, name)

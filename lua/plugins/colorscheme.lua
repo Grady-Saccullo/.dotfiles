@@ -14,6 +14,7 @@ return {
 		"nyoom-engineering/oxocarbon.nvim",
 		config = function(_, opts) 
 			vim.opt.background = "dark"
+			vim.opt.termguicolors = true
 			vim.cmd("colorscheme oxocarbon")
 		end
 	},
