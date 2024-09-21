@@ -22,4 +22,5 @@ in
       brave
       firefox
       spotify
+      wezterm
     ])
