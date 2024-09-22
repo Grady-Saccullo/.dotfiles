@@ -1,6 +1,4 @@
-{pkgs, ...}: let
-  isDarwin = pkgs.stdenv.isDarwin;
-in {
+_: {
   programs = {
     zsh = {
       enable = true;
@@ -12,14 +10,6 @@ in {
       shellAliases = {
           l = "ls -la";
         };
-        # // (
-        #   if isDarwin
-        #   then {
-        #     # temporary until fully move homebrew casks to nix
-        #     brew = "/opt/homebrew/bin/brew";
-        #   }
-        #   else {}
-        # );
 
       oh-my-zsh = {
         enable = true;

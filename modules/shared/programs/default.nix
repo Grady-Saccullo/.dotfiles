@@ -5,8 +5,8 @@
     ./direnv.nix
     ./git.nix
     ./neovim
-    ./tmux.nix
-    ./wezterm.nix
+    ./tmux
+    ./wezterm
     ./zsh.nix
   ];
 }
