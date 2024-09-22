@@ -1,11 +1,4 @@
--- local parsers_path = vim.g.treesitter_parsers_path
 require('nvim-treesitter.configs').setup({
-	ensure_installed = {},
-	-- parser_install_dir = parsers_path,
-	modules = {},
-	auto_install = false,
-	ignore_install = {},
-	sync_install = false,
 	highlight = {
 		enable = true,
 		additional_vim_regex_highlighting = false
@@ -62,7 +55,5 @@ require('nvim-treesitter.configs').setup({
 				['<leader>A'] = '@parameter.inner',
 			},
 		},
-	},
+	}
 })
-
-require("treesitter-context").setup { enable = true }

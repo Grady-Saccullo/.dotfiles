@@ -1,31 +1,5 @@
-local neodev = vim.F.npcall(require, "neodev")
-if neodev then
-	neodev.setup({
-		library = {
-			plugins = { "nvim-dap-ui" },
-			types = true
-		},
-	})
-end
-
-
-require('java').setup()
--- local java = vim.F.npcall(require, "java")
--- if java then
--- 	return
--- end
-
-local lspconfig = vim.F.npcall(require, "lspconfig")
-if not lspconfig then
-	print("lspconfig nil!")
-	return
-end
-
 local telescope = vim.F.npcall(require, "telescope.builtin")
-if not telescope then
-	print("telescope nil!")
-	return
-end
+local lspconfig = vim.F.npcall(require, "lspconfig")
 
 local templ_format = function()
 	local bufnr = vim.api.nvim_get_current_buf()
@@ -42,10 +16,6 @@ local templ_format = function()
 end
 
 local custom_attach = function(client, bufnr)
-	if client.name == "copilot" then
-		return
-	end
-
 	local nmap = function(keys, func, desc)
 		if desc then
 			desc = 'LSP: ' .. desc
@@ -96,7 +66,27 @@ local custom_attach = function(client, bufnr)
 	end, '[F]ormat')
 end
 
+local capabilities = require('cmp_nvim_lsp').default_capabilities(
+	vim.lsp.protocol.make_client_capabilities()
+)
 
+local setup_server = function(server, config)
+	if not config then
+		print("oh no... missing config")
+		return
+	end
+
+	if type(config) ~= "table" then
+		config = {}
+	end
+
+	local meshed_config = vim.tbl_deep_extend("force", {
+		on_attach = custom_attach,
+		capabilities = capabilities,
+	}, config)
+
+	lspconfig[server].setup(meshed_config)
+end
 
 local servers = {
 	bashls = {},
@@ -172,20 +162,20 @@ local servers = {
 	jdtls = {
 		settings = {
 			java = {
-			  configuration = {
-				runtimes = {
-				  {
-					name = "JavaSE-11",
-					path = os.getenv("JAVA_HOME"),
-					default = true
-				  },
-				  {
-					name = "JavaSE-17",
-					path = os.getenv("JAVA_HOME"),
-					default = false
-				  }
+				configuration = {
+					runtimes = {
+						{
+							name = "JavaSE-11",
+							path = os.getenv("JAVA_HOME"),
+							default = true
+						},
+						{
+							name = "JavaSE-17",
+							path = os.getenv("JAVA_HOME"),
+							default = false
+						}
+					}
 				}
-			  }
 			}
 		}
 	},
@@ -198,17 +188,13 @@ local servers = {
 	},
 	rust_analyzer = {
 		settings = {
-			-- check = {
-			-- 	command = "cluippy";
-			-- },
 			diagnostics = {
-				enable = true;
+				enable = true,
 			}
 		}
 	},
 	ruby_lsp = {
 		mason = false,
-		-- cmd = { 'ruby-lsp-wrapper' },
 		init_options = {
 			formatter = 'standard',
 			linters = { 'standard' },
@@ -216,62 +202,6 @@ local servers = {
 	}
 }
 
-local lsp_names = {}
-
-for name, _ in pairs(servers) do
-	table.insert(lsp_names, name)
-end
-
-require('mason').setup()
-require('mason-lspconfig').setup({
-	-- IF NIX: 
-	ensure_installed = {}
-	-- ELSE:
-	-- ensure_installed = lsp_names
-})
-
-local capabilities = vim.lsp.protocol.make_client_capabilities()
-capabilities = require('cmp_nvim_lsp').default_capabilities(capabilities)
-
-local setup_server = function(server, config)
-	if not config then
-		print("oh no... missing config")
-		return
-	end
-
-	if type(config) ~= "table" then
-		config = {}
-	end
-
-	local meshed_config = vim.tbl_deep_extend("force", {
-		on_attach = custom_attach,
-		capabilities = capabilities,
-	}, config)
-
-	lspconfig[server].setup(meshed_config)
-end
-
 for server, config in pairs(servers) do
 	setup_server(server, config)
 end
-
-
-vim.filetype.add {
-	extension = {
-		zsh = 'sh',
-		sh = 'sh',
-	},
-	filename = {
-		['.zshrc'] = 'sh',
-		['.zshenv'] = 'sh',
-		['.zsh'] = 'sh',
-	}
-}
-vim.filetype.add {
-	extension = { templ = 'templ' }
-}
-
-return {
-	on_attach = custom_attach,
-	capabilities = capabilities,
-}

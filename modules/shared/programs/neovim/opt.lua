@@ -4,7 +4,6 @@ local o = vim.opt
 o.relativenumber = true
 o.number = true
 
-
 o.inccommand = "split"
 
 o.showcmd = true

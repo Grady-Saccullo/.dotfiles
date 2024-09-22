@@ -4,7 +4,7 @@
   imports = [
     ./direnv.nix
     ./git.nix
-    ./nvim.nix
+    ./neovim
     ./tmux.nix
     ./wezterm.nix
     ./zsh.nix

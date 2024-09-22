@@ -1,5 +1,3 @@
-
-
 function command_repos() {
 	case "$1" in
 		sync)
