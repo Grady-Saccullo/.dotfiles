@@ -1,13 +1,13 @@
 -- Setup file types --
-vim.filetype.add {
+vim.filetype.add({
 	extension = {
-		zsh = 'sh',
-		sh = 'sh',
-		extension = { templ = 'templ' }
+		zsh = "sh",
+		sh = "sh",
+		extension = { templ = "templ" },
 	},
 	filename = {
-		['.zshrc'] = 'sh',
-		['.zshenv'] = 'sh',
-		['.zsh'] = 'sh',
-	}
-}
+		[".zshrc"] = "sh",
+		[".zshenv"] = "sh",
+		[".zsh"] = "sh",
+	},
+})

@@ -25,8 +25,8 @@ o.tabstop = 4
 o.shiftwidth = 4
 o.softtabstop = 4
 
-o.mouse = 'a'
+o.mouse = "a"
 
 -- Spellcheck --
-o.spelllang = 'en_us'
+o.spelllang = "en_us"
 o.spell = true

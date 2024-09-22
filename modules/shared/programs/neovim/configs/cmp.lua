@@ -9,7 +9,7 @@ cmp.setup({
 	snippet = {
 		expand = function(args)
 			luasnip.lsp_expand(args.body)
-		end
+		end,
 	},
 	completion = {
 		completeopt = "menu,menuone,noinsert",
@@ -20,13 +20,13 @@ cmp.setup({
 		["<C-Space>"] = cmp.mapping.complete(),
 		["<S-CR>"] = cmp.mapping.confirm({
 			behavior = cmp.ConfirmBehavior.Insert,
-			select = true
+			select = true,
 		}),
 	}),
 	sources = cmp.config.sources({
-		{ name = "nvim_lsp", priority = 8,      keyword_length = 1 },
-		{ name = "path",     keyword_length = 3 },
-		{ name = "luasnip",  keyword_length = 2 }
+		{ name = "nvim_lsp", priority = 8, keyword_length = 1 },
+		{ name = "path", keyword_length = 3 },
+		{ name = "luasnip", keyword_length = 2 },
 	}, {
 		name = "buffer",
 	}),
@@ -38,7 +38,7 @@ cmp.setup({
 			cmp.config.compare.locality,
 			cmp.config.compare.offset,
 			cmp.config.compare.order,
-		}
+		},
 	},
 	formatting = {
 		expandable_indicator = true,
@@ -46,16 +46,14 @@ cmp.setup({
 		format = lspkind.cmp_format({
 			mode = "text",
 			maxwidth = 50,
-			ellipsis_char = "..."
-		})
-	}
+			ellipsis_char = "...",
+		}),
+	},
 })
 
-cmp.setup.cmdline(
-	{ '/', '?' },
-	{
-		mapping = cmp.mapping.preset.cmdline(),
-		sources = {
-			{ name = 'buffer' }
-		}
-	})
+cmp.setup.cmdline({ "/", "?" }, {
+	mapping = cmp.mapping.preset.cmdline(),
+	sources = {
+		{ name = "buffer" },
+	},
+})

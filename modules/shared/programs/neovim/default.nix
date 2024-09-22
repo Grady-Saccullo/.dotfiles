@@ -61,6 +61,7 @@ in {
       rust-analyzer
       sourcekit-lsp
       sqls
+      stylua
       templ
       typescript
       typescript
