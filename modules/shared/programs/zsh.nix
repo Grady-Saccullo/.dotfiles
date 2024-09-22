@@ -5,11 +5,12 @@ _: {
 
       # TODO: make darwin specific
       initExtra = ''
-          eval "$(/opt/homebrew/bin/brew shellenv)"
+        eval "$(/opt/homebrew/bin/brew shellenv)"
       '';
+
       shellAliases = {
-          l = "ls -la";
-        };
+        l = "ls -la";
+      };
 
       oh-my-zsh = {
         enable = true;

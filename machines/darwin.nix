@@ -4,7 +4,6 @@
   systemConfig,
   ...
 }: {
-
   nix.useDaemon = true;
 
   nix = {

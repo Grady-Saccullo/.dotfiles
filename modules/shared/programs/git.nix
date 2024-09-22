@@ -14,10 +14,6 @@
       delta = {
         enable = true;
       };
-
-      # extraConfig = {
-      #   credential.helper = "oauth";
-      # };
     };
   };
 }

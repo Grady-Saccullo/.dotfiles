@@ -1,40 +1,38 @@
-{
-  pkgs,
-  ...
-}: let
+{pkgs, ...}: let
   vim-plugins = pkgs.unstable.vimPlugins;
 
-  treesitter-plugins = vim-plugins.nvim-treesitter.withPlugins (p: with p; [
-    angular
-    bash
-    comment
-    css
-    dockerfile
-    gitignore
-    go
-    html
-    java
-    javascript
-    jq
-    json
-    kotlin
-    lua
-    make
-    nix
-    ocaml
-    python
-    regex
-    ruby
-    rust
-    sql
-    swift
-    templ
-    toml
-    tsx
-    typescript
-    yaml
-    zig
-  ]);
+  treesitter-plugins = vim-plugins.nvim-treesitter.withPlugins (p:
+    with p; [
+      angular
+      bash
+      comment
+      css
+      dockerfile
+      gitignore
+      go
+      html
+      java
+      javascript
+      jq
+      json
+      kotlin
+      lua
+      make
+      nix
+      ocaml
+      python
+      regex
+      ruby
+      rust
+      sql
+      swift
+      templ
+      toml
+      tsx
+      typescript
+      yaml
+      zig
+    ]);
 in {
   programs.neovim = {
     enable = true;
@@ -71,15 +69,15 @@ in {
     ];
 
     extraLuaConfig = ''
-    	${builtins.readFile ./filetype.lua}
-    	${builtins.readFile ./globals.lua}
-    	${builtins.readFile ./keymap.lua}
-    	${builtins.readFile ./opt.lua}
+      ${builtins.readFile ./filetype.lua}
+      ${builtins.readFile ./globals.lua}
+      ${builtins.readFile ./keymap.lua}
+      ${builtins.readFile ./opt.lua}
     '';
 
     plugins = [
       {
-      	plugin = vim-plugins.gitsigns-nvim;
+        plugin = vim-plugins.gitsigns-nvim;
         config = builtins.readFile configs/gitsigns.lua;
         type = "lua";
       }
@@ -89,30 +87,29 @@ in {
         config = builtins.readFile configs/treesitter.lua;
         type = "lua";
       }
-      
+
       {
-      	plugin = vim-plugins.nvim-cmp;
-	      config = builtins.readFile configs/cmp.lua;
-	      type = "lua";
+        plugin = vim-plugins.nvim-cmp;
+        config = builtins.readFile configs/cmp.lua;
+        type = "lua";
       }
 
       {
-      	plugin = vim-plugins.nvim-lspconfig;
-	      config = builtins.readFile configs/lspconfig.lua;
-	      type = "lua";
+        plugin = vim-plugins.nvim-lspconfig;
+        config = builtins.readFile configs/lspconfig.lua;
+        type = "lua";
       }
 
       {
-      	plugin = vim-plugins.oxocarbon-nvim;
-	      config = builtins.readFile configs/colorscheme.lua;
-	      type = "lua";
+        plugin = vim-plugins.oxocarbon-nvim;
+        config = builtins.readFile configs/colorscheme.lua;
+        type = "lua";
       }
 
-
       {
-      	plugin = vim-plugins.telescope-nvim;
-	      config = builtins.readFile configs/telescope.lua;
-	      type = "lua";
+        plugin = vim-plugins.telescope-nvim;
+        config = builtins.readFile configs/telescope.lua;
+        type = "lua";
       }
 
       {
@@ -145,7 +142,7 @@ in {
   };
 
   home.file."./.config/nvim/after/" = {
-	  source = ./after;
-	  recursive = true;
+    source = ./after;
+    recursive = true;
   };
 }
