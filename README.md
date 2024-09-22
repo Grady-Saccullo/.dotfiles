@@ -23,12 +23,6 @@ Naming conventions used below:
 - `config-type`: the name for a specific config, e.g. `personal`, `work`, `slim-dev`
 - `machine-type`: the name for a specific machine, e.g. `darwin`, `nixos`, `nixos-vm-fusion`, `fedora`
 
-### `/configs`
-Contains my configs for tooling which I want to maintain outside nix. Although this does
-not follow the "nix way", I personally prefer this. Specifically I like having neovim in
-its own repo. This was a pain point initially, but eventually got it working as I wanted.
-
-
 ### `/lib`
 Contains helper functions for nix.
 
