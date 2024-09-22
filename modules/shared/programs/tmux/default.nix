@@ -1,9 +1,11 @@
-{pkgs, ...}: {
+{
+  pkgs,
+  ...
+}: {
   programs = {
     tmux = {
       enable = true;
-      extraConfig = builtins.readFile ../../../configs/tmux/.tmux.conf;
-
+      extraConfig = builtins.readFile ./.tmux.conf;
       plugins = with pkgs.tmuxPlugins; [
         continuum
         tmux-fzf
