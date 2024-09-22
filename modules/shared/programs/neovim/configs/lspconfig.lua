@@ -62,6 +62,8 @@ local custom_attach = function(client, bufnr)
 			vim.cmd("Neoformat prettier")
 		elseif client.name == "lua_ls" then
 			vim.cmd("Neoformat stylua")
+		elseif client.name == "nil_ls" then
+			vim.cmd("Neoformat alejandra")
 		else
 			vim.lsp.buf.format()
 		end

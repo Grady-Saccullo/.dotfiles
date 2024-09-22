@@ -3,7 +3,10 @@ vim.filetype.add({
 	extension = {
 		zsh = "sh",
 		sh = "sh",
-		extension = { templ = "templ" },
+		extension = {
+			templ = "templ",
+			tmpl = "templ",
+		},
 	},
 	filename = {
 		[".zshrc"] = "sh",

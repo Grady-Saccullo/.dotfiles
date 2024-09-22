@@ -9,11 +9,6 @@
 
     onActivation.cleanup = "uninstall";
 
-    brews = [
-      "carthage"
-      "neofetch"
-    ];
-
     casks = [
       "1password"
       "android-studio"
