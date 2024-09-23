@@ -71,6 +71,7 @@ in {
     extraLuaConfig = ''
       ${builtins.readFile ./filetype.lua}
       ${builtins.readFile ./globals.lua}
+      ${builtins.readFile ./highlight.lua}
       ${builtins.readFile ./keymap.lua}
       ${builtins.readFile ./opt.lua}
     '';
