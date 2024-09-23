@@ -1,4 +1,4 @@
-{...}: {
+_: {
   imports = [
     ./machine-base.nix
     ../../machines/darwin.nix
