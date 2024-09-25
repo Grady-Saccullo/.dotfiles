@@ -57,7 +57,7 @@ in {
       pyright
       rubyPackages.ruby-lsp
       rust-analyzer
-      sourcekit-lsp
+      # sourcekit-lsp
       sqls
       stylua
       templ
@@ -119,7 +119,6 @@ in {
         type = "lua";
       }
 
-      vim-plugins.zig-vim
       vim-plugins.cmp-buffer
       vim-plugins.cmp-nvim-lsp
       vim-plugins.cmp-nvim-lua
@@ -139,6 +138,7 @@ in {
       vim-plugins.vim-fugitive
       vim-plugins.vim-rhubarb
       vim-plugins.vim-vinegar
+      vim-plugins.zig-vim
     ];
   };
 

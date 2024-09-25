@@ -98,7 +98,7 @@ local servers = {
 			telemetry = { enable = false },
 		},
 	},
-	tsserver = {
+	ts_ls = {
 		init_options = require("nvim-lsp-ts-utils").init_options,
 		cmd = { "typescript-language-server", "--stdio" },
 		on_attach = function(client, bufnr)

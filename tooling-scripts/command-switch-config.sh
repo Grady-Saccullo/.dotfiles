@@ -12,9 +12,10 @@ function _command_switch_config_darwin() {
 
 	nix build \
 		--extra-experimental-features 'nix-command flakes' \
-		"$(pwd)#darwinConfigurations.$config_name.system"
+		"$(pwd)#darwinConfigurations.$config_name.system" \
+		--show-trace
 
-	./result/sw/bin/darwin-rebuild switch --flake "$(pwd)#$config_name"
+	./result/sw/bin/darwin-rebuild switch --flake "$(pwd)#$config_name" --show-trace
 }
 
 

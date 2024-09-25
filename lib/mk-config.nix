@@ -23,16 +23,19 @@ let
         ++ hm-modules;
     };
 
+  base-home-manger-config = {
+    home-manager.useGlobalPkgs = true;
+    home-manager.useUserPackages = true;
+    home-manager.users.${systemConfig.user} = home-manager-config;
+  };
+
   built-config =
     if isPlatform "darwin"
     then let
       system = buildSystem [
+        (inputs.nix-homebrew.darwinModules.nix-homebrew)
         (inputs.home-manager.darwinModules.home-manager)
-        {
-          home-manager.useGlobalPkgs = true;
-          home-manager.useUserPackages = true;
-          home-manager.users.${systemConfig.user} = home-manager-config;
-        }
+        (base-home-manger-config)
       ];
     in
       inputs.darwin.lib.darwinSystem system
@@ -40,11 +43,7 @@ let
     then let
       system = buildSystem [
         (inputs.home-manager.nixosModules.home-manager)
-        {
-          home-manager.useGlobalPkgs = true;
-          home-manager.useUserPackages = true;
-          home-manager.users.${systemConfig.user} = home-manager-config;
-        }
+        (base-home-manger-config)
       ];
     in
       nixpkgs.lib.nixosSystem system

@@ -16,14 +16,19 @@ in {
       // mas.todoist;
 
     casks = [
+      "1password"
+      "android-studio"
       "betterdisplay"
       "brave-browser"
       "discord"
       "docker"
       "google-chrome"
+      "postman"
+      "slack"
       "soundsource"
       "spotify"
       "wezterm"
+      "zoom"
     ];
   };
 }
