@@ -3,19 +3,42 @@
   config,
   ...
 }: let
-  home-packages = pkgs.callPackage ./packages.nix {};
-  home-file = import ./file.nix {inherit config;};
+  isLinux = pkgs.stdenv.isLinux;
+  mkRepoSource = p: config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.dotfiles/${p}";
+  shared-packages = pkgs.callPackage ../shared/home-manager/packages.nix {};
 in {
   imports = [
-    ../shared/programs
+    ../shared/home-manager/programs
   ];
 
-  # TODO: look into home manager state version
-  home.stateVersion = "24.05";
+  home.stateVersion = "24.11";
 
-  home.packages = home-packages;
+  home.packages = with pkgs;
+    [
+      asciinema
+      gh
+      unstable.zig
+    ]
+    ++ (lib.optionals isLinux [
+      # gui packages
+      brave
+      firefox
+      spotify
+      wezterm
+    ])
+    ++ shared-packages;
 
-  home.file = home-file;
+  home.file = {
+    "personal".source = mkRepoSource "repos/personal";
+    "krinkle".source = mkRepoSource "repos/krinkle";
+  };
 
   xdg.enable = true;
+
+  programs = {
+    git = {
+      userName = "Hackerman";
+      userEmail = "gradys.dev@gmail.com";
+    };
+  };
 }

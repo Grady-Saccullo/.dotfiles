@@ -1,0 +1,14 @@
+{
+	"version": "0.1",
+	"fields": {
+		"description": {
+			"type": "string",
+			"title": "Description of the nix flake"
+		},
+		"projectName": {
+			"type": "string",
+			"title": "Project name"
+		}
+	}
+}
+

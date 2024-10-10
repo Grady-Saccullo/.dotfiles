@@ -6,8 +6,8 @@
     nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
 
     home-manager = {
-      url = "github:nix-community/home-manager/release-24.05";
-      inputs.nixpkgs.follows = "nixpkgs";
+      url = "github:nix-community/home-manager/master";
+      inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
 
     # formatting
@@ -19,7 +19,7 @@
     # darwin specific inputs
     darwin = {
       url = "github:LnL7/nix-darwin";
-      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
     nix-homebrew.url = "github:zhaofengli-wip/nix-homebrew";
     homebrew-core = {
@@ -30,6 +30,10 @@
       url = "github:homebrew/homebrew-cask";
       flake = false;
     };
+    homebrew-bundle = {
+      url = "github:homebrew/homebrew-bundle";
+      flake = false;
+    };
   };
 
   outputs = {
@@ -37,6 +41,10 @@
     nixpkgs,
     home-manager,
     darwin,
+    nix-homebrew,
+    homebrew-core,
+    homebrew-cask,
+    homebrew-bundle,
     ...
   } @ inputs: let
     helpers = import ./lib/helpers.nix {inherit nixpkgs;};
@@ -47,6 +55,12 @@
         system = "aarch64-darwin";
         configName = "darwin";
         configType = "personal";
+        user = "hackerman";
+      })
+      (helpers.mkSystemConfig {
+        system = "aarch64-darwin";
+        configName = "darwin";
+        configType = "work-voze";
         user = "hackerman";
       })
     ];

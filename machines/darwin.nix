@@ -2,6 +2,7 @@
 {
   pkgs,
   systemConfig,
+  inputs,
   ...
 }: {
   nix.useDaemon = true;
@@ -12,14 +13,35 @@
     '';
   };
 
+  nix-homebrew = {
+    enable = true;
+    enableRosetta = true;
+    user = "${systemConfig.user}";
+    taps = {
+      "homebrew/homebrew-core" = inputs.homebrew-core;
+      "homebrew/homebrew-cask" = inputs.homebrew-cask;
+      "homebrew/homebrew-bundle" = inputs.homebrew-bundle;
+    };
+
+    # Enable fully-declarative tap management
+    mutableTaps = false;
+  };
+
   users.users.${systemConfig.user} = {
     home = "/Users/${systemConfig.user}";
+    shell = pkgs.zsh;
   };
 
   environment.shells = with pkgs; [bashInteractive zsh];
 
   system = {
     stateVersion = 4;
+
+    activationScripts = {
+      extraActivation.text = ''
+        softwareupdate --install-rosetta --agree-to-license;
+      '';
+    };
 
     defaults = {
       dock = {
