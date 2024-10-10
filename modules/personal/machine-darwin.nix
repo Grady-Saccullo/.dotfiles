@@ -23,7 +23,7 @@ in {
       "google-chrome"
       "soundsource"
       "spotify"
-      "wezterm"
+      "wezterm@nightly"
     ];
   };
 }

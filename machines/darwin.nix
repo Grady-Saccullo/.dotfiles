@@ -29,6 +29,7 @@
 
   users.users.${systemConfig.user} = {
     home = "/Users/${systemConfig.user}";
+    shell = pkgs.zsh;
   };
 
   environment.shells = with pkgs; [bashInteractive zsh];

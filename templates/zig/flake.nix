@@ -1,5 +1,5 @@
 {
-  description = "Zig project templates";
+  description = "{{ tmplr.description }}";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
@@ -15,7 +15,7 @@
       pkgs = nixpkgs.legacyPackages.${system};
     in {
       devShells.default = pkgs.mkShell {
-        name = "Zig Project";
+        name = "{{ tmplr.description }}";
         buildInputs = with pkgs; [
           zig
         ];
