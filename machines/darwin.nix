@@ -4,7 +4,9 @@
   systemConfig,
   inputs,
   ...
-}: {
+}: let
+  sed = "${pkgs.gnused}/bin/sed";
+in {
   nix.useDaemon = true;
 
   nix = {
@@ -39,7 +41,19 @@
 
     activationScripts = {
       extraActivation.text = ''
-        softwareupdate --install-rosetta --agree-to-license;
+        echo >&2 "setting up rosetta..."
+        softwareupdate --install-rosetta --agree-to-license >/dev/null 2>&1
+
+
+        # look into maybe an overlay or even custom package for this so we can
+        # symlink to pam_reattach.so and correctly remove when uninstalled
+
+        echo >&2 "setting up reattach for pam..."
+        if ! grep 'pam_reattach.so' /etc/pam.d/sudo > /dev/null; then
+          ${sed} -i '2i\
+        auth       optional       ${pkgs.pam-reattach}/lib/pam/pam_reattach.so # set from extraActivation script within nix-darwin config
+          ' /etc/pam.d/sudo
+        fi
       '';
     };
 
