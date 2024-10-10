@@ -1,7 +1,7 @@
 {pkgs, ...}: let
-  vim-plugins = pkgs.unstable.vimPlugins;
+  vimPlugins = pkgs.unstable.vimPlugins;
 
-  treesitter-plugins = vim-plugins.nvim-treesitter.withPlugins (p:
+  treesitter-plugins = vimPlugins.nvim-treesitter.withPlugins (p:
     with p; [
       angular
       bash
@@ -33,6 +33,13 @@
       yaml
       zig
     ]);
+
+  vimPluginWithCfg = name: file:
+      {
+        plugin = vimPlugins.${name};
+        config = builtins.readFile configs/${file}.lua;
+        type = "lua";
+      };
 in {
   programs.neovim = {
     enable = true;
@@ -78,67 +85,38 @@ in {
 
     plugins = [
       {
-        plugin = vim-plugins.gitsigns-nvim;
-        config = builtins.readFile configs/gitsigns.lua;
-        type = "lua";
-      }
-
-      {
         plugin = treesitter-plugins;
         config = builtins.readFile configs/treesitter.lua;
         type = "lua";
       }
 
-      {
-        plugin = vim-plugins.nvim-cmp;
-        config = builtins.readFile configs/cmp.lua;
-        type = "lua";
-      }
+      (vimPluginWithCfg "gitsigns-nvim" "gitsigns")
+      (vimPluginWithCfg "nvim-cmp" "cmp")
+      (vimPluginWithCfg "nvim-lspconfig" "lspconfig")
+      (vimPluginWithCfg "oxocarbon-nvim" "colorscheme")
+      (vimPluginWithCfg "telescope-nvim" "telescope")
+      (vimPluginWithCfg "vim-slime" "slime")
 
-      {
-        plugin = vim-plugins.nvim-lspconfig;
-        config = builtins.readFile configs/lspconfig.lua;
-        type = "lua";
-      }
-
-      {
-        plugin = vim-plugins.oxocarbon-nvim;
-        config = builtins.readFile configs/colorscheme.lua;
-        type = "lua";
-      }
-
-      {
-        plugin = vim-plugins.telescope-nvim;
-        config = builtins.readFile configs/telescope.lua;
-        type = "lua";
-      }
-
-      {
-        plugin = vim-plugins.vim-slime;
-        config = builtins.readFile configs/slime.lua;
-        type = "lua";
-      }
-
-      vim-plugins.cmp-buffer
-      vim-plugins.cmp-nvim-lsp
-      vim-plugins.cmp-nvim-lua
-      vim-plugins.cmp-path
-      vim-plugins.cmp_luasnip
-      vim-plugins.fidget-nvim
-      vim-plugins.harpoon2
-      vim-plugins.lspkind-nvim
-      vim-plugins.luasnip
-      vim-plugins.neoformat
-      vim-plugins.nvim-lsp-ts-utils
-      vim-plugins.nvim-treesitter-context
-      vim-plugins.nvim-treesitter-textobjects
-      vim-plugins.plenary-nvim
-      vim-plugins.telescope-file-browser-nvim
-      vim-plugins.telescope-fzf-native-nvim
-      vim-plugins.vim-fugitive
-      vim-plugins.vim-rhubarb
-      vim-plugins.vim-vinegar
-      vim-plugins.zig-vim
+      vimPlugins.cmp-buffer
+      vimPlugins.cmp-nvim-lsp
+      vimPlugins.cmp-nvim-lua
+      vimPlugins.cmp-path
+      vimPlugins.cmp_luasnip
+      vimPlugins.fidget-nvim
+      vimPlugins.harpoon2
+      vimPlugins.lspkind-nvim
+      vimPlugins.luasnip
+      vimPlugins.neoformat
+      vimPlugins.nvim-lsp-ts-utils
+      vimPlugins.nvim-treesitter-context
+      vimPlugins.nvim-treesitter-textobjects
+      vimPlugins.plenary-nvim
+      vimPlugins.telescope-file-browser-nvim
+      vimPlugins.telescope-fzf-native-nvim
+      vimPlugins.vim-fugitive
+      vimPlugins.vim-rhubarb
+      vimPlugins.vim-vinegar
+      vimPlugins.zig-vim
     ];
   };
 
