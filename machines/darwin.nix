@@ -44,10 +44,8 @@ in {
         echo >&2 "setting up rosetta..."
         softwareupdate --install-rosetta --agree-to-license >/dev/null 2>&1
 
-
         # look into maybe an overlay or even custom package for this so we can
         # symlink to pam_reattach.so and correctly remove when uninstalled
-
         echo >&2 "setting up reattach for pam..."
         if ! grep 'pam_reattach.so' /etc/pam.d/sudo > /dev/null; then
           ${sed} -i '2i\
@@ -60,6 +58,18 @@ in {
     defaults = {
       dock = {
         autohide = true;
+        autohide-delay = 0.0;
+        orientation = "bottom";
+        persistent-apps = [
+          "/Applications/WezTerm.app"
+          "/Applications/Spotify.app"
+          "/Applications/Safari.app"
+          "/System/Applications/Messages.app"
+        ];
+        show-recents = false;
+        showhidden = true;
+        static-only = false;
+        tilesize = 48;
       };
 
       finder = {
@@ -77,6 +87,9 @@ in {
         "com.apple.keyboard.fnState" = true;
         # I am a weirdo and like the natural scroll direction... don't ask
         "com.apple.swipescrolldirection" = true;
+
+        InitialKeyRepeat = 15;
+        KeyRepeat = 2;
       };
 
       trackpad = {

@@ -91,6 +91,7 @@ in {
       }
 
       (vimPluginWithCfg "gitsigns-nvim" "gitsigns")
+      (vimPluginWithCfg "nvim-autopairs" "autopairs")
       (vimPluginWithCfg "nvim-cmp" "cmp")
       (vimPluginWithCfg "nvim-lspconfig" "lspconfig")
       (vimPluginWithCfg "oxocarbon-nvim" "colorscheme")
