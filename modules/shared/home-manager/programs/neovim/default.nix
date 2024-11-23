@@ -34,12 +34,11 @@
       zig
     ]);
 
-  vimPluginWithCfg = name: file:
-      {
-        plugin = vimPlugins.${name};
-        config = builtins.readFile configs/${file}.lua;
-        type = "lua";
-      };
+  vimPluginWithCfg = name: file: {
+    plugin = vimPlugins.${name};
+    config = builtins.readFile configs/${file}.lua;
+    type = "lua";
+  };
 in {
   programs.neovim = {
     enable = true;
@@ -93,6 +92,9 @@ in {
       (vimPluginWithCfg "gitsigns-nvim" "gitsigns")
       (vimPluginWithCfg "nvim-autopairs" "autopairs")
       (vimPluginWithCfg "nvim-cmp" "cmp")
+      (vimPluginWithCfg "nvim-dap" "nvim-dap")
+      (vimPluginWithCfg "nvim-dap-go" "nvim-dap-go")
+      (vimPluginWithCfg "nvim-dap-ui" "nvim-dap-ui")
       (vimPluginWithCfg "nvim-lspconfig" "lspconfig")
       (vimPluginWithCfg "oxocarbon-nvim" "colorscheme")
       (vimPluginWithCfg "telescope-nvim" "telescope")
@@ -109,6 +111,7 @@ in {
       vimPlugins.luasnip
       vimPlugins.neoformat
       vimPlugins.nvim-lsp-ts-utils
+      vimPlugins.nvim-nio
       vimPlugins.nvim-treesitter-context
       vimPlugins.nvim-treesitter-textobjects
       vimPlugins.plenary-nvim
