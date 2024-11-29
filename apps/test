@@ -1,0 +1,37 @@
+#!/bin/bash -e
+
+config_name="$NIX_CONFIG_MODULE-$NIX_CONFIG_MACHINE"
+
+function build() {
+	nix build \
+		--extra-experimental-features 'nix-command flakes' \
+		--show-trace \
+		--verbose \
+		".#$1"
+}
+
+case $(uname -o) in
+	Darwin)
+		build "darwinConfigurations.$config_name.system"
+
+		./result/sw/bin/darwin-rebuild check \
+			--show-trace \
+			--flake ".#$config_name"
+		;;
+	Linux)
+		if [[ "$NIX_CONFIG_MODULE" =~ ^nixos* ]]; then
+			build "nixosConfigurations.$config_name.system"
+			sudo nixos-rebuild test \
+				--show-trace \
+				--flake ".#$config_name"
+		else
+			echo "Need to implement/port over linux"
+			exit 1
+		fi
+
+		;;
+	*)
+		echo "System type $(uname -o) not supported"
+		exit 1
+		;;
+esac

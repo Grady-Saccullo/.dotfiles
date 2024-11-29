@@ -1,7 +1,8 @@
-{...}: {
+{pkgs, ...}: {
   programs = {
     wezterm = {
       enable = true;
+      package = pkgs.wezterm-nightly.packages.${pkgs.system}.default;
       extraConfig = builtins.readFile ./config.lua;
       colorSchemes = {
         oxocarbon-dark = {

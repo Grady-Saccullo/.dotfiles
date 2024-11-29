@@ -1,17 +1,17 @@
 {nixpkgs}: let
   mkSystemConfig = {
     system,
-    configType,
-    configName,
+    module,
+    machine,
     user,
   }: {
     system = system;
-    configType = configType;
-    configName = configName;
+    module = module;
+    machine = machine;
     user = user;
   };
 
-  configShortName = cfg: "${cfg.configType}-${cfg.configName}";
+  configShortName = cfg: "${cfg.module}-${cfg.machine}";
 
   genSystemConfig = systems: make: let
     systemInfo =
