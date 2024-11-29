@@ -7,11 +7,11 @@
 # TODO refactor this. much of this can be reused/simplified, but it works for now while figuring out multiple systems
 let
   mkSystemModules = import ./mk-system-modules.nix {inherit nixpkgs overlays inputs;};
-  machine-module = import ../modules/${systemConfig.configType}/machine-${systemConfig.configName}.nix;
+  machine-module = import ../modules/${systemConfig.module}/machine-${systemConfig.machine}.nix;
 
-  home-manager-config = import ../modules/${systemConfig.configType}/home-manager.nix;
+  home-manager-config = import ../modules/${systemConfig.module}/home-manager.nix;
 
-  isPlatform = p: nixpkgs.lib.strings.hasInfix p systemConfig.configName;
+  isPlatform = p: nixpkgs.lib.strings.hasInfix p systemConfig.machine;
 
   buildSystem = hm-modules:
     mkSystemModules {
@@ -35,7 +35,7 @@ let
       system = buildSystem [
         (inputs.nix-homebrew.darwinModules.nix-homebrew)
         (inputs.home-manager.darwinModules.home-manager)
-        (base-home-manger-config)
+        base-home-manger-config
       ];
     in
       inputs.darwin.lib.darwinSystem system
@@ -43,7 +43,7 @@ let
     then let
       system = buildSystem [
         (inputs.home-manager.nixosModules.home-manager)
-        (base-home-manger-config)
+        base-home-manger-config
       ];
     in
       nixpkgs.lib.nixosSystem system

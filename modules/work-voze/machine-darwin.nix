@@ -1,5 +1,6 @@
 _: let
   mas = import ../shared/darwin/homebrew-mas.nix;
+  brew = import ../../lib/brew.nix;
 in {
   imports = [
     ../../machines/darwin.nix
@@ -9,26 +10,27 @@ in {
   homebrew = {
     enable = true;
 
-    onActivation.cleanup = "uninstall";
+    onActivation = {
+      cleanup = "uninstall";
+      upgrade = true;
+    };
 
     masApps =
       mas.bitwarden
       // mas.todoist;
 
     casks = [
-      "1password"
-      "android-studio"
-      "betterdisplay"
-      "brave-browser"
-      "discord"
-      "docker"
-      "google-chrome"
-      "postman"
-      "slack"
-      "soundsource"
-      "spotify"
-      "wezterm"
-      "zoom"
+      (brew.greedy "1password")
+      (brew.greedy "android-studio")
+      (brew.greedy "betterdisplay")
+      (brew.greedy "discord")
+      (brew.greedy "docker")
+      (brew.greedy "google-chrome")
+      (brew.greedy "slack")
+      (brew.greedy "soundsource")
+      (brew.greedy "spotify")
+      (brew.greedy "wezterm")
+      (brew.greedy "zoom")
     ];
   };
 }

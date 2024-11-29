@@ -12,7 +12,7 @@
 
     # formatting
     alejandra = {
-      url = "github:kamadorueda/alejandra/3.0.0";
+      url = "github:kamadorueda/alejandra/3.1.0";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
 
@@ -21,7 +21,10 @@
       url = "github:LnL7/nix-darwin";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
-    nix-homebrew.url = "github:zhaofengli-wip/nix-homebrew";
+    nix-homebrew = {
+      url = "github:zhaofengli-wip/nix-homebrew";
+      inputs.nixpkgs.follows = "nixpkgs-unstable";
+    };
     homebrew-core = {
       url = "github:homebrew/homebrew-core";
       flake = false;
@@ -34,6 +37,7 @@
       url = "github:homebrew/homebrew-bundle";
       flake = false;
     };
+    wezterm.url = "github:wez/wezterm?dir=nix";
   };
 
   outputs = {
@@ -45,38 +49,39 @@
     homebrew-core,
     homebrew-cask,
     homebrew-bundle,
+    wezterm,
     ...
   } @ inputs: let
     helpers = import ./lib/helpers.nix {inherit nixpkgs;};
     overlays = import ./overlays {inherit inputs;};
-
+    nix-config = import ./.nix-config.nix;
     darwinSystems = [
       (helpers.mkSystemConfig {
         system = "aarch64-darwin";
-        configName = "darwin";
-        configType = "personal";
+        machine = "darwin";
+        module = "personal";
         user = "hackerman";
       })
       (helpers.mkSystemConfig {
         system = "aarch64-darwin";
-        configName = "darwin";
-        configType = "work-voze";
+        machine = "darwin";
+        module = "work-voze";
         user = "hackerman";
       })
     ];
     nixosSystems = [
       (helpers.mkSystemConfig {
         system = "aarch64-linux";
-        configName = "nixos-vm-fusion";
-        configType = "personal";
+        machine = "nixos-vm-fusion";
+        module = "personal";
         user = "hackerman";
       })
     ];
     genericLinuxSystems = [
       (helpers.mkSystemConfig {
         system = "aarch64-linux";
-        configName = "fedora";
-        configType = "personal";
+        machine = "fedora";
+        module = "personal";
         user = "hackerman";
       })
     ];
@@ -100,10 +105,27 @@
           nativeBuildInputs = with pkgs; [bashInteractive git jq];
           shellHook = ''
             export EDITOR=nvim
+            export NIX_CONFIG_MACHINE=${nix-config.machine}
+            export NIX_CONFIG_MODULE=${nix-config.module}
           '';
         };
     };
+    mkApp = system: name: {
+      type = "app";
+      program = "${(nixpkgs.legacyPackages.${system}.writeScriptBin name ''
+        #!/usr/bin/env bash
+        PATH=${inputs.alejandra.defaultPackage.${system}}./bin:$PATH
+        echo "Running ${name} for ${system}"
+        exec ${self}/apps/${name}
+      '')}/bin/${name}";
+    };
+    makeApps = system: {
+      "switch" = mkApp system "switch";
+      "test" = mkApp system "test";
+      "format" = mkApp system "format";
+    };
   in {
+    apps = iterSystems makeApps;
     devShells = iterSystems devShell;
     darwinConfigurations = helpers.genSystemConfig darwinSystems mkConfig;
     nixosConfigurations = helpers.genSystemConfig nixosSystems mkConfig;

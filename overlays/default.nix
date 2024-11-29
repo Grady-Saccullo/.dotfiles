@@ -5,5 +5,6 @@
       config.allowUnfree = true;
     };
     alejandra = inputs.alejandra.defaultPackage.${final.system};
+    wezterm-nightly = inputs.wezterm;
   };
 }
