@@ -10,11 +10,12 @@
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
 
-    # formatting
+    # packages for overlays
     alejandra = {
       url = "github:kamadorueda/alejandra/3.1.0";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
+    wezterm.url = "github:wez/wezterm?dir=nix";
 
     # darwin specific inputs
     darwin = {
@@ -37,7 +38,6 @@
       url = "github:homebrew/homebrew-bundle";
       flake = false;
     };
-    wezterm.url = "github:wez/wezterm?dir=nix";
   };
 
   outputs = {
