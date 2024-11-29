@@ -11,7 +11,7 @@ This does mean the code can be a bit tricky to follow, specifically in the entry
 ## Getting Started
 - Have a valid nix installation (nix/nixos)
 - Copy `example.nix-config.nix` -> `./.nix-config.nix` and update `machine`/`module` with corresponding config available in flake.nix
-- Create a nix shell with necessary tooling for initial setup: `nix-shell -p gnumake git vim --command "export PS1='\n\[\033[1;32m\][SETUP-SHELL:\w]\$\[\033[0m\] '; exec bash"`.
+- Create a nix shell with necessary tooling for initial setup: `nix-shell -p gnumake git vim`.
 - Run setup
 - Pull submodules down
 - Run setup again to link config repos to config locations
