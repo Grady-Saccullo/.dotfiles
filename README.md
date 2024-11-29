@@ -37,7 +37,7 @@ Contains helpers/common functions for nix.
 
 ### `/machines`
 Contains machine related nix configs. These are the shared base machines to be pulled into
-/modules/<module-name>/machine-<machine-name>.nix`.
+`/modules/<module-name>/machine-<machine-name>.nix`.
 
 Here is an example:
 We have a nixos vm which we want to run on VMWare Fusion. We will need to setup the system
@@ -46,7 +46,7 @@ be reusable anytime we want to spin up a nixos fusion vm no matter the config we
 attempting to use with it. We will put this under `/machines/nixos-vm-fusion.nix`. Inside
 `/modules/<module-name>` we will create another file and call it `machine-nixos-vm-fusion.nix`.
 You can see the parity here in naming schema, but this now allows us to extend the existing
-machine config for a system `config-type`.
+machine config for a system `module-name`.
 
 ### `/modules/shared` 
 Contains shared programs, packages etc for various modules.
