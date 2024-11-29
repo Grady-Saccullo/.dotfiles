@@ -1,5 +1,15 @@
 #!/bin/bash -e
 
+if [[ "$NIX_CONFIG_MODULE" == "" ]]; then
+	echo "Mssing config module name, NIX_CONFIG_MODULE, in env"
+	exit 1
+fi
+
+if [[ "$NIX_CONFIG_MACHINE" == "" ]]; then
+	echo "Mssing config module name, NIX_CONFIG_MACHINE, in env"
+	exit 1
+fi
+
 config_name="$NIX_CONFIG_MODULE-$NIX_CONFIG_MACHINE"
 
 function build() {
