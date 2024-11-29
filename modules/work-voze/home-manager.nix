@@ -4,6 +4,7 @@
   ...
 }: let
   shared-packages = pkgs.callPackage ../shared/home-manager/packages.nix {};
+  mkRepoSource = p: config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.dotfiles/${p}";
 in {
   imports = [
     ../shared/home-manager/programs
@@ -18,7 +19,7 @@ in {
     ++ shared-packages;
 
   home.file = {
-    "voze".source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.dotfiles/repos/work/voze";
+    "voze".source = mkRepoSource "repos/work/voze";
   };
 
   xdg.enable = true;

@@ -11,7 +11,7 @@ in {
     enable = true;
 
     onActivation = {
-      cleanup = "uninstall";
+      cleanup = "zap";
       upgrade = true;
     };
 

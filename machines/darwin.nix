@@ -63,6 +63,7 @@ in {
         persistent-apps = [
           "/Applications/WezTerm.app"
           "/Applications/Spotify.app"
+          "/Applications/Brave Browser.app"
           "/Applications/Safari.app"
           "/System/Applications/Messages.app"
         ];

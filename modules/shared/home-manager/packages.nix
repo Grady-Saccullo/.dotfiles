@@ -1,5 +1,5 @@
 {pkgs, ...}:
-with pkgs; [
+with pkgs.unstable; [
   alejandra
   bat
   btop
