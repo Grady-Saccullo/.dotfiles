@@ -1,31 +1,27 @@
-{
+extras: {
   pkgs,
   config,
   ...
 }: let
-  isLinux = pkgs.stdenv.isLinux;
   mkRepoSource = p: config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.dotfiles/${p}";
   shared-packages = pkgs.callPackage ../shared/home-manager/packages.nix {};
 in {
-  imports = [
-    ../shared/home-manager/programs
-  ];
+  imports =
+    extras.imports
+    ++ [
+      ../shared/home-manager/programs
+    ];
 
   home.stateVersion = "24.11";
 
-  home.packages = with pkgs;
+  home.packages = with pkgs.unstable;
     [
-      asciinema
-      gh
-      unstable.zig
-    ]
-    ++ (lib.optionals isLinux [
-      # gui packages
       brave
-      firefox
+      discord
+      docker
+      gh
       spotify
-      wezterm
-    ])
+    ]
     ++ shared-packages;
 
   home.file = {

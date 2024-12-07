@@ -23,13 +23,9 @@ in {
     # forcing greedy bc too lazy to go figure out if packages are correctly versioned or not
     casks = [
       (brew.greedy "betterdisplay")
-      (brew.greedy "brave-browser")
-      (brew.greedy "discord")
-      (brew.greedy "docker")
+      # TODO: port this possibly to nix packages...
       (brew.greedy "soundsource")
       (brew.greedy "steam")
-      (brew.greedy "spotify")
-      (brew.greedy "wezterm@nightly")
     ];
   };
 }

@@ -7,9 +7,29 @@
 }: let
   sed = "${pkgs.gnused}/bin/sed";
 in {
-  nix.useDaemon = true;
-
   nix = {
+    useDaemon = true;
+    gc = {
+      automatic = true;
+      interval = [
+        {
+          Weekday = 7; # Sunday
+          Hour = 22;
+          Minute = 0;
+        }
+      ];
+      options = "--delete-older-than 30d";
+    };
+    optimise = {
+      automatic = true;
+      interval = [
+        {
+          Weekday = 7; # Sunday
+          Hour = 23;
+          Minute = 0;
+        }
+      ];
+    };
     extraOptions = ''
       experimental-features = nix-command flakes
     '';
@@ -60,11 +80,11 @@ in {
         autohide = true;
         autohide-delay = 0.0;
         orientation = "bottom";
+        # TODO: make this module specific?
         persistent-apps = [
-          "/Applications/WezTerm.app"
-          "/Applications/Spotify.app"
-          "/Applications/Brave Browser.app"
-          "/Applications/Safari.app"
+          "/Applications/Nix Trampolines/WezTerm.app"
+          "/Applications/Nix Trampolines/Spotify.app"
+          "/Applications/Nix Trampolines/Brave Browser.app"
           "/System/Applications/Messages.app"
         ];
         show-recents = false;
@@ -79,6 +99,14 @@ in {
         _FXShowPosixPathInTitle = true;
       };
 
+      hitoolbox = {
+        AppleFnUsageType = "Do Nothing";
+      };
+
+      loginwindow = {
+        GuestEnabled = false;
+      };
+
       LaunchServices = {
         LSQuarantine = true;
       };
@@ -89,6 +117,9 @@ in {
         # I am a weirdo and like the natural scroll direction... don't ask
         "com.apple.swipescrolldirection" = true;
 
+        AppleInterfaceStyle = "Dark";
+        AppleShowAllExtensions = true;
+        AppleShowAllFiles = true;
         InitialKeyRepeat = 15;
         KeyRepeat = 2;
       };

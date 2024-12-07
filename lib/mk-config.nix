@@ -9,8 +9,6 @@ let
   mkSystemModules = import ./mk-system-modules.nix {inherit nixpkgs overlays inputs;};
   machine-module = import ../modules/${systemConfig.module}/machine-${systemConfig.machine}.nix;
 
-  home-manager-config = import ../modules/${systemConfig.module}/home-manager.nix;
-
   isPlatform = p: nixpkgs.lib.strings.hasInfix p systemConfig.machine;
 
   buildSystem = hm-modules:
@@ -23,19 +21,31 @@ let
         ++ hm-modules;
     };
 
-  base-home-manger-config = {
+  hm-extras = {
+    imports =
+      if isPlatform "darwin"
+      then [
+        inputs.mac-app-util.homeManagerModules.default
+      ]
+      else [];
+  };
+
+  hm-module-config = import ../modules/${systemConfig.module}/home-manager.nix hm-extras;
+  hm-config = {
     home-manager.useGlobalPkgs = true;
     home-manager.useUserPackages = true;
-    home-manager.users.${systemConfig.user} = home-manager-config;
+    home-manager.users.${systemConfig.user} = hm-module-config;
   };
 
   built-config =
     if isPlatform "darwin"
     then let
       system = buildSystem [
+        (inputs.mac-app-util.darwinModules.default)
         (inputs.nix-homebrew.darwinModules.nix-homebrew)
+        (inputs.mac-app-util.darwinModules.default)
         (inputs.home-manager.darwinModules.home-manager)
-        base-home-manger-config
+        hm-config
       ];
     in
       inputs.darwin.lib.darwinSystem system
@@ -43,10 +53,10 @@ let
     then let
       system = buildSystem [
         (inputs.home-manager.nixosModules.home-manager)
-        base-home-manger-config
+        hm-config
       ];
     in
       nixpkgs.lib.nixosSystem system
-    else buildSystem [home-manager-config];
+    else buildSystem [hm-module-config];
 in
   built-config

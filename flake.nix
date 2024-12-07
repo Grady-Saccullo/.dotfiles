@@ -2,7 +2,7 @@
   description = "Nix system manager";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-24.05";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-24.11";
     nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
 
     home-manager = {
@@ -22,6 +22,10 @@
       url = "github:LnL7/nix-darwin";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
+
+    # used for linking home manager gui applications
+    mac-app-util.url = "github:hraban/mac-app-util";
+
     nix-homebrew = {
       url = "github:zhaofengli-wip/nix-homebrew";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
@@ -43,13 +47,6 @@
   outputs = {
     self,
     nixpkgs,
-    home-manager,
-    darwin,
-    nix-homebrew,
-    homebrew-core,
-    homebrew-cask,
-    homebrew-bundle,
-    wezterm,
     ...
   } @ inputs: let
     helpers = import ./lib/helpers.nix {inherit nixpkgs;};
