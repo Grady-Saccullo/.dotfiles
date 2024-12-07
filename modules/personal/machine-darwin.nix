@@ -17,7 +17,8 @@ in {
 
     masApps =
       mas.bitwarden
-      // mas.todoist;
+      // mas.todoist
+      // mas.betterSnapTool;
 
     # forcing greedy bc too lazy to go figure out if packages are correctly versioned or not
     casks = [

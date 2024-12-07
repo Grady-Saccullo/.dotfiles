@@ -5,4 +5,7 @@
   todoist = {
     "Todoist: To-Do List & Tasks" = 585829637;
   };
+  betterSnapTool = {
+    BetterSnapTool = 417375580;
+  };
 }
