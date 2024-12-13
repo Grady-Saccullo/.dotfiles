@@ -1,12 +1,21 @@
-# nix-darwin base config for personal
 {
   pkgs,
-  systemConfig,
+  config,
   inputs,
   ...
 }: let
   sed = "${pkgs.gnused}/bin/sed";
+  inherit (inputs) self;
 in {
+  imports = [
+    (inputs.nix-homebrew.darwinModules.nix-homebrew)
+  ];
+
+  users.users.${config.me.user} = {
+    home = "/Users/${config.me.user}";
+    shell = pkgs.zsh;
+  };
+
   nix = {
     useDaemon = true;
     gc = {
@@ -35,29 +44,31 @@ in {
     '';
   };
 
+  homebrew = {
+    enable = true;
+    onActivation = {
+      cleanup = "zap";
+      upgrade = true;
+    };
+  };
+
   nix-homebrew = {
     enable = true;
     enableRosetta = true;
-    user = "${systemConfig.user}";
+    user = "${config.me.user}";
     taps = {
       "homebrew/homebrew-core" = inputs.homebrew-core;
       "homebrew/homebrew-cask" = inputs.homebrew-cask;
       "homebrew/homebrew-bundle" = inputs.homebrew-bundle;
     };
 
-    # Enable fully-declarative tap management
     mutableTaps = false;
-  };
-
-  users.users.${systemConfig.user} = {
-    home = "/Users/${systemConfig.user}";
-    shell = pkgs.zsh;
   };
 
   environment.shells = with pkgs; [bashInteractive zsh];
 
   system = {
-    stateVersion = 4;
+    stateVersion = self.constants.darwinStateVersion;
 
     activationScripts = {
       extraActivation.text = ''
@@ -80,13 +91,6 @@ in {
         autohide = true;
         autohide-delay = 0.0;
         orientation = "bottom";
-        # TODO: make this module specific?
-        persistent-apps = [
-          "${pkgs.wezterm-nightly.packages.${pkgs.system}.default}/Applications/WezTerm.app"
-          "${pkgs.unstable.spotify}/Applications/Spotify.app"
-          "${pkgs.unstable.brave}/Applications/Brave\ Browser.app"
-          "/System/Applications/Messages.app"
-        ];
         show-recents = false;
         showhidden = true;
         static-only = false;
