@@ -29,9 +29,9 @@ in {
           ];
       })
       (lib.mkIf (self.utils.isMachine "darwin") {
-        homebrew.casks = [
-          "bitwarden"
-        ];
+        homebrew.masApps = {
+          "Bitwarden" = 1352778147;
+        };
       })
       (lib.mkIf cfg.browserExtension.enable {
         common.browserExtensions.chromium = [

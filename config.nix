@@ -4,6 +4,6 @@
     name = "personal";
   };
   me = {
-    user = "user";
+    user = "hackerman";
   };
 }
