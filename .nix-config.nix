@@ -1,4 +1,0 @@
-{
-  machine = "darwin";
-  module = "personal";
-}

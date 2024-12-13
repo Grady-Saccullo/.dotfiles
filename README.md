@@ -1,5 +1,7 @@
 # Dotty Files
 
+> Recently made a lot of change to make truly modular/simplify and readme is now outdated... will fix soon(ish)
+
 This config/setup is dependent on nix. A lot of inspiration for this setup came
 from [dustinlyons/nixos-config](https://github.com/dustinlyons/nixos-config/tree/main)
 and [mitchellh/nixos-config](https://github.com/mitchellh/nixos-config/tree/main).
