@@ -5,8 +5,6 @@
   ...
 }: let
   inherit (inputs) self;
-  # mkRepoSource = p: config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.dotfiles/${p}";
-  # shared-packages = pkgs.callPackage ../shared/home-manager/packages.nix {};
 in
   {
     imports = [
@@ -18,11 +16,6 @@ in
   }
   // self.utils.mkHomeManagerUser {
     home.stateVersion = self.constants.stateVersion;
-
-    # home.file = {
-    #   "personal".source = mkRepoSource "repos/personal";
-    #   "krinkle".source = mkRepoSource "repos/krinkle";
-    # };
 
     xdg.enable = true;
   }

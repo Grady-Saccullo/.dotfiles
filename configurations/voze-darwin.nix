@@ -1,6 +1,6 @@
 {
-  pkgs,
   inputs,
+  config,
   ...
 }: let
   inherit (inputs) self;
@@ -12,7 +12,10 @@ in {
   ];
 
   applications = {
-    _1password.enable = true;
+    _1password = {
+      enable = true;
+      browserExtension.enable = true;
+    };
     android-studio.enable = true;
     betterdisplay.enable = true;
     bettersnaptool.enable = true;
@@ -28,7 +31,6 @@ in {
       typescript.enable = true;
       html = {
         enable = true;
-        htmx.enable = true;
       };
     };
     raycast.enable = true;
@@ -42,12 +44,12 @@ in {
   };
 
   system.defaults.dock.persistent-apps = [
-    "${pkgs.wezterm-nightly.packages.${pkgs.system}.default}/Applications/WezTerm.app"
+    "${config.applications.wezterm.package}/Applications/WezTerm.app"
     "/Applications/Android\ Studio.app"
     "/Applications/Xcode.app"
-    "${pkgs.unstable.slack}/Applications/Slack.app"
-    "${pkgs.unstable.brave}/Applications/Brave\ Browser.app"
-    "${pkgs.unstable.spotify}/Applications/Spotify.app"
+    "${config.applications.slack.package}/Applications/Slack.app"
+    "${config.applications.brave.package}/Applications/Brave\ Browser.app"
+    "${config.applications.spotify.package}/Applications/Spotify.app"
     "/System/Applications/Messages.app"
   ];
 }

@@ -6,12 +6,16 @@
   ...
 }: let
   inherit (inputs) self;
-  inherit (lib) mkEnableOption;
+  inherit (lib) mkEnableOption mkOption types;
   cfg = config.applications.wezterm;
 in {
   options = {
     applications.wezterm = {
       enable = mkEnableOption "wezterm";
+      package = mkOption {
+        type = types.package;
+        default = pkgs.wezterm-nightly.packages.${pkgs.system}.default;
+      };
     };
   };
   config = lib.mkIf cfg.enable (
@@ -19,7 +23,7 @@ in {
       programs = {
         wezterm = {
           enable = true;
-          package = pkgs.wezterm-nightly.packages.${pkgs.system}.default;
+          package = cfg.package;
           extraConfig = builtins.readFile ./config.lua;
           colorSchemes = {
             oxocarbon-dark = {

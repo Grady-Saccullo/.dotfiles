@@ -1,6 +1,6 @@
 {
-  pkgs,
   inputs,
+  config,
   ...
 }: let
   inherit (inputs) self;
@@ -49,9 +49,9 @@ in {
   };
 
   system.defaults.dock.persistent-apps = [
-    "${pkgs.wezterm-nightly.packages.${pkgs.system}.default}/Applications/WezTerm.app"
-    "${pkgs.unstable.spotify}/Applications/Spotify.app"
-    "${pkgs.unstable.brave}/Applications/Brave\ Browser.app"
+    "${config.applications.wezterm.package}/Applications/WezTerm.app"
+    "${config.applications.brave.package}/Applications/Brave\ Browser.app"
+    "${config.applications.spotify.package}/Applications/Spotify.app"
     "/System/Applications/Messages.app"
   ];
 }
