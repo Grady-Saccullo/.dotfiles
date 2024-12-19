@@ -2,42 +2,24 @@
   description = "Nix system manager";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-24.11";
-    nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+    alejandra.inputs.nixpkgs.follows = "nixpkgs-unstable";
+    alejandra.url = "github:kamadorueda/alejandra/3.1.0";
+    darwin.inputs.nixpkgs.follows = "nixpkgs-unstable";
+    darwin.url = "github:LnL7/nix-darwin";
     flake-parts.url = "github:hercules-ci/flake-parts";
+    home-manager.inputs.nixpkgs.follows = "nixpkgs-unstable";
+    home-manager.url = "github:nix-community/home-manager/master";
+    homebrew-bundle.flake = false;
+    homebrew-bundle.url = "github:homebrew/homebrew-bundle";
+    homebrew-cask.flake = false;
+    homebrew-cask.url = "github:homebrew/homebrew-cask";
+    homebrew-core.flake = false;
+    homebrew-core.url = "github:homebrew/homebrew-core";
+    nix-homebrew.inputs.nixpkgs.follows = "nixpkgs-unstable";
+    nix-homebrew.url = "github:zhaofengli-wip/nix-homebrew";
+    nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-24.11";
     wezterm.url = "github:wez/wezterm?dir=nix";
-
-    home-manager = {
-      url = "github:nix-community/home-manager/master";
-      inputs.nixpkgs.follows = "nixpkgs-unstable";
-    };
-
-    alejandra = {
-      url = "github:kamadorueda/alejandra/3.1.0";
-      inputs.nixpkgs.follows = "nixpkgs-unstable";
-    };
-
-    darwin = {
-      url = "github:LnL7/nix-darwin";
-      inputs.nixpkgs.follows = "nixpkgs-unstable";
-    };
-
-    nix-homebrew = {
-      url = "github:zhaofengli-wip/nix-homebrew";
-      inputs.nixpkgs.follows = "nixpkgs-unstable";
-    };
-    homebrew-core = {
-      url = "github:homebrew/homebrew-core";
-      flake = false;
-    };
-    homebrew-cask = {
-      url = "github:homebrew/homebrew-cask";
-      flake = false;
-    };
-    homebrew-bundle = {
-      url = "github:homebrew/homebrew-bundle";
-      flake = false;
-    };
   };
 
   outputs = inputs @ {self, ...}:
