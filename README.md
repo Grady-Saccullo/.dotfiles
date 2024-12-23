@@ -2,30 +2,13 @@
 
 > Recently made a lot of change to make truly modular/simplify and readme is now outdated... will fix soon(ish)
 
-This config/setup is dependent on nix. A lot of inspiration for this setup came
-from [dustinlyons/nixos-config](https://github.com/dustinlyons/nixos-config/tree/main)
-and [mitchellh/nixos-config](https://github.com/mitchellh/nixos-config/tree/main).
-Highly recommend looking into these repos.
-
-The goal of the setup is to allow for easily creating new config types, `module-name`, for a given machine.
-This does mean the code can be a bit tricky to follow, specifically in the entry flake.nix.
-
 ## Getting Started
 - Have a valid nix installation (nix/nixos)
-- Create a nix shell with necessary tooling for initial setup: `nix-shell -p gnumake git vim`.
+- Create a nix shell with necessary tooling for initial setup: `nix-shell -p gnumake git`.
 - Clone repo
-- Copy `example.nix-config.nix` -> `./.nix-config.nix` and update `machine`/`module` with corresponding config available in flake.nix
-- Pull down submodules if necessary
-- Leave nix shell and enter `nix develop`
-- Run `nix run .#switch`
-- Run setup again to link config repos to config locations
-
+- Run `nix run .#switch <config-name>`
 
 ## Project Structure
-
-Naming conventions used below:
-- `module-name`: the name for a specific config, e.g. `personal`, `work`, `slim-dev`
-- `machine-name`: the name for a specific machine, e.g. `darwin`, `nixos`, `nixos-vm-fusion`, `fedora`
 
 ### `/apps`
 Contains scripts available within a nix develop shell.
@@ -36,35 +19,39 @@ Run with nix run `.#<command>`.
 - `test`: test the current configuration
 - `format`: format the repo with [alejandra](https://github.com/kamadorueda/alejandra)
 
-### `/lib`
-Contains helpers/common functions for nix.
 
-### `/machines`
-Contains machine related nix configs. These are the shared base machines to be pulled into
-`/modules/<module-name>/machine-<machine-name>.nix`.
+### `/configurations`
+Contains the root machine confis which get pulled into the main flake.nix. All of these
+configurations are built upon the modules pulled into the root flake.nix.
 
-Here is an example:
-We have a nixos vm which we want to run on VMWare Fusion. We will need to setup the system
-to work with Fusion and there for we need to create a base nixos fusion machine which should
-be reusable anytime we want to spin up a nixos fusion vm no matter the config we are 
-attempting to use with it. We will put this under `/machines/nixos-vm-fusion.nix`. Inside
-`/modules/<module-name>` we will create another file and call it `machine-nixos-vm-fusion.nix`.
-You can see the parity here in naming schema, but this now allows us to extend the existing
-machine config for a system `module-name`.
+### `/modules/applications` 
+Contains all of the shared "applications" which can be turned on through .enable. The reasoning
+for this style was so that I could easily share a given application between multiple machine
+types (`darwin`, `nixos`, or `linux` which is just any other distro not nixos). I wasn't a fan of
+how many configs spread applications to be shared across multiple files and felt this made 
+upkeep more painful so this was my solution. Even though this is called application it contains
+anything from gui applications to toolling to a cli.
 
-### `/modules/shared` 
-Contains shared programs, packages etc for various modules.
+### `/modules/darwin`
+Contains shared darwin configurations to be pulled into `/configurations` through the `darwinModules`
+set in the root flake.nix. Currently only contains `sensible`.
 
-### `/modules/<module-name>` 
-Contains all files related to a given config type.
+### `/modules/flake-parts` 
+Contains shared options/imports for the root flake.nix to be used with flake-parts. Some things
+in here such as utils are not actually flake-parts specific and probably need to be refactored out.
 
-Files prefixed with `machine-<machine-name>` are use for a given machine type for the
-specific config. This means we could have `machine-darwin.nix`, `machine-nixos.nix`,
-`machine-nixos-fusion-vm.nix`, `machine-fedora.nix`, and so on... All of these machine
-types will share the same home manager, since they are under a specific module name,
-eg `personal`. These specific machine configs can then pull in the base machine from
-`/machines/<machine-name>.nix` making easily reusable.
+### `/modules/home-manager`
+Contains shared per platform homemanager configurations to be pulled into `/configurations`
+through the `homeManagerModules` set in the root flake.nix. Currently only contains `darwin`.
 
 ### `/overlays`
 Contains overlays, specifically only need package overlays for now so there is only
 a default.nix file in there.
+
+---
+##### Notes
+
+A lot of initial inspiration for my config came
+from [dustinlyons/nixos-config](https://github.com/dustinlyons/nixos-config/tree/main)
+and [mitchellh/nixos-config](https://github.com/mitchellh/nixos-config/tree/main).
+Highly recommend looking into these repos if you are just getting into nix.
