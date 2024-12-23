@@ -21,6 +21,7 @@ in {
     };
   };
   config = utils.mkHomeManagerUser {
+    home.packages = [pkgs.unstable.git-filter-repo];
     programs = {
       git = {
         enable = true;
