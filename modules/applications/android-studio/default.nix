@@ -1,11 +1,10 @@
 {
   pkgs,
-  inputs,
+  utils,
   config,
   lib,
   ...
 }: let
-  inherit (inputs) self;
   inherit (lib) mkEnableOption;
   cfg = config.applications.android-studio;
 in {
@@ -14,18 +13,23 @@ in {
       enable = mkEnableOption "Android Studio";
     };
   };
-  config = lib.mkIf cfg.enable (
-    lib.mkMerge [
-      (self.utils.mkHomeManagerUser {
-        home.packages =
-          [pkgs.unstable.android-tools]
-          ++ lib.optionals (self.utils.isNotMachine "darwin") [
-            pkgs.unstable.android-studio
-          ];
-      })
-      (lib.mkIf (self.utils.isMachine "darwin") {
-        homebrew.casks = ["android-studio"];
-      })
-    ]
-  );
+  config = lib.mkIf cfg.enable (utils.mkPlatformConfig {
+    base = utils.mkHomeManagerUser {
+      home.packages = [pkgs.unstable.android-tools];
+    };
+    darwin = {
+      homebrew.casks = [
+        {
+          name = "android-studio";
+          greedy = true;
+        }
+      ];
+    };
+    linux = utils.mkHomeManagerUser {
+      home.packages = [pkgs.unstable.android-studio];
+    };
+    nixos = utils.mkHomeManagerUser {
+      home.packages = [pkgs.unstable.android-studio];
+    };
+  });
 }

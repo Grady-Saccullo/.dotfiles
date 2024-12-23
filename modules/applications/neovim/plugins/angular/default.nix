@@ -2,11 +2,10 @@
   config,
   lib,
   pkgs,
-  inputs,
+  utils,
   ...
 }: let
   inherit (lib) mkEnableOption;
-  inherit (inputs) self;
   cfg = config.applications.neovim.angular;
 in {
   options = {
@@ -18,7 +17,7 @@ in {
   config = let
     vimPlugins = pkgs.unstable.vimPlugins;
   in
-    lib.mkIf cfg.enable (self.utils.mkHomeManagerUser {
+    lib.mkIf cfg.enable (utils.mkHomeManagerUser {
       programs.neovim.plugins = [
         (vimPlugins.nvim-treesitter.withPlugins (p: [p.angular]))
       ];

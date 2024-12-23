@@ -1,11 +1,10 @@
 {
   pkgs,
-  inputs,
+  utils,
   config,
   lib,
   ...
 }: let
-  inherit (inputs) self;
   inherit (lib) mkEnableOption;
   cfg = config.applications.discord;
 in {
@@ -14,9 +13,7 @@ in {
       enable = mkEnableOption "Discord";
     };
   };
-  config = lib.mkIf cfg.enable (
-    self.utils.mkHomeManagerUser {
-      home.packages = [pkgs.unstable.discord];
-    }
-  );
+  config = lib.mkIf cfg.enable (utils.mkHomeManagerUser {
+    home.packages = [pkgs.unstable.discord];
+  });
 }

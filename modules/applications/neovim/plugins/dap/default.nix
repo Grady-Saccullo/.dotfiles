@@ -2,13 +2,12 @@
   config,
   lib,
   pkgs,
-  inputs,
+  utils,
   ...
 }: let
   vimPlugins = pkgs.unstable.vimPlugins;
   cfg = config.applications.neovim.dap;
   inherit (lib) mkEnableOption;
-  inherit (inputs) self;
 in {
   options = {
     applications.neovim.dap = {
@@ -17,7 +16,7 @@ in {
     };
   };
 
-  config = lib.mkIf cfg.enable (self.utils.mkHomeManagerUser {
+  config = lib.mkIf cfg.enable (utils.mkHomeManagerUser {
     programs.neovim.plugins =
       [
         {

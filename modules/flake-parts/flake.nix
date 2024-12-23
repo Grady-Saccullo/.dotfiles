@@ -2,7 +2,6 @@
   lib,
   flake-parts-lib,
   moduleLocation,
-  config,
   ...
 }: let
   inherit (lib) mapAttrs mkOption types;
@@ -61,20 +60,8 @@ in {
           };
         };
       };
-
       applications = mkOption {
         type = types.deferredModule;
-      };
-
-      utils = mkOption {
-        type = types.attrs;
-        default = {
-          mkHomeManagerUser = mod: {
-            home-manager.users.${config.me.user} = mod;
-          };
-          isMachine = machine: config.configuration.machine == machine;
-          isNotMachine = machine: config.configuration.machine != machine;
-        };
       };
     };
   };

@@ -1,11 +1,10 @@
 {
   pkgs,
-  inputs,
+  utils,
   lib,
   config,
   ...
 }: let
-  inherit (inputs) self;
   inherit (lib) mkEnableOption mkOption types;
   cfg = config.applications.spotify;
 in {
@@ -19,9 +18,7 @@ in {
     };
   };
 
-  config = lib.mkIf cfg.enable (
-    self.utils.mkHomeManagerUser {
-      home.packages = [cfg.package];
-    }
-  );
+  config = lib.mkIf cfg.enable (utils.mkHomeManagerUser {
+    home.packages = [cfg.package];
+  });
 }

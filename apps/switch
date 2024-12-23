@@ -1,16 +1,14 @@
 #!/bin/bash -e
 
-if [[ "$NIX_CONFIG_MODULE" == "" ]]; then
-	echo "Mssing config module name, NIX_CONFIG_MODULE, in env"
+echo "$@"
+
+if [[ $# == 0 ]]; then
+	echo "missing config name, usage switch <config name> <optional other args>"
 	exit 1
 fi
 
-if [[ "$NIX_CONFIG_MACHINE" == "" ]]; then
-	echo "Mssing config module name, NIX_CONFIG_MACHINE, in env"
-	exit 1
-fi
-
-config_name="$NIX_CONFIG_MODULE-$NIX_CONFIG_MACHINE"
+config_name="$1"
+shift
 
 function build() {
 	nix build \
@@ -25,14 +23,14 @@ case $(uname -o) in
 
 		./result/sw/bin/darwin-rebuild switch \
 			--show-trace \
-			--flake ".#$config_name"
+			--flake ".#$config_name" "$@"
 		;;
 	Linux)
-		if [[ "$NIX_CONFIG_MODULE" =~ ^nixos* ]]; then
+		if [ -f /etc/NIXOS ]; then
 			build "nixosConfigurations.$config_name.system"
 			sudo nixos-rebuild switch \
 				--show-trace \
-				--flake ".#$config_name"
+				--flake ".#$config_name" "$@"
 		else
 			echo "Need to implement/port over linux"
 			exit 1

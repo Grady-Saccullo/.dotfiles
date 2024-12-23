@@ -25,14 +25,12 @@
   outputs = inputs @ {self, ...}:
     inputs.flake-parts.lib.mkFlake {inherit inputs;} {
       imports = [
-        ./modules/flake-parts/config.nix
         ./modules/flake-parts/flake.nix
         ./modules/flake-parts/devshells.nix
         ./modules/flake-parts/apps.nix
       ];
       systems = ["aarch64-darwin"];
       perSystem = {system, ...}: {
-        imports = [./modules/flake-parts/config.nix];
         _module.args.pkgs = import inputs.nixpkgs {
           inherit system;
           overlays = [(import ./overlays {inherit inputs;})];
@@ -55,13 +53,44 @@
           sensible = ./modules/darwin/sensible.nix;
         };
         darwinConfigurations = {
-          personal-darwin = inputs.darwin.lib.darwinSystem {
+          personal = inputs.darwin.lib.darwinSystem {
             system = "aarch64-darwin";
-            specialArgs = {inherit inputs;};
+            specialArgs = let
+              machineType = "darwin";
+              me = {
+                user = "hackerman";
+              };
+            in {
+              inherit inputs me machineType;
+              utils = import ./modules/flake-parts/utils.nix {
+                inherit me machineType;
+                inherit (inputs.nixpkgs) lib;
+              };
+            };
             modules = [
               ./configurations/personal-darwin.nix
               ./modules/flake-parts/common.nix
-              ./modules/flake-parts/config.nix
+              ./modules/nixpkgs.nix
+            ];
+          };
+
+          voze = inputs.darwin.lib.darwinSystem {
+            system = "aarch64-darwin";
+            specialArgs = let
+              machineType = "darwin";
+              me = {
+                user = "grady-saccullo";
+              };
+            in {
+              inherit inputs me machineType;
+              utils = import ./modules/flake-parts/utils.nix {
+                inherit me machineType;
+                inherit (inputs.nixpkgs) lib;
+              };
+            };
+            modules = [
+              ./configurations/voze-darwin.nix
+              ./modules/flake-parts/common.nix
               ./modules/nixpkgs.nix
             ];
           };

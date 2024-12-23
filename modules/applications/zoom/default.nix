@@ -1,11 +1,10 @@
 {
   pkgs,
-  inputs,
+  utils,
   config,
   lib,
   ...
 }: let
-  inherit (inputs) self;
   inherit (lib) mkEnableOption;
   cfg = config.applications.zoom;
 in {
@@ -15,7 +14,7 @@ in {
     };
   };
   config = lib.mkIf cfg.enable (
-    self.utils.mkHomeManagerUser {
+    utils.mkHomeManagerUser {
       home.packages = [pkgs.unstable.zoom-us];
     }
   );

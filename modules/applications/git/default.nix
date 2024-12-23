@@ -1,11 +1,10 @@
 {
-  inputs,
+  utils,
   lib,
   pkgs,
   config,
   ...
 }: let
-  inherit (inputs) self;
   inherit (lib) mkOption types;
   cfg = config.applications.git;
 in {
@@ -21,7 +20,7 @@ in {
       };
     };
   };
-  config = self.utils.mkHomeManagerUser {
+  config = utils.mkHomeManagerUser {
     programs = {
       git = {
         enable = true;

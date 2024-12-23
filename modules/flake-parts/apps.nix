@@ -14,7 +14,7 @@
         #!/usr/bin/env bash
         PATH=${inputs.alejandra.defaultPackage.${system}}./bin:$PATH
         echo "Running ${name} for ${system}"
-        exec ${self}/apps/${name}
+        exec ${self}/apps/${name} "$@"
       '')}/bin/${name}";
     };
   in {

@@ -1,6 +1,6 @@
 {
   pkgs,
-  config,
+  me,
   inputs,
   ...
 }: let
@@ -11,8 +11,8 @@ in {
     (inputs.nix-homebrew.darwinModules.nix-homebrew)
   ];
 
-  users.users.${config.me.user} = {
-    home = "/Users/${config.me.user}";
+  users.users.${me.user} = {
+    home = "/Users/${me.user}";
     shell = pkgs.zsh;
   };
 
@@ -55,7 +55,7 @@ in {
   nix-homebrew = {
     enable = true;
     enableRosetta = true;
-    user = "${config.me.user}";
+    user = "${me.user}";
     taps = {
       "homebrew/homebrew-core" = inputs.homebrew-core;
       "homebrew/homebrew-cask" = inputs.homebrew-cask;

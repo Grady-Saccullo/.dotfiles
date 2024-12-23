@@ -2,6 +2,7 @@
   pkgs,
   inputs,
   config,
+  utils,
   ...
 }: let
   inherit (inputs) self;
@@ -14,7 +15,7 @@ in
     home-manager.useGlobalPkgs = true;
     home-manager.useUserPackages = true;
   }
-  // self.utils.mkHomeManagerUser {
+  // utils.mkHomeManagerUser {
     home.stateVersion = self.constants.stateVersion;
 
     xdg.enable = true;

@@ -1,11 +1,10 @@
 {
   pkgs,
   config,
-  inputs,
+  utils,
   lib,
   ...
 }: let
-  inherit (inputs) self;
   inherit (lib) mkEnableOption;
   cfg = config.applications._1password;
 in {
@@ -19,7 +18,7 @@ in {
 
   config = lib.mkIf cfg.enable (
     lib.mkMerge [
-      (self.utils.mkHomeManagerUser {
+      (utils.mkHomeManagerUser {
         home.packages = [
           pkgs.unstable._1password-gui
           pkgs.unstable._1password-cli

@@ -1,11 +1,10 @@
 {
   config,
   lib,
-  inputs,
+  utils,
   pkgs,
   ...
 }: let
-  inherit (inputs) self;
   inherit (lib) mkEnableOption;
   cfg = config.applications.soundsource;
 in {
@@ -14,14 +13,13 @@ in {
       enable = mkEnableOption "SoundSource";
     };
   };
-  config = lib.mkIf cfg.enable (
-    if self.utils.isNotMachine "darwin"
-    then throw "soundsource is only supported on darwin"
-    else
-      self.utils.mkHomeManagerUser {
-        home.packages = [
-          pkgs.unstable.soundsource
-        ];
-      }
-  );
+  config = lib.mkIf cfg.enable (utils.mkPlatformConfig {
+    darwin = utils.mkHomeManagerUser {
+      home.packages = [
+        pkgs.unstable.soundsource
+      ];
+    };
+    nixos = "soundsource is only supported on darwin";
+    linux = "soundsource is only supported on darwin";
+  });
 }

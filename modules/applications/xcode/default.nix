@@ -1,10 +1,9 @@
 {
-  config,
-  inputs,
   lib,
+  config,
+  utils,
   ...
 }: let
-  inherit (inputs) self;
   inherit (lib) mkEnableOption;
   cfg = config.applications.xcode;
 in {
@@ -13,15 +12,15 @@ in {
       enable = mkEnableOption "Xcode";
     };
   };
-  config = lib.mkIf cfg.enable (
-    if self.utils.isNotMachine "darwin"
-    then throw "xcode is only supported on darwin"
-    else {
-      homebrew = {
-        masApps = {
-          "Xcode" = 497799835;
+  config = lib.mkIf cfg.enable (utils.mkPlatformConfig {
+      darwin = {
+        homebrew = {
+          masApps = {
+            "Xcode" = 497799835;
+          };
         };
       };
-    }
-  );
+      nixos = "xcode is only supported on darwin";
+      linux = "xcode is only supported on darwin";
+    });
 }

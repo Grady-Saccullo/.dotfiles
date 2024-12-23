@@ -1,11 +1,10 @@
 {
-  inputs,
+  utils,
   lib,
   pkgs,
   config,
   ...
 }: let
-  inherit (inputs) self;
   inherit (lib) mkEnableOption;
   cfg = config.applications.shell;
 in {
@@ -17,7 +16,7 @@ in {
       direnv.enable = (mkEnableOption "Shell / direnv") // {default = true;};
     };
   };
-  config = self.utils.mkHomeManagerUser {
+  config = utils.mkHomeManagerUser {
     programs = {
       # TODO: figure out where i want to put these. here works for now
       bat.enable = true;

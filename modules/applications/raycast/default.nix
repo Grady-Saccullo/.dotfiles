@@ -1,11 +1,10 @@
 {
-  pkgs,
   config,
-  inputs,
+  utils,
   lib,
+  pkgs,
   ...
 }: let
-  inherit (inputs) self;
   inherit (lib) mkEnableOption;
   cfg = config.applications.raycast;
 in {
@@ -15,12 +14,11 @@ in {
     };
   };
 
-  config = lib.mkIf cfg.enable (
-    if self.utils.isNotMachine "darwin"
-    then throw "raycast is only supported on darwin"
-    else
-      self.utils.mkHomeManagerUser {
-        home.packages = [pkgs.unstable.raycast];
-      }
-  );
+  config = lib.mkIf cfg.enable (utils.mkPlatformConfig {
+    darwin = utils.mkHomeManagerUser {
+      home.packages = [pkgs.unstable.raycast];
+    };
+    nixos = "raycast is only supported on darwin";
+    linux = "raycast is only supported on darwin";
+  });
 }

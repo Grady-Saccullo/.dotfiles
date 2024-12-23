@@ -1,10 +1,9 @@
 {
   config,
   lib,
-  inputs,
+  utils,
   ...
 }: let
-  inherit (inputs) self;
   inherit (lib) mkEnableOption;
   cfg = config.applications.bettersnaptool;
 in {
@@ -13,13 +12,13 @@ in {
       enable = mkEnableOption "BetterSnapTool";
     };
   };
-  config = lib.mkIf cfg.enable (
-    if self.utils.isNotMachine "darwin"
-    then throw "bettersnaptool is only supported on darwin"
-    else {
+  config = lib.mkIf cfg.enable (utils.mkPlatformConfig {
+    darwin = {
       homebrew.masApps = {
         "BetterSnapTool" = 417375580;
       };
-    }
-  );
+    };
+    nixos = "bettersnaptool is only supported on darwin";
+    linux = "bettersnaptool is only supported on darwin";
+  });
 }

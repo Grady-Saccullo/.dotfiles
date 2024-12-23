@@ -1,10 +1,9 @@
 {
-  config,
-  inputs,
   lib,
+  config,
+  utils,
   ...
 }: let
-  inherit (inputs) self;
   inherit (lib) mkEnableOption;
   cfg = config.applications.todoist;
 in {
@@ -13,13 +12,16 @@ in {
       enable = mkEnableOption "Todoist";
     };
   };
-  config = lib.mkIf cfg.enable (
-    if self.utils.isNotMachine "darwin"
-    then throw "todoist is only supported on darwin"
-    else {
+  config = lib.mkIf cfg.enable (utils.mkPlatformConfig {
+    darwin = {
       homebrew.casks = [
-        "todoist"
+        {
+          name = "todoist";
+          greedy = true;
+        }
       ];
-    }
-  );
+    };
+    nixos = "todoist is only supported on darwin";
+    linux = "todoist is only supported on darwin";
+  });
 }

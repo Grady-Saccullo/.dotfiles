@@ -1,11 +1,10 @@
 {
-  inputs,
+  utils,
   lib,
   config,
   pkgs,
   ...
 }: let
-  inherit (inputs) self;
   inherit (lib) mkEnableOption mkOption types;
   cfg = config.applications.brave;
 in {
@@ -21,20 +20,18 @@ in {
       # extensions.youtubeDislike = mkEnableOption "Brave / Extension / YouTube Dislike";
     };
   };
-  config = lib.mkIf cfg.enable (
-    self.utils.mkHomeManagerUser {
-      programs.brave = {
-        enable = true;
-        package = cfg.package;
-        extensions =
-          [
-            # Dark Reader
-            {id = "eimadpbcbfnmbkopoojfekhnkhdbieeh";}
-            # YouTube Dislike
-            {id = "gebbhagfogifgggkldgodflihgfeippi";}
-          ]
-          ++ config.common.browserExtensions.chromium;
-      };
-    }
-  );
+  config = lib.mkIf cfg.enable (utils.mkHomeManagerUser {
+    programs.brave = {
+      enable = true;
+      package = cfg.package;
+      extensions =
+        [
+          # Dark Reader
+          {id = "eimadpbcbfnmbkopoojfekhnkhdbieeh";}
+          # YouTube Dislike
+          {id = "gebbhagfogifgggkldgodflihgfeippi";}
+        ]
+        ++ config.common.browserExtensions.chromium;
+    };
+  });
 }
