@@ -1,6 +1,6 @@
 # Dotty Files
 
-> Recently made a lot of change to make truly modular/simplify and readme is now outdated... will fix soon(ish)
+> Readme is now accurate but still a wip for new very modular setup
 
 ## Getting Started
 - Have a valid nix installation (nix/nixos)
