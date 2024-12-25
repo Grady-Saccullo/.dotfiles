@@ -14,6 +14,9 @@ in {
     };
   };
   config = lib.mkIf cfg.enable (utils.mkPlatformConfig {
+    base = utils.mkHomeManagerUser {
+      home.packages = [pkgs.unstable.podman-compose];
+    };
     darwin = utils.mkHomeManagerUser {
       home.packages = [pkgs.unstable.podman];
     };
