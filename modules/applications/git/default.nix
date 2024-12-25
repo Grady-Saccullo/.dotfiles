@@ -25,7 +25,7 @@ in {
     programs = {
       git = {
         enable = true;
-        package = pkgs.unstable.gitFull;
+        package = pkgs.unstable.git;
         userName = cfg.username;
         userEmail = cfg.email;
         lfs = {

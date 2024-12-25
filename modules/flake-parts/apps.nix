@@ -1,18 +1,15 @@
-{
-  inputs,
-  self,
-  ...
-}: {
+{self, ...}: {
   perSystem = {
     system,
     pkgs,
+    lib,
     ...
   }: let
     mkApp = name: {
       type = "app";
       program = "${(pkgs.writeScriptBin name ''
         #!/usr/bin/env bash
-        PATH=${inputs.alejandra.defaultPackage.${system}}./bin:$PATH
+        PATH=${lib.makeBinPath [pkgs.alejandra]}:$PATH
         echo "Running ${name} for ${system}"
         exec ${self}/apps/${name} "$@"
       '')}/bin/${name}";

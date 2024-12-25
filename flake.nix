@@ -2,8 +2,6 @@
   description = "Nix system manager";
 
   inputs = {
-    alejandra.inputs.nixpkgs.follows = "nixpkgs-unstable";
-    alejandra.url = "github:kamadorueda/alejandra/3.1.0";
     darwin.inputs.nixpkgs.follows = "nixpkgs-unstable";
     darwin.url = "github:LnL7/nix-darwin";
     flake-parts.url = "github:hercules-ci/flake-parts";
