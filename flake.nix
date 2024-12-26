@@ -27,7 +27,7 @@
         ./modules/flake-parts/devshells.nix
         ./modules/flake-parts/apps.nix
       ];
-      systems = ["aarch64-darwin"];
+      systems = ["aarch64-darwin" "aarch64-linux"];
       perSystem = {system, ...}: {
         _module.args.pkgs = import inputs.nixpkgs {
           inherit system;
@@ -46,6 +46,7 @@
         applications = ./modules/applications;
         homeManagerModules = {
           darwinModule = ./modules/home-manager/darwin.nix;
+          nixosModule = ./modules/home-manager/nixos.nix;
         };
         darwinModules = {
           sensible = ./modules/darwin/sensible.nix;
@@ -92,6 +93,28 @@
               ./modules/nixpkgs.nix
             ];
           };
+        };
+        nixosConfigurations = {
+          home-assistant = inputs.nixpkgs-unstable.lib.nixosSystem {
+            system = "aarch64-linux";
+            specialArgs = let
+              machineType = "nixos";
+              me = {
+                user = "ha";
+              };
+            in {
+              inherit inputs me machineType;
+              utils = import ./modules/flake-parts/utils.nix {
+                inherit me machineType;
+                inherit (inputs.nixpkgs) lib;
+              };
+            };
+          };
+          modules = [
+            ./configurations/home-assistant-nixos.nix
+            ./modules/flake-parts/common.nix
+            ./modules/nixpkgs.nix
+          ];
         };
       };
     };
