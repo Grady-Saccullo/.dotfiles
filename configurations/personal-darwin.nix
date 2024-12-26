@@ -42,9 +42,10 @@ in {
       zig.enable = true;
     };
     raycast.enable = true;
+    soundsource.enable = true;
     spotify.enable = true;
     todoist.enable = true;
-    soundsource.enable = true;
+    utm.enable = true;
     wezterm.enable = true;
   };
 

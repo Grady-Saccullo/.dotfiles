@@ -17,6 +17,7 @@
     ./soundsource
     ./spotify
     ./todoist
+    ./utm
     ./wezterm
     ./xcode
     ./zoom
