@@ -6,6 +6,7 @@
     ./go
     ./html
     ./ocaml
+    ./python
     ./rust
     ./typescript
     ./zig

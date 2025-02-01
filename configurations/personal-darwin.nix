@@ -33,6 +33,7 @@ in {
         templ.enable = true;
       };
       docker.enable = true;
+      python.enable = true;
       html = {
         enable = true;
         htmx.enable = true;
