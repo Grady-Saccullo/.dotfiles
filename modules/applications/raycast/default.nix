@@ -15,9 +15,18 @@ in {
   };
 
   config = lib.mkIf cfg.enable (utils.mkPlatformConfig {
-    darwin = utils.mkHomeManagerUser {
-      home.packages = [pkgs.unstable.raycast];
-    };
+    darwin =
+      utils.mkHomeManagerUser {
+        home.packages = [pkgs.unstable.raycast];
+      }
+      // {
+        launchd.user.agents.raycasy = {
+          command = "open ${pkgs.unstable.raycast}/Applications/Raycast.app";
+          serviceConfig = {
+            RunAtLoad = true;
+          };
+        };
+      };
     nixos = "raycast is only supported on darwin";
     linux = "raycast is only supported on darwin";
   });
