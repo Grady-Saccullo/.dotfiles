@@ -38,6 +38,11 @@ in {
         enable = true;
         htmx.enable = true;
       };
+      typescript = {
+        enable = true;
+        lsp = "vtsls";
+        tsx.enable = true;
+      };
       ocaml.enable = true;
       rust.enable = true;
       zig.enable = true;
