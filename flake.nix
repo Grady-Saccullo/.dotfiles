@@ -17,7 +17,7 @@
     nix-homebrew.url = "github:zhaofengli-wip/nix-homebrew";
     nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-24.11";
-    wezterm.url = "github:wez/wezterm?dir=nix";
+    wezterm.url = "github:wezterm/wezterm?dir=nix";
   };
 
   outputs = inputs @ {self, ...}:
@@ -41,7 +41,7 @@
       flake = {
         constants = {
           stateVersion = "24.11";
-          darwinStateVersion = 4;
+          darwinStateVersion = 6;
         };
         applications = ./modules/applications;
         homeManagerModules = {

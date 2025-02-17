@@ -17,7 +17,6 @@ in {
   };
 
   nix = {
-    useDaemon = true;
     gc = {
       automatic = true;
       interval = [

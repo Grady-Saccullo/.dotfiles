@@ -7,13 +7,24 @@
 }: let
   inherit (lib) mkEnableOption mkOption types;
   cfg = config.applications.wezterm;
+
+  # it looks like during a recent update wezterm started relying on openssl,
+  # or this has been a dependency but now is no longer on the system (not sure)
+  # so as a work around adding in openssl to build inputs
+  # previously could pull directly from pkgs.wezterm-nightly.packages.${pkgs.system}.default;
+  wezterm = pkgs.wezterm-nightly.packages.${pkgs.system}.default.overrideAttrs (oldAttrs: {
+    buildInputs = (oldAttrs.buildInputs or []) ++ [
+      pkgs.unstable.openssl
+      pkgs.pkg-config
+    ];
+  });
 in {
   options = {
     applications.wezterm = {
       enable = mkEnableOption "wezterm";
       package = mkOption {
         type = types.package;
-        default = pkgs.wezterm-nightly.packages.${pkgs.system}.default;
+        default = wezterm;
       };
     };
   };
