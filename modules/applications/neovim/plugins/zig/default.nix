@@ -5,8 +5,12 @@
   utils,
   ...
 }: let
-  inherit (lib) mkEnableOption;
-  cfg = config.applications.neovim.zig;
+  inherit (lib) mkEnableOption mkIf;
+  inherit (utils) allEnable mkHomeManagerUser;
+  enable = allEnable config.applications.neovim [
+    "enable"
+    "zig.enable"
+  ];
 in {
   options = {
     applications.neovim.zig = {
@@ -17,7 +21,7 @@ in {
   config = let
     vimPlugins = pkgs.unstable.vimPlugins;
   in
-    lib.mkIf cfg.enable (utils.mkHomeManagerUser {
+    mkIf enable (mkHomeManagerUser {
       programs.neovim.extraPackages = [
         pkgs.unstable.zls
       ];

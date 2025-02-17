@@ -23,6 +23,9 @@ in {
       with p; [
         bash
         comment
+        diff
+        gitcommit
+        gitignore
         gitignore
         jq
         json
@@ -30,11 +33,9 @@ in {
         make
         nix
         regex
+        sql
         toml
         yaml
-        diff
-        gitignore
-        gitcommit
       ]);
   in
     lib.mkIf cfg.enable (utils.mkHomeManagerUser {

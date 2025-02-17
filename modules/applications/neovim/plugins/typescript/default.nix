@@ -5,13 +5,18 @@
   utils,
   ...
 }: let
-  inherit (lib) mkEnableOption mkOption types;
-  cfg = config.applications.neovim.typescript;
+  inherit (lib) mkEnableOption mkOption mkIf types;
+  inherit (utils) allEnable mkHomeManagerUser;
+
+  enable = allEnable config.applications.neovim [
+    "enable"
+    "typescript.enable"
+  ];
 in {
+  imports = [./tsx.nix];
   options = {
     applications.neovim.typescript = {
       enable = mkEnableOption "TypeScript";
-      tsx.enable = mkEnableOption "TypeScript / TSX";
       lsp = mkOption {
         type = types.enum ["tsls" "vtsls"];
         default = "tsls";
@@ -22,32 +27,30 @@ in {
 
   config = let
     vimPlugins = pkgs.unstable.vimPlugins;
+    lsp = config.applications.neovim.typescript.lsp;
   in
-    lib.mkIf cfg.enable (utils.mkHomeManagerUser {
+    mkIf enable (mkHomeManagerUser {
       programs.neovim.plugins =
         [
           (vimPlugins.nvim-treesitter.withPlugins (p: [p.typescript p.javascript]))
         ]
-        ++ lib.optionals (cfg.lsp == "tsls") [
+        ++ lib.optionals (lsp == "tsls") [
           vimPlugins.nvim-lsp-ts-utils
-        ]
-        ++ lib.optionals cfg.tsx.enable [
-          (vimPlugins.nvim-treesitter.withPlugins (p: [p.tsx]))
         ];
 
       programs.neovim.extraPackages =
-        lib.optionals (cfg.lsp == "tsls") [
+        lib.optionals (lsp == "tsls") [
           pkgs.unstable.typescript-language-server
         ]
-        ++ lib.optionals (cfg.lsp == "vtsls") [
+        ++ lib.optionals (lsp == "vtsls") [
           pkgs.unstable.vtsls
         ];
 
       programs.neovim.extraLuaConfig =
-        lib.optionalString (cfg.lsp == "tsls") ''
+        lib.optionalString (lsp == "tsls") ''
           ${builtins.readFile ./typescript-lsp-tsls.lua}
         ''
-        + lib.optionalString (cfg.lsp == "vtsls") ''
+        + lib.optionalString (lsp == "vtsls") ''
           ${builtins.readFile ./typescript-lsp-vtsls.lua}
         '';
     });

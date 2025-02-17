@@ -9,12 +9,13 @@
   inherit (utils) allEnable mkHomeManagerUser;
   enable = allEnable config.applications.neovim [
     "enable"
-    "python.enable"
+    "typescript.enable"
+    "typescript.tsx.enable"
   ];
 in {
   options = {
-    applications.neovim.python = {
-      enable = mkEnableOption "Python";
+    applications.neovim.typescript.tsx = {
+      enable = mkEnableOption "TypeScript / TSX";
     };
   };
 
@@ -23,13 +24,7 @@ in {
   in
     mkIf enable (mkHomeManagerUser {
       programs.neovim.plugins = [
-        (vimPlugins.nvim-treesitter.withPlugins (p: [p.python]))
+        (vimPlugins.nvim-treesitter.withPlugins (p: [p.tsx]))
       ];
-      programs.neovim.extraPackages = [
-        pkgs.unstable.basedpyright
-      ];
-      programs.neovim.extraLuaConfig = ''
-        addLspServer("basedpyright", {})
-      '';
     });
 }

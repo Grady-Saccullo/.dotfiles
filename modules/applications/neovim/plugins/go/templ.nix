@@ -6,15 +6,16 @@
   ...
 }: let
   inherit (lib) mkEnableOption mkIf;
-  inherit (utils) allEnable mkHomeManagerUser;
+  inherit (utils) mkHomeManagerUser allEnable;
   enable = allEnable config.applications.neovim [
     "enable"
-    "python.enable"
+    "go.enable"
+    "go.templ.enable"
   ];
 in {
   options = {
-    applications.neovim.python = {
-      enable = mkEnableOption "Python";
+    applications.neovim.go.templ = {
+      enable = mkEnableOption "Go / templ";
     };
   };
 
@@ -23,13 +24,15 @@ in {
   in
     mkIf enable (mkHomeManagerUser {
       programs.neovim.plugins = [
-        (vimPlugins.nvim-treesitter.withPlugins (p: [p.python]))
+        (vimPlugins.nvim-treesitter.withPlugins (p: [p.templ]))
       ];
+
       programs.neovim.extraPackages = [
-        pkgs.unstable.basedpyright
+        pkgs.unstable.templ
       ];
+
       programs.neovim.extraLuaConfig = ''
-        addLspServer("basedpyright", {})
+        ${builtins.readFile ./go-templ-lsp.lua}
       '';
     });
 }

@@ -5,8 +5,12 @@
   utils,
   ...
 }: let
-  inherit (lib) mkEnableOption;
-  cfg = config.applications.neovim.ocaml;
+  inherit (lib) mkEnableOption mkIf;
+  inherit (utils) allEnable mkHomeManagerUser;
+  enable = allEnable config.applications.neovim [
+    "enable"
+    "ocaml.enable"
+  ];
 in {
   options = {
     applications.neovim.ocaml = {
@@ -17,7 +21,7 @@ in {
   config = let
     vimPlugins = pkgs.unstable.vimPlugins;
   in
-    lib.mkIf cfg.enable (utils.mkHomeManagerUser {
+    mkIf enable (mkHomeManagerUser {
       programs.neovim.extraPackages = [
         pkgs.unstable.ocamlPackages.lsp
       ];

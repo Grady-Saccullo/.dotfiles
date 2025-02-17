@@ -5,8 +5,13 @@
   utils,
   ...
 }: let
-  inherit (lib) mkEnableOption;
-  cfg = config.applications.neovim.angular;
+  inherit (lib) mkEnableOption mkIf;
+  inherit (utils) allEnable mkHomeManagerUser;
+
+  enable = allEnable config.applications.neovim [
+    "enable"
+    "angular.enable"
+  ];
 in {
   options = {
     applications.neovim.angular = {
@@ -17,7 +22,7 @@ in {
   config = let
     vimPlugins = pkgs.unstable.vimPlugins;
   in
-    lib.mkIf cfg.enable (utils.mkHomeManagerUser {
+    mkIf enable (mkHomeManagerUser {
       programs.neovim.plugins = [
         (vimPlugins.nvim-treesitter.withPlugins (p: [p.angular]))
       ];

@@ -5,26 +5,26 @@
   utils,
   ...
 }: let
-  inherit (lib) mkEnableOption;
-  cfg = config.applications.neovim.html;
+  inherit (lib) mkEnableOption mkIf;
+  inherit (utils) allEnable mkHomeManagerUser;
+  enable = allEnable config.applications.neovim [
+    "enable"
+    "html.enable"
+  ];
 in {
+  imports = [./htmx.nix];
   options = {
     applications.neovim.html = {
       enable = mkEnableOption "HTML";
-      htmx.enable = mkEnableOption "HTMX";
     };
   };
 
   config = let
     vimPlugins = pkgs.unstable.vimPlugins;
   in
-    lib.mkIf cfg.enable (utils.mkHomeManagerUser {
+    mkIf enable (mkHomeManagerUser {
       programs.neovim.plugins = [
         (vimPlugins.nvim-treesitter.withPlugins (p: [p.html p.css]))
-      ];
-
-      programs.neovim.extraPackages = lib.optionals cfg.htmx.enable [
-        pkgs.unstable.htmx-lsp
       ];
 
       programs.neovim.extraLuaConfig = let
@@ -34,11 +34,6 @@ in {
               	filetypes = { "html", ${lib.optionals templEnabled "templ"}},
         })
         addLspServer("cssls", {})
-        ${lib.optionals cfg.htmx.enable ''
-          addLspServer("htmx", {
-          	filetypes = { "html", ${lib.optionals templEnabled "templ"}},
-          })
-        ''}
       '';
     });
 }

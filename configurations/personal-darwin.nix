@@ -28,6 +28,10 @@ in {
         enable = true;
         go.enable = true;
       };
+      db = {
+        enable = true;
+        sql.enable = true;
+      };
       go = {
         enable = true;
         templ.enable = true;
