@@ -44,7 +44,7 @@ local lspconfig_custom_attach = function(client, bufnr)
 
 		if client.name == "sourcekit" then
 			vim.cmd("Neoformat swiftformat")
-		elseif client.name == "tsserver" then
+		elseif client.name == "vtsls" then
 			vim.cmd("Neoformat prettier")
 		elseif client.name == "lua_ls" then
 			vim.cmd("Neoformat stylua")
