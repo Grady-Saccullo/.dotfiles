@@ -16,41 +16,30 @@ cmp.setup({
 		completeopt = "menu,menuone,noinsert",
 	},
 	mapping = cmp.mapping.preset.insert({
-		["<C-n>"] = cmp.mapping.select_next_item({ behavior = cmp.SelectBehavior.Insert }),
-		["<C-p>"] = cmp.mapping.select_prev_item({ behavior = cmp.SelectBehavior.Insert }),
+		["<C-j>"] = cmp.mapping.select_next_item({ behavior = cmp.SelectBehavior.Insert }),
+		["<C-k>"] = cmp.mapping.select_prev_item({ behavior = cmp.SelectBehavior.Insert }),
 		["<C-Space>"] = cmp.mapping.complete(),
-		["<S-CR>"] = cmp.mapping.confirm({
-			behavior = cmp.ConfirmBehavior.Insert,
-			select = true,
-		}),
+		["<C-e>"] = cmp.mapping.abort(),
+		["<CR>"] = cmp.mapping.confirm({ select = true }),
 	}),
 	sources = cmp.config.sources({
-		{ name = "nvim_lsp", priority = 8, keyword_length = 1 },
-		{ name = "path", keyword_length = 3 },
-		{ name = "luasnip", keyword_length = 2 },
+		{ name = "nvim_lsp" },
+		{ name = "path" },
+		{ name = "luasnip" },
 	}, {
 		name = "buffer",
 	}),
-	sorting = {
-		priority_weight = 1.0,
-		comparators = {
-			cmp.config.compare.recently_used,
-			cmp.config.compare.score,
-			cmp.config.compare.locality,
-			cmp.config.compare.offset,
-			cmp.config.compare.order,
-		},
-	},
-	formatting = {
-		expandable_indicator = true,
-		fields = { "abbr", "kind" },
-		format = lspkind.cmp_format({
-			mode = "text",
-			maxwidth = 50,
-			ellipsis_char = "...",
-		}),
-	},
 })
+
+cmp.setup.filetype('gitcommit', {
+    sources = cmp.config.sources({
+      { name = 'git' },
+    }, {
+      { name = 'buffer' },
+    })
+ })
+
+ require("cmp_git").setup()
 
 cmp.setup.cmdline({ "/", "?" }, {
 	mapping = cmp.mapping.preset.cmdline(),

@@ -8,7 +8,7 @@
   inherit (lib) mkEnableOption;
   cfg = config.applications.neovim;
 in {
-  imports = [./plugins];
+  imports = [./configs];
 
   options = {
     applications.neovim = {
@@ -37,6 +37,7 @@ in {
         toml
         yaml
       ]);
+    enable-nvim-ts-autotag = cfg.typescript.tsx.enable || cfg.html.enable;
   in
     lib.mkIf cfg.enable (utils.mkHomeManagerUser {
       programs.neovim = {
@@ -89,67 +90,81 @@ in {
           -- [END] shared lsp serves table ---
         '';
 
-        plugins = [
-          {
-            plugin = treesitter-plugins;
-            config = builtins.readFile ./nvim-treesitter.lua;
-            type = "lua";
-          }
-          {
-            plugin = vimPlugins.nvim-lspconfig;
-            config = builtins.readFile ./nvim-lspconfig.lua;
-            type = "lua";
-          }
-          {
-            plugin = vimPlugins.gitsigns-nvim;
-            config = builtins.readFile ./gitsigns-nvim.lua;
-            type = "lua";
-          }
-          {
-            plugin = vimPlugins.nvim-autopairs;
-            config = builtins.readFile ./nvim-autopairs.lua;
-            type = "lua";
-          }
-          {
-            plugin = vimPlugins.nvim-cmp;
-            config = builtins.readFile ./nvim-cmp.lua;
-            type = "lua";
-          }
-          {
-            plugin = vimPlugins.oxocarbon-nvim;
-            config = builtins.readFile ./oxocarbon-nvim.lua;
-            type = "lua";
-          }
-          {
-            plugin = vimPlugins.telescope-nvim;
-            config = builtins.readFile ./telescope-nvim.lua;
-            type = "lua";
-          }
-          {
-            plugin = vimPlugins.vim-slime;
-            config = builtins.readFile ./vim-slime.lua;
-            type = "lua";
-          }
+        plugins =
+          [
+            {
+              plugin = treesitter-plugins;
+              config = builtins.readFile ./nvim-treesitter.lua;
+              type = "lua";
+            }
+            {
+              plugin = vimPlugins.nvim-lspconfig;
+              config = builtins.readFile ./nvim-lspconfig.lua;
+              type = "lua";
+            }
+            {
+              plugin = vimPlugins.gitsigns-nvim;
+              config = builtins.readFile ./gitsigns-nvim.lua;
+              type = "lua";
+            }
+            {
+              plugin = vimPlugins.nvim-autopairs;
+              config = builtins.readFile ./nvim-autopairs.lua;
+              type = "lua";
+            }
+            {
+              plugin = vimPlugins.nvim-cmp;
+              config = builtins.readFile ./nvim-cmp.lua;
+              type = "lua";
+            }
+            {
+              plugin = vimPlugins.oxocarbon-nvim;
+              config = builtins.readFile ./oxocarbon-nvim.lua;
+              type = "lua";
+            }
+            {
+              plugin = vimPlugins.telescope-nvim;
+              config = builtins.readFile ./telescope-nvim.lua;
+              type = "lua";
+            }
+            {
+              plugin = vimPlugins.vim-slime;
+              config = builtins.readFile ./vim-slime.lua;
+              type = "lua";
+            }
+            {
+              plugin = vimPlugins.ts-comments-nvim;
+              config = builtins.readFile ./ts-comments-nvim.lua;
+              type = "lua";
+            }
 
-          vimPlugins.cmp-buffer
-          vimPlugins.cmp-nvim-lsp
-          vimPlugins.cmp-nvim-lua
-          vimPlugins.cmp-path
-          vimPlugins.cmp_luasnip
-          vimPlugins.fidget-nvim
-          vimPlugins.harpoon2
-          vimPlugins.lspkind-nvim
-          vimPlugins.luasnip
-          vimPlugins.neoformat
-          vimPlugins.nvim-treesitter-context
-          vimPlugins.nvim-treesitter-textobjects
-          vimPlugins.plenary-nvim
-          vimPlugins.telescope-file-browser-nvim
-          vimPlugins.telescope-fzf-native-nvim
-          vimPlugins.vim-fugitive
-          vimPlugins.vim-rhubarb
-          vimPlugins.vim-vinegar
-        ];
+            vimPlugins.cmp-buffer
+            vimPlugins.cmp-nvim-lsp
+            vimPlugins.cmp-nvim-lua
+            vimPlugins.cmp-path
+            vimPlugins.cmp-git
+            vimPlugins.cmp_luasnip
+            vimPlugins.fidget-nvim
+            vimPlugins.harpoon2
+            vimPlugins.lspkind-nvim
+            vimPlugins.luasnip
+            vimPlugins.neoformat
+            vimPlugins.nvim-treesitter-context
+            vimPlugins.nvim-treesitter-textobjects
+            vimPlugins.plenary-nvim
+            vimPlugins.telescope-file-browser-nvim
+            vimPlugins.telescope-fzf-native-nvim
+            vimPlugins.vim-fugitive
+            vimPlugins.vim-rhubarb
+            vimPlugins.vim-vinegar
+          ]
+          ++ lib.optionals enable-nvim-ts-autotag [
+            {
+              plugin = vimPlugins.nvim-ts-autotag;
+              config = builtins.readFile ./nvim-ts-autotag.lua;
+              type = "lua";
+            }
+          ];
       };
 
       home.file."./.config/nvim/after/" = {
