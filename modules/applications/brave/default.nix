@@ -15,9 +15,6 @@ in {
         type = types.package;
         default = pkgs.unstable.brave;
       };
-      # NOTE: maybe add this in for work vs personal vs other...?
-      # extensions.darkReader = mkEnableOption "Brave / Extension / Dark Reader";
-      # extensions.youtubeDislike = mkEnableOption "Brave / Extension / YouTube Dislike";
     };
   };
   config = lib.mkIf cfg.enable (utils.mkHomeManagerUser {

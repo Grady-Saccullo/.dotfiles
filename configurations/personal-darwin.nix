@@ -42,6 +42,7 @@ in {
         enable = true;
         htmx.enable = true;
       };
+      terraform.enable = true;
       typescript = {
         enable = true;
         lsp = "vtsls";

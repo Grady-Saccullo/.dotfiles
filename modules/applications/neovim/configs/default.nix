@@ -9,6 +9,7 @@
     ./ocaml
     ./python
     ./rust
+    ./terraform
     ./typescript
     ./zig
   ];
