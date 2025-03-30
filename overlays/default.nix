@@ -14,7 +14,7 @@
             owner = "redhat-developer";
             repo = "yaml-language-server";
             rev = "main";
-            hash = "sha256-u1GV19l73CTjhPOoT+IIwRdSsUSdUWdMZam9/sQ3OGg=";
+            hash = "sha256-ICWoZtNFj20Cv7B7r5FqP/EC/kP7eXLk5seJ1y0vy5E=";
           };
 
           # Add environment variables to handle certificates and set up node environment
