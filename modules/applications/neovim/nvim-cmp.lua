@@ -1,6 +1,7 @@
 -- [START] nvim-cmp.lua --
 local luasnip = require("luasnip")
 luasnip.config.setup()
+require("luasnip.loaders.from_vscode").lazy_load()
 
 local lspkind = require("lspkind")
 lspkind.init()

@@ -139,12 +139,13 @@ in {
             }
 
             vimPlugins.cmp-buffer
+            vimPlugins.cmp-git
             vimPlugins.cmp-nvim-lsp
             vimPlugins.cmp-nvim-lua
             vimPlugins.cmp-path
-            vimPlugins.cmp-git
             vimPlugins.cmp_luasnip
             vimPlugins.fidget-nvim
+            vimPlugins.friendly-snippets
             vimPlugins.harpoon2
             vimPlugins.lspkind-nvim
             vimPlugins.luasnip
