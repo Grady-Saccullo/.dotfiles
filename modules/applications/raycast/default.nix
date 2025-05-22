@@ -20,7 +20,7 @@ in {
         home.packages = [pkgs.unstable.raycast];
       }
       // {
-        launchd.user.agents.raycasy = {
+        launchd.user.agents.raycast = {
           command = "open ${pkgs.unstable.raycast}/Applications/Raycast.app";
           serviceConfig = {
             RunAtLoad = true;

@@ -4,12 +4,12 @@
   inputs,
   ...
 }: let
-  sed = "${pkgs.gnused}/bin/sed";
   inherit (inputs) self;
 in {
   imports = [
     (inputs.nix-homebrew.darwinModules.nix-homebrew)
   ];
+
 
   users.users.${me.user} = {
     home = "/Users/${me.user}";
@@ -69,6 +69,7 @@ in {
 
   system = {
     stateVersion = self.constants.darwinStateVersion;
+    primaryUser = me.user;
 
     activationScripts = {
       extraActivation.text = ''

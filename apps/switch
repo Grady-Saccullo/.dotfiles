@@ -21,7 +21,7 @@ case $(uname -o) in
 	Darwin)
 		build "darwinConfigurations.$config_name.system"
 
-		./result/sw/bin/darwin-rebuild switch \
+		sudo ./result/sw/bin/darwin-rebuild switch \
 			--show-trace \
 			--flake ".#$config_name" "$@"
 		;;
