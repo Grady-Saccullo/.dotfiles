@@ -7,6 +7,7 @@
     ./go
     ./html
     ./ocaml
+    ./protobuf
     ./python
     ./rust
     ./terraform

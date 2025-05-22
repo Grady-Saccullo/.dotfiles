@@ -13,8 +13,8 @@
     src = pkgs.unstable.fetchFromGitHub {
       owner = "nanotee";
       repo = "sqls.nvim";
-      rev = "a514379f5f89bf72955ed3bf5c1c31a40b8a1472";
-      sha256 = "o5uD6shPkweuE+k/goBX42W3I2oojXVijfJC7L50sGU=";
+      rev = "d1bc5421ef3e8edc5101e37edbb7de6639207a09";
+      sha256 = "bQKO5Kq4Jc8v7d6OSkkzjqYHzt8c5C71xzHHABErlsg=";
     };
   };
 

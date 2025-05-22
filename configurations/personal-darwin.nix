@@ -38,6 +38,7 @@ in {
       };
       docker.enable = true;
       python.enable = true;
+      protobuf.enable = true;
       html = {
         enable = true;
         htmx.enable = true;

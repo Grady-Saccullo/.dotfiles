@@ -1,4 +1,16 @@
 -- [START] nvim-lspconfig.lua --
+
+local function has_config(file_names)
+	local root_dir = vim.fn.getcwd()
+
+	for _, file_path in ipairs(file_names) do
+		if vim.fn.filereadable(root_dir .. "/" .. file_path) == 1 then
+			return true
+		end
+	end
+	return false
+end
+
 local lspconfig_custom_attach = function(client, bufnr)
 	local nmap = function(keys, func, desc)
 		if desc then
@@ -45,7 +57,23 @@ local lspconfig_custom_attach = function(client, bufnr)
 		if client.name == "sourcekit" then
 			vim.cmd("Neoformat swiftformat")
 		elseif client.name == "vtsls" then
-			vim.cmd("Neoformat prettier")
+			local biome = has_config({ "biome.json", "biome.jsonc" })
+			local prettier = has_config({
+				".prettierrc",
+				".prettierrc.json",
+				".prettierrc.yml",
+				".prettierrc.yaml",
+				".prettierrc.js",
+				"prettier.config.js",
+			})
+
+			if biome then
+				vim.cmd("Neoformat biome")
+			elseif prettier then
+				vim.cmd("Neoformat prettier")
+			else
+				print("missing js/ts formatter...")
+			end
 		elseif client.name == "lua_ls" then
 			vim.cmd("Neoformat stylua")
 		elseif client.name == "nil_ls" then
