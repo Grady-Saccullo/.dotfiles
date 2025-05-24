@@ -18,10 +18,10 @@ in {
       enable = true;
       browserExtension.enable = true;
     };
-    discord.enable = true;
     brave.enable = true;
+    discord.enable = true;
     github-cli.enable = true;
-    podman.enable = true;
+    hoppscotch.enable = true;
     neovim = {
       enable = true;
       dap = {
@@ -53,6 +53,7 @@ in {
       rust.enable = true;
       zig.enable = true;
     };
+    podman.enable = true;
     raycast.enable = true;
     soundsource.enable = true;
     spotify.enable = true;

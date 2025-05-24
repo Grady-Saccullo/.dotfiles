@@ -9,6 +9,7 @@
     ./discord
     ./git
     ./github-cli
+    ./hoppscotch
     ./neovim
     ./podman
     ./raycast
