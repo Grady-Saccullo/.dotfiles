@@ -1,14 +1,46 @@
 -- [START] nvim-lspconfig.lua --
 
-local function has_config(file_names)
-	local root_dir = vim.fn.getcwd()
+local function find_config_file(file_names, start_path)
+	-- normalize the stop path, aka project root (cwd)
+	local stop_dir = vim.fn.resolve(vim.fn.getcwd())
+	local current_dir = start_path
 
-	for _, file_path in ipairs(file_names) do
-		if vim.fn.filereadable(root_dir .. "/" .. file_path) == 1 then
-			return true
+	while current_dir ~= "/" and current_dir ~= "" do
+		for _, file_name in ipairs(file_names) do
+			local config_path = current_dir .. "/" .. file_name
+			if vim.fn.filereadable(config_path) == 1 then
+				return config_path, current_dir
+			end
 		end
+
+		if vim.fn.resolve(current_dir) == stop_dir then
+			break
+		end
+
+		-- move up a dir
+		local parent_dir = vim.fn.fnamemodify(current_dir, ":h")
+
+		if current_dir == parent_dir then
+			break
+		end
+
+		current_dir = parent_dir
 	end
-	return false
+
+	return nil, nil
+end
+
+local function has_config(file_names)
+	-- attempt to find in root
+	local root_config_path, root_config_dir = find_config_file(file_names, vim.fn.getcwd())
+	if root_config_path ~= nil then
+		return true, root_config_dir
+	end
+
+	-- if we didn't find in the config it is probably a mono repo
+	-- traverse backwards from the current file until we find a valid config
+	local traversal_config_path, traversal_config_dir = find_config_file(file_names, vim.fn.expand("%:p:h"))
+	return traversal_config_path ~= nil, traversal_config_dir
 end
 
 local lspconfig_custom_attach = function(client, bufnr)
@@ -57,8 +89,15 @@ local lspconfig_custom_attach = function(client, bufnr)
 		if client.name == "sourcekit" then
 			vim.cmd("Neoformat swiftformat")
 		elseif client.name == "vtsls" then
-			local biome = has_config({ "biome.json", "biome.jsonc" })
-			local prettier = has_config({
+			local function run_neoformat(cmd, config_dir)
+				local og_cwg = vim.fn.getcwd()
+				vim.cmd("cd " .. vim.fn.fnameescape(config_dir))
+				vim.cmd("Neoformat " .. cmd)
+				vim.cmd("cd " .. vim.fn.fnameescape(og_cwg))
+			end
+
+			local biome_exists, biome_dir = has_config({ "biome.json", "biome.jsonc" })
+			local prettier_exists, prettier_dir = has_config({
 				".prettierrc",
 				".prettierrc.json",
 				".prettierrc.yml",
@@ -67,10 +106,10 @@ local lspconfig_custom_attach = function(client, bufnr)
 				"prettier.config.js",
 			})
 
-			if biome then
-				vim.cmd("Neoformat biome")
-			elseif prettier then
-				vim.cmd("Neoformat prettier")
+			if biome_exists then
+				run_neoformat("biome", biome_dir)
+			elseif prettier_exists then
+				run_neoformat("prettier", prettier_dir)
 			else
 				print("missing js/ts formatter...")
 			end
