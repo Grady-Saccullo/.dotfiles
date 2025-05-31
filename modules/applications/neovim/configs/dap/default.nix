@@ -22,19 +22,18 @@ in {
   };
 
   config = mkIf enable (mkHomeManagerUser {
-    programs.neovim.plugins =
-      [
-        {
-          plugin = vimPlugins.nvim-dap;
-          config = builtins.readFile ./dap.lua;
-          type = "lua";
-        }
-        {
-          plugin = vimPlugins.nvim-dap-ui;
-          config = builtins.readFile ./dap-ui.lua;
-          type = "lua";
-        }
-        vimPlugins.nvim-nio
-      ];
+    programs.neovim.plugins = [
+      {
+        plugin = vimPlugins.nvim-dap;
+        config = builtins.readFile ./dap.lua;
+        type = "lua";
+      }
+      {
+        plugin = vimPlugins.nvim-dap-ui;
+        config = builtins.readFile ./dap-ui.lua;
+        type = "lua";
+      }
+      vimPlugins.nvim-nio
+    ];
   });
 }

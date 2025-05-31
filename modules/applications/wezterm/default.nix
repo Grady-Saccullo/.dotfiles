@@ -13,10 +13,12 @@
   # so as a work around adding in openssl to build inputs
   # previously could pull directly from pkgs.wezterm-nightly.packages.${pkgs.system}.default;
   wezterm = pkgs.wezterm-nightly.packages.${pkgs.system}.default.overrideAttrs (oldAttrs: {
-    buildInputs = (oldAttrs.buildInputs or []) ++ [
-      pkgs.unstable.openssl
-      pkgs.pkg-config
-    ];
+    buildInputs =
+      (oldAttrs.buildInputs or [])
+      ++ [
+        pkgs.unstable.openssl
+        pkgs.pkg-config
+      ];
   });
 in {
   options = {

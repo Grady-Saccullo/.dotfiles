@@ -10,7 +10,6 @@ in {
     (inputs.nix-homebrew.darwinModules.nix-homebrew)
   ];
 
-
   users.users.${me.user} = {
     home = "/Users/${me.user}";
     shell = pkgs.zsh;
