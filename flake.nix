@@ -2,6 +2,9 @@
   description = "Nix system manager";
 
   inputs = {
+    nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.05";
+
     darwin.inputs.nixpkgs.follows = "nixpkgs-unstable";
     darwin.url = "github:LnL7/nix-darwin";
     flake-parts.url = "github:hercules-ci/flake-parts";
@@ -13,10 +16,7 @@
     homebrew-cask.url = "github:homebrew/homebrew-cask";
     homebrew-core.flake = false;
     homebrew-core.url = "github:homebrew/homebrew-core";
-    nix-homebrew.inputs.nixpkgs.follows = "nixpkgs-unstable";
     nix-homebrew.url = "github:zhaofengli-wip/nix-homebrew";
-    nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-24.11";
     wezterm.url = "github:wezterm/wezterm?dir=nix";
   };
 
@@ -40,7 +40,7 @@
       };
       flake = {
         constants = {
-          stateVersion = "24.11";
+          stateVersion = "25.05";
           darwinStateVersion = 6;
         };
         applications = ./modules/applications;
