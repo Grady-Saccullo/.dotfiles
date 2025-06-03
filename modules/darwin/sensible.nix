@@ -5,7 +5,7 @@
   ...
 }: let
   inherit (inputs) self;
-in {
+in rec {
   imports = [
     (inputs.nix-homebrew.darwinModules.nix-homebrew)
   ];
@@ -49,6 +49,8 @@ in {
       cleanup = "zap";
       upgrade = true;
     };
+
+    taps = builtins.attrNames nix-homebrew.taps;
   };
 
   nix-homebrew = {

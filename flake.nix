@@ -4,19 +4,24 @@
   inputs = {
     nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.05";
-
-    darwin.inputs.nixpkgs.follows = "nixpkgs-unstable";
-    darwin.url = "github:LnL7/nix-darwin";
-    flake-parts.url = "github:hercules-ci/flake-parts";
     home-manager.inputs.nixpkgs.follows = "nixpkgs-unstable";
     home-manager.url = "github:nix-community/home-manager/master";
+
+    # Utilities/Helpers
+    flake-parts.url = "github:hercules-ci/flake-parts";
+
+    # Darwin specific packages
+    nix-homebrew.url = "github:zhaofengli-wip/nix-homebrew";
     homebrew-bundle.flake = false;
     homebrew-bundle.url = "github:homebrew/homebrew-bundle";
     homebrew-cask.flake = false;
     homebrew-cask.url = "github:homebrew/homebrew-cask";
     homebrew-core.flake = false;
     homebrew-core.url = "github:homebrew/homebrew-core";
-    nix-homebrew.url = "github:zhaofengli-wip/nix-homebrew";
+    darwin.inputs.nixpkgs.follows = "nixpkgs-unstable";
+    darwin.url = "github:LnL7/nix-darwin";
+
+    # Applications
     wezterm.url = "github:wezterm/wezterm?dir=nix";
   };
 
