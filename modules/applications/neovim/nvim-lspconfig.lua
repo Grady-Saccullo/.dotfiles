@@ -123,18 +123,12 @@ local lspconfig_custom_attach = function(client, bufnr)
 	end, "[F]ormat")
 end
 
-local lspconfig_setup_server = function(server, config)
-	if not config then
-		print("oh no... missing config")
-		return
-	end
-
+for server, config in pairs(lsp_servers) do
 	if type(config) ~= "table" then
 		config = {}
 	end
 
 	local capabilities = require("cmp_nvim_lsp").default_capabilities(vim.lsp.protocol.make_client_capabilities())
-	local lspconfig = vim.F.npcall(require, "lspconfig")
 
 	local wrapped_on_attach = function(client, bufnr)
 		lspconfig_custom_attach(client, bufnr)
@@ -148,10 +142,7 @@ local lspconfig_setup_server = function(server, config)
 		capabilities = capabilities,
 	}, config)
 
-	lspconfig[server].setup(meshed_config)
-end
-
-for server, config in pairs(lsp_servers) do
-	lspconfig_setup_server(server, config)
+	vim.lsp.enable(server)
+	vim.lsp.config(server, meshed_config)
 end
 -- [END] nvim-lspconfig.lua --

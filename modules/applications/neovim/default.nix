@@ -65,7 +65,9 @@ in {
           ${builtins.readFile ./highlight.lua}
           ${builtins.readFile ./keymap.lua}
           ${builtins.readFile ./opt.lua}
+
           -- [START] shared lsp serves table ---
+
           -- shared table for us to be able to attach lsp servers to dynamically --
           local lsp_servers = {
             bashls = {},
@@ -87,7 +89,9 @@ in {
           local function addLspServer(name, config)
             lsp_servers[name] = config
           end
+
           -- [END] shared lsp serves table ---
+
         '';
 
         plugins =
