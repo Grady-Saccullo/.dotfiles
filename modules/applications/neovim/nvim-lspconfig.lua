@@ -1,46 +1,9 @@
 -- [START] nvim-lspconfig.lua --
 
-local function find_config_file(file_names, start_path)
-	-- normalize the stop path, aka project root (cwd)
-	local stop_dir = vim.fn.resolve(vim.fn.getcwd())
-	local current_dir = start_path
-
-	while current_dir ~= "/" and current_dir ~= "" do
-		for _, file_name in ipairs(file_names) do
-			local config_path = current_dir .. "/" .. file_name
-			if vim.fn.filereadable(config_path) == 1 then
-				return config_path, current_dir
-			end
-		end
-
-		if vim.fn.resolve(current_dir) == stop_dir then
-			break
-		end
-
-		-- move up a dir
-		local parent_dir = vim.fn.fnamemodify(current_dir, ":h")
-
-		if current_dir == parent_dir then
-			break
-		end
-
-		current_dir = parent_dir
-	end
-
-	return nil, nil
-end
-
-local function has_config(file_names)
-	-- attempt to find in root
-	local root_config_path, root_config_dir = find_config_file(file_names, vim.fn.getcwd())
-	if root_config_path ~= nil then
-		return true, root_config_dir
-	end
-
-	-- if we didn't find in the config it is probably a mono repo
-	-- traverse backwards from the current file until we find a valid config
-	local traversal_config_path, traversal_config_dir = find_config_file(file_names, vim.fn.expand("%:p:h"))
-	return traversal_config_path ~= nil, traversal_config_dir
+local function find_dir_with_files(file_names, bufnr)
+	local fname = vim.api.nvim_buf_get_name(bufnr)
+	local root_dir = vim.fs.dirname(vim.fs.find(file_names, { path = fname, upward = true })[1])
+	return root_dir ~= nil, root_dir
 end
 
 local lspconfig_custom_attach = function(client, bufnr)
@@ -96,8 +59,8 @@ local lspconfig_custom_attach = function(client, bufnr)
 				vim.cmd("cd " .. vim.fn.fnameescape(og_cwg))
 			end
 
-			local biome_exists, biome_dir = has_config({ "biome.json", "biome.jsonc" })
-			local prettier_exists, prettier_dir = has_config({
+			local biome_exists, biome_dir = find_dir_with_files({ "biome.json", "biome.jsonc" })
+			local prettier_exists, prettier_dir = find_dir_with_files({
 				".prettierrc",
 				".prettierrc.json",
 				".prettierrc.yml",
