@@ -108,11 +108,16 @@ in rec {
         LSQuarantine = true;
       };
 
+      menuExtraClock = {
+        ShowSeconds = true;
+      };
+
       NSGlobalDomain = {
         # Make function keys stay function keys
         "com.apple.keyboard.fnState" = true;
         # I am a weirdo and like the natural scroll direction... don't ask
         "com.apple.swipescrolldirection" = true;
+        "com.apple.mouse.tapBehavior" = 1;
 
         AppleInterfaceStyle = "Dark";
         AppleShowAllExtensions = true;
@@ -139,6 +144,7 @@ in rec {
           enable = true;
           reattach = true;
           touchIdAuth = true;
+          watchIdAuth = true;
         };
       };
     };
