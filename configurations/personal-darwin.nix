@@ -48,6 +48,7 @@ in {
         enable = true;
         lsp = "vtsls";
         tsx.enable = true;
+        biome.enable = true;
       };
       ocaml.enable = true;
       rust.enable = true;

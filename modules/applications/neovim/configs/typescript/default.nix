@@ -13,7 +13,7 @@
     "typescript.enable"
   ];
 in {
-  imports = [./tsx.nix];
+  imports = [./tsx.nix ./biome.nix];
   options = {
     applications.neovim.typescript = {
       enable = mkEnableOption "TypeScript";
