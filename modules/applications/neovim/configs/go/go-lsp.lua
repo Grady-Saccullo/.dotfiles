@@ -1,6 +1,4 @@
 addLspServer("gopls", {
-	cmd = { "gopls", "serve" },
-	root_dir = require("lspconfig").util.root_pattern("go.mod", ".git"),
 	settings = {
 		gopls = {
 			hints = {

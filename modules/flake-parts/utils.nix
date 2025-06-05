@@ -7,6 +7,7 @@
   mkHomeManagerUser = mod: {
     home-manager.users.${me.user} = mod;
   };
+
   mkPlatformConfig = {
     base ? {},
     nixos ? {},
@@ -33,6 +34,7 @@
       (evalConfig isNixOS nixos)
       (evalConfig isLinux linux)
     ];
+
   allEnable = root: checks: let
     checkEnabled = path: let
       getPath = lib.attrByPath (lib.splitString "." path) false root;

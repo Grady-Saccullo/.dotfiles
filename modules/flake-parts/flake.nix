@@ -47,7 +47,7 @@ in {
           options = {
             stateVersion = mkOption {
               description = ''
-                Current version of nix (eg 24.11)
+                Current version of nix (eg 25.05)
               '';
               type = types.str;
             };
