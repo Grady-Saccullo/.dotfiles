@@ -146,7 +146,13 @@ in {
               config = builtins.readFile ./todo-comments-nvim.lua;
               type = "lua";
             }
+            {
+              plugin = vimPlugins.noice-nvim;
+              config = builtins.readFile ./noice-nvim.lua;
+              type = "lua";
+            }
 
+            vimPlugins.nui-nvim
             vimPlugins.cmp-buffer
             vimPlugins.cmp-git
             vimPlugins.cmp-nvim-lsp
