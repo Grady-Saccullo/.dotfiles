@@ -38,7 +38,6 @@ in {
       };
       go = {
         enable = true;
-        templ.enable = true;
       };
       docker.enable = true;
       python.enable = true;
