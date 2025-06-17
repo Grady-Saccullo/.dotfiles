@@ -26,9 +26,10 @@ in {
 
     programs.neovim.extraLuaConfig = let
       templEnabled = config.applications.neovim.go.templ.enable;
+      fileTypes = ["\"html\""] ++ lib.optionals templEnabled ["\"templ\""];
     in ''
       addLspServer("htmx", {
-      	filetypes = { "html", ${lib.optionals templEnabled "templ"}},
+        filetypes = { ${lib.concatStringsSep ", " fileTypes} },
       })
     '';
   });
