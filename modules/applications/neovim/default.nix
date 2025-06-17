@@ -141,6 +141,11 @@ in {
               config = builtins.readFile ./ts-comments-nvim.lua;
               type = "lua";
             }
+            {
+              plugin = vimPlugins.todo-comments-nvim;
+              config = builtins.readFile ./todo-comments-nvim.lua;
+              type = "lua";
+            }
 
             vimPlugins.cmp-buffer
             vimPlugins.cmp-git
@@ -157,7 +162,6 @@ in {
             vimPlugins.nvim-treesitter-context
             vimPlugins.nvim-treesitter-textobjects
             vimPlugins.plenary-nvim
-            vimPlugins.telescope-file-browser-nvim
             vimPlugins.telescope-fzf-native-nvim
             vimPlugins.vim-fugitive
             vimPlugins.vim-rhubarb
