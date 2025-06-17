@@ -27,7 +27,7 @@ in {
     github-cli.enable = true;
     neovim = {
       enable = true;
-      angualr.enable = true;
+      angular.enable = true;
       dap = {
         enable = true;
         go.enable = true;
