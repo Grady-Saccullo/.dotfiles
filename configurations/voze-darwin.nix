@@ -27,11 +27,36 @@ in {
     github-cli.enable = true;
     neovim = {
       enable = true;
-      angular.enable = true;
-      typescript.enable = true;
+      angualr.enable = true;
+      dap = {
+        enable = true;
+        go.enable = true;
+      };
+      db = {
+        enable = true;
+        sql.enable = true;
+      };
+      go = {
+        enable = true;
+        templ.enable = true;
+      };
+      docker.enable = true;
+      python.enable = true;
+      protobuf.enable = true;
       html = {
         enable = true;
+        htmx.enable = true;
       };
+      terraform.enable = true;
+      typescript = {
+        enable = true;
+        lsp = "vtsls";
+        tsx.enable = true;
+        biome.enable = true;
+      };
+      ocaml.enable = true;
+      rust.enable = true;
+      zig.enable = true;
     };
     raycast.enable = true;
     slack.enable = true;
