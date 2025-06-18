@@ -42,26 +42,17 @@ in {
         enable = true;
         sql.enable = true;
       };
-      go = {
-        enable = true;
-      };
+      go.enable = true;
       docker.enable = true;
       python.enable = true;
       protobuf.enable = true;
-      html = {
-        enable = true;
-        htmx.enable = true;
-      };
+      html.enable = true;
       terraform.enable = true;
       typescript = {
         enable = true;
         lsp = "vtsls";
         tsx.enable = true;
-        biome.enable = true;
       };
-      ocaml.enable = true;
-      rust.enable = true;
-      zig.enable = true;
     };
     raycast.enable = true;
     slack.enable = true;
