@@ -6,10 +6,12 @@
     ./bettersnaptool
     ./bitwarden
     ./brave
+    ./cursor-editor
     ./discord
     ./git
     ./github-cli
     ./hoppscotch
+    ./jetbrains
     ./neovim
     ./podman
     ./raycast

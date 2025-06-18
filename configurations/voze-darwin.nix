@@ -24,7 +24,13 @@ in {
       browserExtension.enable = true;
     };
     brave.enable = true;
+    cursor-editor.enable = true;
     github-cli.enable = true;
+    jetbrains = {
+      enable = true;
+      datagrip.enable = true;
+      idea.enable = true;
+    };
     neovim = {
       enable = true;
       angular.enable = true;
