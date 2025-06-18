@@ -66,8 +66,6 @@ in {
 
   system.defaults.dock.persistent-apps = [
     "${config.applications.wezterm.package}/Applications/WezTerm.app"
-    "/Applications/Android\ Studio.app"
-    "/Applications/Xcode.app"
     "${config.applications.slack.package}/Applications/Slack.app"
     "${config.applications.brave.package}/Applications/Brave\ Browser.app"
     "${config.applications.spotify.package}/Applications/Spotify.app"
