@@ -18,11 +18,29 @@ in {
 
   config = lib.mkIf cfg.enable (
     lib.mkMerge [
-      (utils.mkHomeManagerUser {
-        home.packages = [
-          pkgs.unstable._1password-gui
-          pkgs.unstable._1password-cli
-        ];
+      (utils.mkPlatformConfig {
+        darwin = {
+          programs._1password = {
+            enable = true;
+            package = pkgs.unstable._1password-cli;
+          };
+          programs._1password-gui = {
+            enable = true;
+            package = pkgs.unstable._1password-gui;
+          };
+        };
+        linux = utils.mkHomeManagerUser {
+          home.packages = [
+            pkgs.unstable._1password-gui
+            pkgs.unstable._1password-cli
+          ];
+        };
+        nixos = utils.mkHomeManagerUser {
+          home.packages = [
+            pkgs.unstable._1password-gui
+            pkgs.unstable._1password-cli
+          ];
+        };
       })
       (lib.mkIf cfg.browserExtension.enable {
         common.browserExtensions.chromium = [
