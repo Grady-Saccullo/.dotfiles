@@ -12,10 +12,11 @@ in {
   ];
 
   applications = {
-    _1password = {
-      enable = true;
-      browserExtension.enable = true;
-    };
+      # NOTE: 1pass updates are killin me... and causing havoc... might just be worth manually installing for darwin
+    # _1password = {
+    #   enable = true;
+    #   browserExtension.enable = true;
+    # };
     android-studio.enable = true;
     betterdisplay.enable = true;
     bettersnaptool.enable = true;
@@ -30,6 +31,7 @@ in {
       enable = true;
       datagrip.enable = true;
       idea.enable = true;
+      rider.enable = true;
     };
     neovim = {
       enable = true;

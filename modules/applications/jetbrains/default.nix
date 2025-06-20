@@ -34,6 +34,13 @@ in {
         };
         enable = mkEnableOption "JetBrains / IDEA";
       };
+      rider = {
+        package = mkOption {
+          type = types.package;
+          default = pkgs.unstable.jetbrains.rider;
+        };
+        enable = mkEnableOption "JetBrains / Rider";
+      };
     };
   };
 
@@ -41,6 +48,7 @@ in {
     home.packages =
       []
       ++ lib.optionals datagripEnable [cfg.datagrip.package]
-      ++ lib.optionals ideaEnable [cfg.idea.package];
+      ++ lib.optionals ideaEnable [cfg.idea.package]
+      ++ lib.optionals ideaEnable [cfg.rider.package];
   });
 }

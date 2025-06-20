@@ -20,13 +20,15 @@ in {
     lib.mkMerge [
       (utils.mkPlatformConfig {
         darwin = {
+          homebrew.casks = [
+            {
+              name = "1password";
+              greedy = true;
+            }
+          ];
           programs._1password = {
             enable = true;
             package = pkgs.unstable._1password-cli;
-          };
-          programs._1password-gui = {
-            enable = true;
-            package = pkgs.unstable._1password-gui;
           };
         };
         linux = utils.mkHomeManagerUser {
