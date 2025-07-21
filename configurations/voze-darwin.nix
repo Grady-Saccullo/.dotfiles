@@ -18,6 +18,10 @@ in {
     #   browserExtension.enable = true;
     # };
     android-studio.enable = true;
+    azure = {
+      enable = true;
+      vpn-client.enable = true;
+    };
     betterdisplay.enable = true;
     bettersnaptool.enable = true;
     bitwarden = {
@@ -26,6 +30,8 @@ in {
     };
     brave.enable = true;
     cursor-editor.enable = true;
+    charles-proxy.enable = true;
+    discord.enable = true;
     github-cli.enable = true;
     jetbrains = {
       enable = true;
@@ -56,7 +62,10 @@ in {
         tsx.enable = true;
       };
     };
-    raycast.enable = true;
+    raycast = {
+      enable = true;
+      browserExtension.enable = true;
+    };
     slack.enable = true;
     soundsource.enable = true;
     spotify.enable = true;

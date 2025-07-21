@@ -2,10 +2,12 @@
   imports = [
     ./1password
     ./android-studio
+    ./azure
     ./betterdisplay
     ./bettersnaptool
     ./bitwarden
     ./brave
+    ./charles-proxy
     ./cursor-editor
     ./discord
     ./git

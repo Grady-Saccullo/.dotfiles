@@ -11,7 +11,6 @@ in {
   options = {
     applications._1password = {
       enable = mkEnableOption "1Password";
-
       browserExtension.enable = mkEnableOption "1Password Browser Extension";
     };
   };
