@@ -25,7 +25,7 @@ in {
     mkIf enable (mkHomeManagerUser {
       programs.neovim.extraPackages = [
         pkgs.unstable.docker-compose-language-service
-        pkgs.unstable.dockerfile-language-server-nodejs
+        pkgs.unstable.dockerfile-language-server
       ];
       programs.neovim.plugins = [
         (vimPlugins.nvim-treesitter.withPlugins (p: [p.dockerfile]))

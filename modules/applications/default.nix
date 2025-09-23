@@ -1,5 +1,6 @@
 {...}: {
   imports = [
+    ./ai
     ./1password
     ./android-studio
     ./azure
@@ -10,6 +11,7 @@
     ./charles-proxy
     ./cursor-editor
     ./discord
+    ./docker
     ./git
     ./github-cli
     ./hoppscotch

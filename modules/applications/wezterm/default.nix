@@ -48,7 +48,7 @@ in {
             brights = ["#393939" "#ee5396" "#42be65" "#ffe97b" "#33b1ff" "#ff7eb6" "#3ddbd9" "#ffffff"];
 
             tab_bar = {
-              background = "#262626";
+              background = "rgba(0,0,0,0)";
 
               active_tab = {
                 bg_color = "#161616";

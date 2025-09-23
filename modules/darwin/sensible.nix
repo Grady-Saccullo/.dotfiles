@@ -25,7 +25,7 @@ in rec {
           Minute = 0;
         }
       ];
-      options = "--delete-older-than 30d";
+      options = "--delete-older-than 7d";
     };
     optimise = {
       automatic = true;

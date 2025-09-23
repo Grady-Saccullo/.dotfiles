@@ -12,6 +12,10 @@ in {
   ];
 
   applications = {
+    ai = {
+      enable = true;
+      claude-code.enable = true;
+    };
     betterdisplay.enable = true;
     bettersnaptool.enable = true;
     bitwarden = {
@@ -20,6 +24,7 @@ in {
     };
     brave.enable = true;
     discord.enable = true;
+    docker.enable = true;
     github-cli.enable = true;
     hoppscotch.enable = true;
     neovim = {
@@ -58,7 +63,6 @@ in {
     raycast.enable = true;
     soundsource.enable = true;
     spotify.enable = true;
-    todoist.enable = true;
     utm.enable = true;
     wezterm.enable = true;
   };
@@ -66,7 +70,7 @@ in {
   system.defaults.dock.persistent-apps = [
     "${config.applications.wezterm.package}/Applications/WezTerm.app"
     "${config.applications.brave.package}/Applications/Brave\ Browser.app"
-    "${config.applications.spotify.package}/Applications/Spotify.app"
+    config.applications.spotify.path
     "/System/Applications/Messages.app"
   ];
 }
