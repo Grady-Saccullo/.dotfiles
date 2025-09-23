@@ -12,7 +12,7 @@ in {
   ];
 
   applications = {
-      # NOTE: 1pass updates are killin me... and causing havoc... might just be worth manually installing for darwin
+    # NOTE: 1pass updates are killin me... and causing havoc... might just be worth manually installing for darwin
     # _1password = {
     #   enable = true;
     #   browserExtension.enable = true;
@@ -32,6 +32,7 @@ in {
     cursor-editor.enable = true;
     charles-proxy.enable = true;
     discord.enable = true;
+    docker.enable = true;
     github-cli.enable = true;
     jetbrains = {
       enable = true;
@@ -69,7 +70,6 @@ in {
     slack.enable = true;
     soundsource.enable = true;
     spotify.enable = true;
-    todoist.enable = true;
     wezterm.enable = true;
     xcode.enable = true;
     zoom.enable = true;
@@ -79,7 +79,7 @@ in {
     "${config.applications.wezterm.package}/Applications/WezTerm.app"
     "${config.applications.slack.package}/Applications/Slack.app"
     "${config.applications.brave.package}/Applications/Brave\ Browser.app"
-    "${config.applications.spotify.package}/Applications/Spotify.app"
+    config.applications.spotify.path
     "/System/Applications/Messages.app"
   ];
 }
