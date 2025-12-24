@@ -25,77 +25,86 @@
     wezterm.url = "github:wezterm/wezterm?dir=nix";
   };
 
-  outputs = inputs @ {self, ...}:
+  outputs = inputs @ {self, ...}: let
+    pkgsFor = system:
+      import inputs.nixpkgs-unstable {
+        localSystem = system;
+        overlays = [(import ./overlays {inherit inputs;})];
+        config = {
+          allowUnfree = true;
+          allowUnsupportedSystem = true;
+        };
+      };
+
+    nixpkgsModule = system: {
+      nixpkgs.hostPlatform = system;
+      nixpkgs.pkgs = pkgsFor system;
+    };
+
+    mkDarwinHost = {
+      system,
+      user,
+      configPath,
+    }: let
+      machineType = "darwin";
+      me = {inherit user;};
+    in
+      inputs.darwin.lib.darwinSystem {
+        inherit system;
+        specialArgs = {
+          inherit inputs me machineType;
+          utils = import ./modules/flake-parts/utils.nix {
+            inherit me machineType;
+            inherit (inputs.nixpkgs-unstable) lib;
+          };
+        };
+        modules = [
+          configPath
+          ./modules/flake-parts/common.nix
+          (nixpkgsModule system)
+        ];
+      };
+  in
     inputs.flake-parts.lib.mkFlake {inherit inputs;} {
       imports = [
         ./modules/flake-parts/flake.nix
         ./modules/flake-parts/devshells.nix
         ./modules/flake-parts/apps.nix
       ];
-      systems = ["aarch64-darwin"];
+
+      systems = ["aarch64-darwin" "aarch64-linux"];
+
       perSystem = {system, ...}: {
-        _module.args.pkgs = import inputs.nixpkgs {
-          inherit system;
-          overlays = [(import ./overlays {inherit inputs;})];
-          config = {
-            allowUnfree = true;
-            allowUnsupportedSystem = true;
-          };
-        };
+        _module.args.pkgs = pkgsFor system;
       };
+
       flake = {
         constants = {
           stateVersion = "25.05";
           darwinStateVersion = 6;
         };
+
         applications = ./modules/applications;
+
         homeManagerModules = {
           darwinModule = ./modules/home-manager/darwin.nix;
         };
+
         darwinModules = {
           sensible = ./modules/darwin/sensible.nix;
         };
+
         darwinConfigurations = {
-          personal = inputs.darwin.lib.darwinSystem {
+          personal = mkDarwinHost {
             system = "aarch64-darwin";
-            specialArgs = let
-              machineType = "darwin";
-              me = {
-                user = "hackerman";
-              };
-            in {
-              inherit inputs me machineType;
-              utils = import ./modules/flake-parts/utils.nix {
-                inherit me machineType;
-                inherit (inputs.nixpkgs) lib;
-              };
-            };
-            modules = [
-              ./configurations/personal-darwin.nix
-              ./modules/flake-parts/common.nix
-              ./modules/nixpkgs.nix
-            ];
+            user = "hackerman";
+            configPath = ./configurations/personal-darwin.nix;
           };
 
-          voze = inputs.darwin.lib.darwinSystem {
+          voze = mkDarwinHost {
             system = "aarch64-darwin";
-            specialArgs = let
-              machineType = "darwin";
-              me = {
-                user = "grady-saccullo";
-              };
-            in {
-              inherit inputs me machineType;
-              utils = import ./modules/flake-parts/utils.nix {
-                inherit me machineType;
-                inherit (inputs.nixpkgs) lib;
-              };
-            };
-            modules = [
-              ./configurations/voze-darwin.nix
-              ./modules/flake-parts/common.nix
-              ./modules/nixpkgs.nix
-            ];
+            user = "grady-saccullo";
+            configPath = ./configurations/voze-darwin.nix;
           };
         };
       };

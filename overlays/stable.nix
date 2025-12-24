@@ -1,6 +1,7 @@
-# Provides pkgs.unstable for accessing unstable nixpkgs packages
+# Provides pkgs.stable for accessing stable nixpkgs packages
+# (base pkgs is unstable for darwin compatibility)
 {inputs, ...}: final: prev: {
-  unstable = import inputs.nixpkgs-unstable {
+  stable = import inputs.nixpkgs {
     localSystem = final.stdenv.hostPlatform.system;
     config = {
       allowUnfree = true;
