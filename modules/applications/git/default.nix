@@ -1,3 +1,4 @@
+
 {
   utils,
   lib,
@@ -7,6 +8,7 @@
 }: let
   inherit (lib) mkOption types;
   cfg = config.applications.git;
+  gitAliases = import ./git-aliases.nix;
 in {
   options = {
     applications.git = {
@@ -39,6 +41,10 @@ in {
       delta = {
         enable = true;
         enableGitIntegration = true;
+      };
+      zsh = {
+        shellAliases = gitAliases.aliases;
+        initContent = gitAliases.initContent;
       };
     };
   };

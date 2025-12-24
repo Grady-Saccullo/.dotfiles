@@ -11,19 +11,44 @@ in {
   options = {
     applications.shell = {
       zsh.enable = (mkEnableOption "Shell / zsh") // {default = true;};
-      fzf.enable = (mkEnableOption "Shell / fzf") // {default = true;};
+      starship.enable = (mkEnableOption "Shell / starship") // {default = true;};
       tmux.enable = (mkEnableOption "Shell / tmux") // {default = true;};
       direnv.enable = (mkEnableOption "Shell / direnv") // {default = true;};
+      fzf = {
+        enable = (mkEnableOption "Shell / fzf") // {default = true;};
+        searchPaths = lib.mkOption {
+          type = lib.types.listOf lib.types.str;
+          default = ["$HOME"];
+          description = "Directories for fd/fzf to search";
+        };
+      };
     };
   };
   config = utils.mkHomeManagerUser {
     programs = {
-      # TODO: figure out where i want to put these. here works for now
       bat.enable = true;
       btop.enable = true;
       jq.enable = true;
+      ripgrep.enable = true;
+
+      eza = {
+        enable = true;
+        git = true;
+        enableZshIntegration = cfg.zsh.enable;
+        extraOptions = [
+          "--group-directories-first"
+          "--header"
+        ];
+      };
 
       fzf = lib.mkIf cfg.fzf.enable (let
+        searchPaths = lib.concatStringsSep " " (
+          cfg.fzf.searchPaths
+          ++ [
+            "$HOME/.dotfiles"
+            "$HOME/.config"
+          ]
+        );
         baseOptions = [
           "--height 100%"
           "--layout default"
@@ -39,10 +64,11 @@ in {
         enable = true;
         package = pkgs.unstable.fzf;
         enableZshIntegration = cfg.zsh.enable;
-        defaultCommand = "fd -t f -H . $HOME";
-        fileWidgetCommand = "fd -t f -H . $HOME";
+        defaultCommand = "fd -t f -H . ${searchPaths}";
+        fileWidgetCommand = "fd -t f -H . ${searchPaths}";
         fileWidgetOptions = fileOptions;
-        changeDirWidgetCommand = "fd -t d -H . $HOME";
+        # append root search paths so they're also selectable
+        changeDirWidgetCommand = "{ fd -t d -H . ${searchPaths}; echo ${searchPaths} | tr ' ' '\\n'; } | sort -u";
         changeDirWidgetOptions = baseOptions;
         tmux.enableShellIntegration = cfg.tmux.enable;
       });
@@ -50,38 +76,21 @@ in {
       fd = lib.mkIf cfg.fzf.enable {
         enable = true;
         ignores = [
-          ".aws/"
-          ".bash_sessions/"
-          ".cache/"
-          ".cargo/"
-          ".config/"
-          ".gem/"
           ".git/"
-          ".local/"
-          ".matplotlib/"
-          ".nix-defexpr/"
-          ".nix-profile/"
-          ".npm/"
-          ".rustup/"
-          ".ssh/"
-          ".tmux/"
-          ".Trash/"
-          ".vim/"
-          ".zsh_sessions/"
-          "Applications/"
-          "bin/"
+          ".gradle/"
+          ".terraform/"
+          ".elixir_ls/"
+          ".lsp/"
+          "_build/"
           "build/"
+          "deps/"
           "dist/"
-          "go/"
-          "Library/"
-          "Movies/"
-          "Music/"
           "node_modules/"
           "out/"
-          "Pictures/"
-          "Public/"
           "target/"
           "vendor/"
+          "zig-cache/"
+          "zig-out/"
         ];
       };
 
@@ -91,14 +100,13 @@ in {
           l = "ls -la";
           cl = "clear";
         };
+        autosuggestion.enable = true;
+        syntaxHighlighting.enable = true;
+      };
 
-        oh-my-zsh = {
-          enable = true;
-          plugins = [
-            "git"
-          ];
-          theme = "robbyrussell";
-        };
+      starship = lib.mkIf cfg.starship.enable {
+        enable = true;
+        enableZshIntegration = cfg.zsh.enable;
       };
 
       tmux = lib.mkIf cfg.tmux.enable {
@@ -126,6 +134,13 @@ in {
           enable = true;
         };
       };
+    };
+
+    home.sessionVariables = {
+      EZA_CONFIG_DIR = "${pkgs.runCommand "eza-config" {} ''
+        mkdir -p $out
+        cp ${./eza-theme.yaml} $out/theme.yml
+      ''}";
     };
   };
 }

@@ -1,0 +1,102 @@
+colourful: false
+
+filekinds:
+  normal: { foreground: Default }
+  directory: { foreground: Blue }
+  symlink: { foreground: Cyan }
+  pipe: { foreground: Default }
+  block_device: { foreground: Default }
+  char_device: { foreground: Default }
+  socket: { foreground: Default }
+  special: { foreground: Default }
+  executable: { foreground: Green }
+  mount_point: { foreground: Blue, is_underline: true }
+
+perms:
+  user_read: { foreground: Blue }
+  user_write: { foreground: Purple }
+  user_execute_file: { foreground: Cyan }
+  user_execute_other: { foreground: Cyan }
+  group_read: { foreground: Blue }
+  group_write: { foreground: Purple }
+  group_execute: { foreground: Cyan }
+  other_read: { foreground: Blue }
+  other_write: { foreground: Purple }
+  other_execute: { foreground: Cyan }
+  special_user_file: { foreground: Purple }
+  special_other: { foreground: Purple }
+  attribute: { foreground: Default }
+
+size:
+  major: { foreground: Default, is_dimmed: true }
+  minor: { foreground: Default, is_dimmed: true }
+  number_byte: { foreground: Default, is_dimmed: true }
+  number_kilo: { foreground: Default, is_dimmed: true }
+  number_mega: { foreground: Default, is_dimmed: true }
+  number_giga: { foreground: Default, is_dimmed: true }
+  number_huge: { foreground: Default, is_dimmed: true }
+  unit_byte: { foreground: Default, is_dimmed: true }
+  unit_kilo: { foreground: Default, is_dimmed: true }
+  unit_mega: { foreground: Default, is_dimmed: true }
+  unit_giga: { foreground: Default, is_dimmed: true }
+  unit_huge: { foreground: Default, is_dimmed: true }
+
+users:
+  user_you: { foreground: White, is_dimmed: true }
+  user_root: { foreground: Red, is_dimmed: true }
+  user_other: { foreground: White, is_dimmed: true }
+  group_yours: { foreground: White, is_dimmed: true }
+  group_other: { foreground: White, is_dimmed: true }
+  group_root: { foreground: White, is_dimmed: true }
+
+links:
+  normal: { foreground: Default }
+  multi_link_file: { foreground: Default }
+
+git:
+  new: { foreground: Green, is_dimmed: true }
+  modified: { foreground: Blue, is_dimmed: true }
+  deleted: { foreground: Red, is_dimmed: true }
+  renamed: { foreground: Cyan, is_dimmed: true }
+  typechange: { foreground: Purple, is_dimmed: true }
+  ignored: { foreground: Default, is_dimmed: true }
+  conflicted: { foreground: Red }
+
+git_repo:
+  branch_main: { foreground: Default }
+  branch_other: { foreground: Default }
+  git_clean: { foreground: Green }
+  git_dirty: { foreground: Default }
+
+security_context:
+  colon: { foreground: Default, is_dimmed: true }
+  user: { foreground: Default, is_dimmed: true }
+  role: { foreground: Default, is_dimmed: true }
+  typ: { foreground: Default, is_dimmed: true }
+  range: { foreground: Default, is_dimmed: true }
+
+file_type:
+  image: { foreground: Purple, is_dimmed: true }
+  video: { foreground: Purple, is_dimmed: true }
+  music: { foreground: Cyan, is_dimmed: true }
+  lossless: { foreground: Cyan, is_dimmed: true }
+  crypto: { foreground: Default, is_dimmed: true }
+  document: { foreground: Default, is_dimmed: true }
+  compressed: { foreground: Default, is_dimmed: true }
+  temp: { foreground: Default, is_dimmed: true }
+  compiled: { foreground: Default, is_dimmed: true }
+  build: { foreground: Default, is_dimmed: true }
+  source: { foreground: Default, is_dimmed: true }
+
+punctuation: { foreground: Default, is_dimmed: true }
+date: { foreground: White, is_dimmed: true }
+inode: { foreground: Default, is_dimmed: true }
+blocks: { foreground: Default, is_dimmed: true }
+header: { foreground: Default, is_dimmed: true, is_underline: true }
+octal: { foreground: Default }
+flags: { foreground: Default, is_dimmed: true }
+
+symlink_path: { foreground: Cyan }
+control_char: { foreground: Red }
+broken_symlink: { foreground: Red }
+broken_path_overlay: { foreground: Red, is_underline: true }
