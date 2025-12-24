@@ -16,6 +16,7 @@ in {
       enable = true;
       claude-code.enable = true;
     };
+    android-studio.enable = true;
     betterdisplay.enable = true;
     bettersnaptool.enable = true;
     bitwarden = {
@@ -23,12 +24,14 @@ in {
       browserExtension.enable = true;
     };
     brave.enable = true;
+    devenv.enable = true;
     discord.enable = true;
     docker.enable = true;
     github-cli.enable = true;
     hoppscotch.enable = true;
     neovim = {
       enable = true;
+      elixir.enable = true;
       dap = {
         enable = true;
         go.enable = true;
@@ -61,10 +64,11 @@ in {
     };
     podman.enable = true;
     raycast.enable = true;
-    soundsource.enable = true;
+    # soundsource.enable = true;
     spotify.enable = true;
     utm.enable = true;
     wezterm.enable = true;
+    xcode.enable = true;
   };
 
   system.defaults.dock.persistent-apps = [

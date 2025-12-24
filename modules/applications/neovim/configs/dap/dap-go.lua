@@ -16,6 +16,13 @@ require("dap-go").setup({
 			mode = "remote",
 			request = "attach",
 		},
+		{
+			type = "go",
+			name = "Debug (Build Flags)",
+			request = "launch",
+			program = "${file}",
+			buildFlags = require("dap-go").get_build_flags
+		}
 	},
 })
 -- [END] dap-go.lua --

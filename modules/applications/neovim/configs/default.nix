@@ -4,6 +4,7 @@
     ./dap
     ./db
     ./docker
+    ./elixir
     ./go
     ./html
     ./ocaml

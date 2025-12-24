@@ -10,6 +10,7 @@
     ./brave
     ./charles-proxy
     ./cursor-editor
+    ./devenv
     ./discord
     ./docker
     ./git

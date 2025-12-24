@@ -26,14 +26,19 @@ in {
       git = {
         enable = true;
         package = pkgs.unstable.git;
-        userName = cfg.username;
-        userEmail = cfg.email;
+        settings = {
+          user = {
+            email = cfg.email;
+            name = cfg.username;
+          };
+        };
         lfs = {
           enable = true;
         };
-        delta = {
-          enable = true;
-        };
+      };
+      delta = {
+        enable = true;
+        enableGitIntegration = true;
       };
     };
   };

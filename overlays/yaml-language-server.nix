@@ -1,6 +1,6 @@
 final: prev: {
   yaml-language-server = prev.yaml-language-server.overrideAttrs (oldAttrs: {
-    version = "1.18.0-main";
+    version = "1.20.0-main";
 
     src = prev.fetchFromGitHub {
       owner = "redhat-developer";

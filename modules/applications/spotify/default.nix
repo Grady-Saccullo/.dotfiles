@@ -18,7 +18,7 @@ in {
         default = pkgs.unstable.spotify;
       };
       path = mkOption {
-        type = types.string;
+        type = types.str;
         default = if isDarwin 
           then "/Applications/Spotify.app"
           else "${cfg.package}/Applications/Spotify.app";

@@ -27,6 +27,7 @@ in rec {
       ];
       options = "--delete-older-than 7d";
     };
+
     optimise = {
       automatic = true;
       interval = [
@@ -37,10 +38,13 @@ in rec {
         }
       ];
     };
+
     extraOptions = ''
       experimental-features = nix-command flakes
       extra-platforms = aarch64-darwin x86_64-darwin
     '';
+
+    settings.trusted-users = ["root" "${me.user}"];
   };
 
   homebrew = {

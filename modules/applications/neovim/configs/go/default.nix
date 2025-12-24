@@ -30,6 +30,7 @@ in {
           p.gosum
           p.gowork
         ]))
+        (vimPlugins.go-nvim)
       ];
 
       programs.neovim.extraPackages = [
@@ -37,6 +38,7 @@ in {
       ];
 
       programs.neovim.extraLuaConfig = ''
+        require('go').setup()
         ${builtins.readFile ./go-lsp.lua}
       '';
     });

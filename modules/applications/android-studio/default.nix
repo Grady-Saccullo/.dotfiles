@@ -15,7 +15,7 @@ in {
   };
   config = lib.mkIf cfg.enable (utils.mkPlatformConfig {
     base = utils.mkHomeManagerUser {
-      home.packages = [pkgs.unstable.android-tools];
+      home.packages = [pkgs.unstable.android-tools pkgs.jdk17];
     };
     darwin = {
       homebrew.casks = [
