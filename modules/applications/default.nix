@@ -1,6 +1,5 @@
 {...}: {
   imports = [
-    ./claude-code
     ./1password
     ./android-studio
     ./azure
@@ -9,6 +8,7 @@
     ./bitwarden
     ./brave
     ./charles-proxy
+    ./claude-code
     ./cursor-editor
     ./devenv
     ./discord
