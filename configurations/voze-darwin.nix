@@ -22,6 +22,7 @@ in {
       enable = true;
       vpn-client.enable = true;
     };
+    claude-code.enable = true;
     betterdisplay.enable = true;
     bettersnaptool.enable = true;
     bitwarden = {

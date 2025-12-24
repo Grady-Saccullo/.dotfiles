@@ -12,10 +12,7 @@ in {
   ];
 
   applications = {
-    ai = {
-      enable = true;
-      claude-code.enable = true;
-    };
+    claude-code.enable = true;
     android-studio.enable = true;
     betterdisplay.enable = true;
     bettersnaptool.enable = true;

@@ -1,6 +1,6 @@
 {...}: {
   imports = [
-    ./ai
+    ./claude-code
     ./1password
     ./android-studio
     ./azure
