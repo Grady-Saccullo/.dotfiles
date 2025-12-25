@@ -1,51 +1,48 @@
-
 {
   utils,
+  config,
   lib,
   pkgs,
-  config,
   ...
 }: let
-  inherit (lib) mkOption types;
-  cfg = config.applications.git;
   gitAliases = import ./git-aliases.nix;
-in {
-  options = {
-    applications.git = {
-      username = mkOption {
-        type = types.str;
+in
+  utils.mkAppModule {
+    path = "git";
+    inherit config;
+    default = true;
+    extraOptions = {
+      username = lib.mkOption {
+        type = lib.types.str;
         default = "Grady Saccullo";
       };
-      email = mkOption {
-        type = types.str;
+      email = lib.mkOption {
+        type = lib.types.str;
         default = "gradys.dev@gmail.com";
       };
     };
-  };
-  config = utils.mkHomeManagerUser {
-    home.packages = [pkgs.unstable.git-filter-repo];
-    programs = {
-      git = {
-        enable = true;
-        package = pkgs.unstable.git;
-        settings = {
-          user = {
-            email = cfg.email;
-            name = cfg.username;
-          };
-        };
-        lfs = {
+  } (cfg:
+    utils.mkHomeManagerUser {
+      home.packages = [pkgs.unstable.git-filter-repo];
+      programs = {
+        git = {
           enable = true;
+          package = pkgs.unstable.git;
+          settings = {
+            user = {
+              email = cfg.email;
+              name = cfg.username;
+            };
+          };
+          lfs.enable = true;
+        };
+        delta = {
+          enable = true;
+          enableGitIntegration = true;
+        };
+        zsh = lib.mkIf config.applications.zsh.enable {
+          shellAliases = gitAliases.aliases;
+          initContent = gitAliases.initContent;
         };
       };
-      delta = {
-        enable = true;
-        enableGitIntegration = true;
-      };
-      zsh = {
-        shellAliases = gitAliases.aliases;
-        initContent = gitAliases.initContent;
-      };
-    };
-  };
-}
+    })

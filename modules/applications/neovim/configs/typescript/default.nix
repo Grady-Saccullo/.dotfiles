@@ -4,54 +4,43 @@
   pkgs,
   utils,
   ...
-}: let
-  inherit (lib) mkEnableOption mkOption mkIf types;
-  inherit (utils) allEnable mkHomeManagerUser;
-
-  enable = allEnable config.applications.neovim [
-    "enable"
-    "typescript.enable"
-  ];
-in {
-  imports = [./tsx.nix ./biome.nix];
-  options = {
-    applications.neovim.typescript = {
-      enable = mkEnableOption "TypeScript";
-      lsp = mkOption {
-        type = types.enum ["tsls" "vtsls"];
-        default = "tsls";
-        description = "TypeScript LSP server to use (tsls, vtsls)";
-      };
+}:
+utils.mkNeovimModule {
+  inherit config pkgs;
+  imports = [./biome.nix ./tsx.nix];
+  path = "typescript";
+  extraOptions = {
+    lsp = lib.mkOption {
+      type = lib.types.enum ["tsls" "vtsls"];
+      default = "tsls";
+      description = "TypeScript LSP server to use (tsls, vtsls)";
     };
   };
+} ({
+  vimPlugins,
+  cfg,
+}: {
+  plugins =
+    [
+      (vimPlugins.nvim-treesitter.withPlugins (p: [p.typescript p.javascript]))
+    ]
+    ++ lib.optionals (cfg.lsp == "tsls") [
+      vimPlugins.nvim-lsp-ts-utils
+    ];
 
-  config = let
-    vimPlugins = pkgs.unstable.vimPlugins;
-    lsp = config.applications.neovim.typescript.lsp;
-  in
-    mkIf enable (mkHomeManagerUser {
-      programs.neovim.plugins =
-        [
-          (vimPlugins.nvim-treesitter.withPlugins (p: [p.typescript p.javascript]))
-        ]
-        ++ lib.optionals (lsp == "tsls") [
-          vimPlugins.nvim-lsp-ts-utils
-        ];
+  extraPackages =
+    lib.optionals (cfg.lsp == "tsls") [
+      pkgs.unstable.typescript-language-server
+    ]
+    ++ lib.optionals (cfg.lsp == "vtsls") [
+      pkgs.unstable.vtsls
+    ];
 
-      programs.neovim.extraPackages =
-        lib.optionals (lsp == "tsls") [
-          pkgs.unstable.typescript-language-server
-        ]
-        ++ lib.optionals (lsp == "vtsls") [
-          pkgs.unstable.vtsls
-        ];
-
-      programs.neovim.extraLuaConfig =
-        lib.optionalString (lsp == "tsls") ''
-          ${builtins.readFile ./typescript-lsp-tsls.lua}
-        ''
-        + lib.optionalString (lsp == "vtsls") ''
-          ${builtins.readFile ./typescript-lsp-vtsls.lua}
-        '';
-    });
-}
+  extraLuaConfig =
+    lib.optionalString (cfg.lsp == "tsls") ''
+      ${builtins.readFile ./typescript-lsp-tsls.lua}
+    ''
+    + lib.optionalString (cfg.lsp == "vtsls") ''
+      ${builtins.readFile ./typescript-lsp-vtsls.lua}
+    '';
+})

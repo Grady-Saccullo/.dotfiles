@@ -1,27 +1,21 @@
 {
-  config,
-  lib,
   utils,
+  config,
   ...
-}: let
-  inherit (lib) mkEnableOption;
-  cfg = config.applications.betterdisplay;
-in {
-  options = {
-    applications.betterdisplay = {
-      enable = mkEnableOption "BetterDisplay";
-    };
-  };
-  config = lib.mkIf cfg.enable (utils.mkPlatformConfig {
-    darwin = {
-      homebrew.casks = [
-        {
-          name = "betterdisplay";
-          greedy = true;
-        }
-      ];
-    };
-    nixos = "betterdisplay is only supported on darwin";
-    linux = "betterdisplay is only supported on darwin";
-  });
-}
+}:
+utils.mkAppModule {
+  path = "betterdisplay";
+  inherit config;
+} (cfg:
+    utils.mkPlatformConfig {
+      darwin = {
+        homebrew.casks = [
+          {
+            name = "betterdisplay";
+            greedy = true;
+          }
+        ];
+      };
+      nixos = "betterdisplay is only supported on darwin";
+      linux = "betterdisplay is only supported on darwin";
+    })

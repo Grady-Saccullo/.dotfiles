@@ -1,21 +1,17 @@
 {
-  pkgs,
-  config,
   utils,
+  config,
   lib,
+  pkgs,
   ...
-}: let
-  inherit (lib) mkEnableOption;
-  cfg = config.applications._1password;
-in {
-  options = {
-    applications._1password = {
-      enable = mkEnableOption "1Password";
-      browserExtension.enable = mkEnableOption "1Password Browser Extension";
-    };
+}:
+utils.mkAppModule {
+  inherit config;
+  path = "_1password";
+  extraOptions = {
+    browserExtension.enable = lib.mkEnableOption "1Password Browser Extension";
   };
-
-  config = lib.mkIf cfg.enable (
+} (cfg:
     lib.mkMerge [
       (utils.mkPlatformConfig {
         darwin = {
@@ -48,6 +44,4 @@ in {
           {id = "aeblfdkhhhdcdjpifhhbdiojplfjncoa";}
         ];
       })
-    ]
-  );
-}
+    ])

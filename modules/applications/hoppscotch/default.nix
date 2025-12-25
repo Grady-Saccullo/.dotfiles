@@ -1,20 +1,13 @@
 {
-  pkgs,
   utils,
-  lib,
   config,
+  pkgs,
   ...
-}: let
-  inherit (lib) mkEnableOption;
-  cfg = config.applications.hoppscotch;
-in {
-  options = {
-    applications.hoppscotch = {
-      enable = mkEnableOption "Hoppscotch";
-    };
-  };
-
-  config = lib.mkIf cfg.enable (utils.mkHomeManagerUser {
-    home.packages = [pkgs.unstable.hoppscotch];
-  });
-}
+}:
+utils.mkAppModule {
+  path = "hoppscotch";
+  inherit config;
+} (cfg:
+    utils.mkHomeManagerUser {
+      home.packages = [pkgs.unstable.hoppscotch];
+    })

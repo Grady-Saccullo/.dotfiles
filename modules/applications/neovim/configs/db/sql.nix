@@ -1,13 +1,16 @@
 {
   config,
-  lib,
   pkgs,
   utils,
   ...
+}:
+utils.mkNeovimModule {
+  inherit config pkgs;
+  path = ["db" "sql"];
+} ({
+  vimPlugins,
+  cfg,
 }: let
-  inherit (lib) mkEnableOption mkIf;
-  inherit (utils) allEnable mkHomeManagerUser;
-
   sqls-nvim = pkgs.unstable.vimUtils.buildVimPlugin {
     name = "sqls.nvim";
     src = pkgs.unstable.fetchFromGitHub {
@@ -17,38 +20,21 @@
       sha256 = "bQKO5Kq4Jc8v7d6OSkkzjqYHzt8c5C71xzHHABErlsg=";
     };
   };
-
-  enable = allEnable config.applications.neovim [
-    "enable"
-    "db.enable"
-    "db.sql.enable"
-  ];
 in {
-  options = {
-    applications.neovim.db.sql = {
-      enable = mkEnableOption "SQL Database";
-    };
-  };
+  plugins = [
+    (vimPlugins.nvim-treesitter.withPlugins (p: [p.sql]))
+    sqls-nvim
+  ];
 
-  config = let
-    vimPlugins = pkgs.unstable.vimPlugins;
-  in
-    mkIf enable (mkHomeManagerUser {
-      programs.neovim.plugins = [
-        (vimPlugins.nvim-treesitter.withPlugins (p: [p.sql]))
-        sqls-nvim
-      ];
+  extraPackages = [
+    pkgs.unstable.sqls
+  ];
 
-      programs.neovim.extraPackages = [
-        pkgs.unstable.sqls
-      ];
-
-      programs.neovim.extraLuaConfig = ''
-        addLspServer("sqls", {
-          on_attach = function(client, bufnr)
-            require('sqls').on_attach(client, bufnr)
-          end
-        })
-      '';
-    });
-}
+  extraLuaConfig = ''
+    addLspServer("sqls", {
+      on_attach = function(client, bufnr)
+        require('sqls').on_attach(client, bufnr)
+      end
+    })
+  '';
+})

@@ -2,32 +2,41 @@
   imports = [
     ./1password
     ./android-studio
-    ./azure
+    ./azure-vpn
+    ./bat
     ./betterdisplay
     ./bettersnaptool
     ./bitwarden
     ./brave
+    ./btop
     ./charles-proxy
     ./claude-code
     ./cursor-editor
     ./devenv
+    ./direnv
     ./discord
     ./docker
+    ./eza
+    ./fzf
     ./git
     ./github-cli
     ./hoppscotch
     ./jetbrains
+    ./jq
     ./neovim
     ./podman
     ./raycast
-    ./shell
+    ./ripgrep
     ./slack
     ./soundsource
     ./spotify
+    ./starship
+    ./tmux
     ./todoist
     ./utm
     ./wezterm
     ./xcode
     ./zoom
+    ./zsh
   ];
 }

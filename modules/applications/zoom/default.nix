@@ -1,21 +1,13 @@
 {
-  pkgs,
   utils,
   config,
-  lib,
+  pkgs,
   ...
-}: let
-  inherit (lib) mkEnableOption;
-  cfg = config.applications.zoom;
-in {
-  options = {
-    applications.zoom = {
-      enable = mkEnableOption "Zoom";
-    };
-  };
-  config = lib.mkIf cfg.enable (
+}:
+utils.mkAppModule {
+  inherit config;
+  path = "zoom";
+} (cfg:
     utils.mkHomeManagerUser {
       home.packages = [pkgs.unstable.zoom-us];
-    }
-  );
-}
+    })

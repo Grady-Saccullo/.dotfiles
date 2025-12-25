@@ -1,45 +1,30 @@
 {
   config,
-  lib,
   pkgs,
   utils,
   ...
-}: let
-  inherit (lib) mkEnableOption mkIf;
-  inherit (utils) mkHomeManagerUser allEnable;
-  enable = allEnable config.applications.neovim [
-    "enable"
-    "go.enable"
-  ];
-in {
+}:
+utils.mkNeovimModule {
+  inherit config pkgs;
   imports = [./templ.nix];
-  options = {
-    applications.neovim.go = {
-      enable = mkEnableOption "Go";
-    };
-  };
+  path = "go";
+} ({vimPlugins, ...}: {
+  plugins = [
+    (vimPlugins.nvim-treesitter.withPlugins (p: [
+      p.go
+      p.gomod
+      p.gosum
+      p.gowork
+    ]))
+    (vimPlugins.go-nvim)
+  ];
 
-  config = let
-    vimPlugins = pkgs.unstable.vimPlugins;
-  in
-    mkIf enable (mkHomeManagerUser {
-      programs.neovim.plugins = [
-        (vimPlugins.nvim-treesitter.withPlugins (p: [
-          p.go
-          p.gomod
-          p.gosum
-          p.gowork
-        ]))
-        (vimPlugins.go-nvim)
-      ];
+  extraPackages = [
+    pkgs.unstable.gopls
+  ];
 
-      programs.neovim.extraPackages = [
-        pkgs.unstable.gopls
-      ];
-
-      programs.neovim.extraLuaConfig = ''
-        require('go').setup()
-        ${builtins.readFile ./go-lsp.lua}
-      '';
-    });
-}
+  extraLuaConfig = ''
+    require('go').setup()
+    ${builtins.readFile ./go-lsp.lua}
+  '';
+})

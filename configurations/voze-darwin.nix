@@ -18,10 +18,7 @@ in {
     #   browserExtension.enable = true;
     # };
     android-studio.enable = true;
-    azure = {
-      enable = true;
-      vpn-client.enable = true;
-    };
+    azure-vpn.enable = true;
     claude-code.enable = true;
     betterdisplay.enable = true;
     bettersnaptool.enable = true;

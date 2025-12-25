@@ -1,36 +1,22 @@
 {
   config,
-  lib,
   pkgs,
   utils,
   ...
-}: let
-  inherit (lib) mkEnableOption mkIf;
-  inherit (utils) allEnable mkHomeManagerUser;
-  vimPlugins = pkgs.unstable.vimPlugins;
-  enable = allEnable config.applications.neovim [
-    "enable"
-    "dap.enable"
-    "dap.go.enable"
+}:
+utils.mkNeovimModule {
+  inherit config pkgs;
+  path = ["dap" "go"];
+} ({vimPlugins, ...}: {
+  plugins = [
+    {
+      plugin = vimPlugins.nvim-dap-go;
+      config = builtins.readFile ./dap-go.lua;
+      type = "lua";
+    }
   ];
-in {
-  options = {
-    applications.neovim.dap.go = {
-      enable = mkEnableOption "Dap / Go";
-    };
-  };
 
-  config = mkIf enable (mkHomeManagerUser {
-    programs.neovim.plugins = [
-      {
-        plugin = vimPlugins.nvim-dap-go;
-        config = builtins.readFile ./dap-go.lua;
-        type = "lua";
-      }
-    ];
-
-    programs.neovim.extraPackages = [
-      pkgs.unstable.delve
-    ];
-  });
-}
+  extraPackages = [
+    pkgs.unstable.delve
+  ];
+})

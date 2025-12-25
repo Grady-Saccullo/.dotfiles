@@ -1,23 +1,20 @@
 {
-  pkgs,
   utils,
   config,
   lib,
+  pkgs,
   ...
-}: let
-  inherit (lib) mkEnableOption mkOption types;
-  cfg = config.applications.slack;
-in {
-  options = {
-    applications.slack = {
-      enable = mkEnableOption "Slack";
-      package = mkOption {
-        type = types.package;
-        default = pkgs.unstable.slack;
-      };
+}:
+utils.mkAppModule {
+  path = "slack";
+  inherit config;
+  extraOptions = {
+    package = lib.mkOption {
+      type = lib.types.package;
+      default = pkgs.unstable.slack;
     };
   };
-  config = lib.mkIf cfg.enable (utils.mkHomeManagerUser {
-    home.packages = [cfg.package];
-  });
-}
+} (cfg:
+    utils.mkHomeManagerUser {
+      home.packages = [cfg.package];
+    })

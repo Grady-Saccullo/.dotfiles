@@ -1,31 +1,18 @@
 {
   config,
-  lib,
   pkgs,
   utils,
   ...
-}: let
-  inherit (lib) mkEnableOption mkIf;
-  inherit (utils) allEnable mkHomeManagerUser;
-  enable = allEnable config.applications.neovim [
-    "enable"
-    "typescript.enable"
-    "typescript.biome.enable"
+}:
+utils.mkNeovimModule {
+  inherit config pkgs;
+  path = ["typescript" "biome"];
+} (_: {
+  extraPackages = [
+    pkgs.unstable.biome
   ];
-in {
-  options = {
-    applications.neovim.typescript.biome = {
-      enable = mkEnableOption "TypeScript / Biome";
-    };
-  };
 
-  config = mkIf enable (mkHomeManagerUser {
-    programs.neovim.extraPackages = [
-      pkgs.unstable.biome
-    ];
-
-    programs.neovim.extraLuaConfig = ''
-      addLspServer("biome", {})
-    '';
-  });
-}
+  extraLuaConfig = ''
+    addLspServer("biome", {})
+  '';
+})

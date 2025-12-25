@@ -1,13 +1,10 @@
 {
-  pkgs,
   utils,
   config,
   lib,
+  pkgs,
   ...
 }: let
-  inherit (lib) mkEnableOption mkOption types;
-  cfg = config.applications.wezterm;
-
   # it looks like during a recent update wezterm started relying on openssl,
   # or this has been a dependency but now is no longer on the system (not sure)
   # so as a work around adding in openssl to build inputs
@@ -19,19 +16,19 @@
         pkgs.pkg-config
       ];
   });
-in {
-  options = {
-    applications.wezterm = {
-      enable = mkEnableOption "wezterm";
-      package = mkOption {
-        type = types.package;
+in
+  utils.mkAppModule {
+    path = "wezterm";
+    inherit config;
+    extraOptions = {
+      package = lib.mkOption {
+        type = lib.types.package;
         default = wezterm;
       };
     };
-  };
-  config = lib.mkIf cfg.enable (utils.mkHomeManagerUser {
-    programs = {
-      wezterm = {
+  } (cfg:
+    utils.mkHomeManagerUser {
+      programs.wezterm = {
         enable = true;
         package = cfg.package;
         extraConfig = builtins.readFile ./config.lua;
@@ -79,6 +76,4 @@ in {
           };
         };
       };
-    };
-  });
-}
+    })

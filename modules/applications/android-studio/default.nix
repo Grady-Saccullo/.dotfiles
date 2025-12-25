@@ -1,35 +1,29 @@
 {
-  pkgs,
   utils,
   config,
-  lib,
+  pkgs,
   ...
-}: let
-  inherit (lib) mkEnableOption;
-  cfg = config.applications.android-studio;
-in {
-  options = {
-    applications.android-studio = {
-      enable = mkEnableOption "Android Studio";
-    };
-  };
-  config = lib.mkIf cfg.enable (utils.mkPlatformConfig {
-    base = utils.mkHomeManagerUser {
-      home.packages = [pkgs.unstable.android-tools pkgs.jdk17];
-    };
-    darwin = {
-      homebrew.casks = [
-        {
-          name = "android-studio";
-          greedy = true;
-        }
-      ];
-    };
-    linux = utils.mkHomeManagerUser {
-      home.packages = [pkgs.unstable.android-studio];
-    };
-    nixos = utils.mkHomeManagerUser {
-      home.packages = [pkgs.unstable.android-studio];
-    };
-  });
-}
+}:
+utils.mkAppModule {
+  path = "android-studio";
+  inherit config;
+} (_:
+    utils.mkPlatformConfig {
+      base = utils.mkHomeManagerUser {
+        home.packages = [pkgs.unstable.android-tools pkgs.jdk17];
+      };
+      darwin = {
+        homebrew.casks = [
+          {
+            name = "android-studio";
+            greedy = true;
+          }
+        ];
+      };
+      linux = utils.mkHomeManagerUser {
+        home.packages = [pkgs.unstable.android-studio];
+      };
+      nixos = utils.mkHomeManagerUser {
+        home.packages = [pkgs.unstable.android-studio];
+      };
+    })

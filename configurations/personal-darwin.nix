@@ -62,17 +62,13 @@ in {
     podman.enable = true;
     raycast.enable = true;
     # soundsource.enable = true;
-    shell = {
-      fzf = {
-        searchPaths = [
-          "$HOME/Desktop/"
-          "$HOME/Documents/"
-          "$HOME/Downloads/"
-          "$HOME/code/"
-          "$HOME/personal/"
-        ];
-      };
-    };
+    fzf.searchPaths = [
+      "$HOME/Desktop/"
+      "$HOME/Documents/"
+      "$HOME/Downloads/"
+      "$HOME/code/"
+      "$HOME/personal/"
+    ];
     spotify.enable = true;
     utm.enable = true;
     wezterm.enable = true;

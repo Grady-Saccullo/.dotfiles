@@ -4,33 +4,21 @@
   pkgs,
   utils,
   ...
-}: let
-  inherit (lib) mkEnableOption mkIf;
-  inherit (utils) allEnable mkHomeManagerUser;
-  enable = allEnable config.applications.neovim [
-    "enable"
-    "html.enable"
-    "html.htmx.enable"
+}:
+utils.mkNeovimModule {
+  inherit config pkgs;
+  path = ["html" "htmx"];
+} (_: {
+  extraPackages = [
+    pkgs.unstable.htmx-lsp
   ];
-in {
-  options = {
-    applications.neovim.html.htmx = {
-      enable = mkEnableOption "HTML / HTMX";
-    };
-  };
 
-  config = mkIf enable (mkHomeManagerUser {
-    programs.neovim.extraPackages = [
-      pkgs.unstable.htmx-lsp
-    ];
-
-    programs.neovim.extraLuaConfig = let
-      templEnabled = config.applications.neovim.go.templ.enable;
-      fileTypes = ["\"html\""] ++ lib.optionals templEnabled ["\"templ\""];
-    in ''
-      addLspServer("htmx", {
-        filetypes = { ${lib.concatStringsSep ", " fileTypes} },
-      })
-    '';
-  });
-}
+  extraLuaConfig = let
+    templEnabled = config.applications.neovim.go.templ.enable;
+    fileTypes = ["\"html\""] ++ lib.optionals templEnabled ["\"templ\""];
+  in ''
+    addLspServer("htmx", {
+      filetypes = { ${lib.concatStringsSep ", " fileTypes} },
+    })
+  '';
+})

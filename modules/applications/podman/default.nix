@@ -1,33 +1,25 @@
 {
-  config,
   utils,
-  lib,
+  config,
   pkgs,
   ...
-}: let
-  inherit (lib) mkEnableOption;
-  cfg = config.applications.podman;
-in {
-  options = {
-    applications.podman = {
-      enable = mkEnableOption "Podman";
-    };
-  };
-  config = lib.mkIf cfg.enable (utils.mkPlatformConfig {
-    base = utils.mkHomeManagerUser {
-      home.packages = [pkgs.unstable.podman-compose];
-    };
-    darwin = utils.mkHomeManagerUser {
-      home.packages = [pkgs.unstable.podman];
-    };
-    nixos = {
-      virtualisation.podman = {
-        enable = true;
+}:
+utils.mkAppModule {
+  path = "podman";
+  inherit config;
+} (cfg:
+    utils.mkPlatformConfig {
+      base = utils.mkHomeManagerUser {
+        home.packages = [pkgs.unstable.podman-compose];
       };
-    };
-    linux = utils.mkHomeManagerUser {
-      services.podman.enable = true;
-      services.podman.package = pkgs.unstable.podman;
-    };
-  });
-}
+      darwin = utils.mkHomeManagerUser {
+        home.packages = [pkgs.unstable.podman];
+      };
+      nixos = {
+        virtualisation.podman.enable = true;
+      };
+      linux = utils.mkHomeManagerUser {
+        services.podman.enable = true;
+        services.podman.package = pkgs.unstable.podman;
+      };
+    })
