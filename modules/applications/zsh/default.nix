@@ -14,6 +14,11 @@ utils.mkAppModule {
         shellAliases = {
           l = "ls -la";
           cl = "clear";
+          "~" = "cd ~";
+          "--" = "cd -";
+          ".." = "cd ..";
+          "..." = "cd ../..";
+          "...." = "cd ../../..";
         };
         autosuggestion.enable = true;
         syntaxHighlighting.enable = true;
