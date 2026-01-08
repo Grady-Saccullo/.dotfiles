@@ -59,7 +59,7 @@ local lspconfig_custom_attach = function(client, bufnr)
 				vim.cmd("cd " .. vim.fn.fnameescape(og_cwg))
 			end
 
-			local biome_exists, biome_dir = find_dir_with_files({ "biome.json", "biome.jsonc" })
+			local biome_exists, biome_dir = find_dir_with_files({ "biome.json", "biome.jsonc" }, bufnr)
 			local prettier_exists, prettier_dir = find_dir_with_files({
 				".prettierrc",
 				".prettierrc.json",
@@ -67,7 +67,7 @@ local lspconfig_custom_attach = function(client, bufnr)
 				".prettierrc.yaml",
 				".prettierrc.js",
 				"prettier.config.js",
-			})
+			}, bufnr)
 
 			if biome_exists then
 				run_neoformat("biome", biome_dir)
