@@ -165,6 +165,11 @@ in {
             vimPlugins.vim-fugitive
             vimPlugins.vim-rhubarb
             vimPlugins.vim-vinegar
+            {
+              plugin = vimPlugins.smart-splits-nvim;
+              config = builtins.readFile ./smart-splits.lua;
+              type = "lua";
+            }
           ]
           ++ lib.optionals enable-nvim-ts-autotag [
             {

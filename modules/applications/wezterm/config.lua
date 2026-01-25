@@ -1,6 +1,9 @@
 local wezterm = require("wezterm")
 local act = wezterm.action
 
+-- Smart splits plugin for seamless nvim/wezterm pane navigation
+local smart_splits = wezterm.plugin.require("https://github.com/mrjones2014/smart-splits.nvim")
+
 local config = {
 	color_scheme = "oxocarbon-dark",
 	font = wezterm.font("JetBrains Mono", { weight = "Book" }),
@@ -71,6 +74,7 @@ local config = {
 			mods = "LEADER",
 			action = act.ShowTabNavigator,
 		},
+		-- Leader + arrow for explicit wezterm pane navigation
 		{
 			key = "LeftArrow",
 			mods = "LEADER",
@@ -153,5 +157,17 @@ local config = {
 		},
 	},
 }
+
+-- Apply smart-splits with arrow keys for navigation and resize
+smart_splits.apply_to_config(config, {
+	direction_keys = {
+		move = { "LeftArrow", "DownArrow", "UpArrow", "RightArrow" },
+		resize = { "LeftArrow", "DownArrow", "UpArrow", "RightArrow" },
+	},
+	modifiers = {
+		move = "CTRL",
+		resize = "CTRL|SHIFT",
+	},
+})
 
 return config
