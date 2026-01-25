@@ -26,7 +26,6 @@ in {
         diff
         gitcommit
         gitignore
-        gitignore
         jq
         json
         lua
