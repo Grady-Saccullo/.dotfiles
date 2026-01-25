@@ -16,7 +16,7 @@ utils.mkNeovimModule {
     pkgs.unstable.templ
   ];
 
-  extraLuaConfig = ''
+  initLua = ''
     ${builtins.readFile ./go-templ-lsp.lua}
   '';
 })

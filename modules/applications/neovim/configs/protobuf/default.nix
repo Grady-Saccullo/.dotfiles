@@ -16,7 +16,7 @@ utils.mkNeovimModule {
     pkgs.unstable.protols
   ];
 
-  extraLuaConfig = ''
+  initLua = ''
     addLspServer("protols", {
       -- Add support for monorepo where protols.toml may not be in the root of the repo
       root_markers = { ".protols.toml", "protols.toml", ".git" }

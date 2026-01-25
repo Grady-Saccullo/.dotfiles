@@ -16,7 +16,7 @@ utils.mkNeovimModule {
     (vimPlugins.nvim-treesitter.withPlugins (p: [p.ocaml]))
   ];
 
-  extraLuaConfig = ''
+  initLua = ''
     addLspServer("ocamllsp", {})
   '';
 })

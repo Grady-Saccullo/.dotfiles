@@ -13,7 +13,7 @@ utils.mkNeovimModule {
     pkgs.unstable.htmx-lsp
   ];
 
-  extraLuaConfig = let
+  initLua = let
     templEnabled = config.applications.neovim.go.templ.enable;
     fileTypes = ["\"html\""] ++ lib.optionals templEnabled ["\"templ\""];
   in ''

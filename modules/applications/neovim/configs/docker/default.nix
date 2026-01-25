@@ -17,7 +17,7 @@ utils.mkNeovimModule {
     (vimPlugins.nvim-treesitter.withPlugins (p: [p.dockerfile]))
   ];
 
-  extraLuaConfig = ''
+  initLua = ''
     addLspServer("docker_compose_language_service", {})
     addLspServer("dockerls", {})
   '';

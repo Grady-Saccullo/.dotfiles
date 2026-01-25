@@ -12,7 +12,7 @@ utils.mkNeovimModule {
     pkgs.unstable.biome
   ];
 
-  extraLuaConfig = ''
+  initLua = ''
     addLspServer("biome", {})
   '';
 })

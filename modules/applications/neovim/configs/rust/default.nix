@@ -16,7 +16,7 @@ utils.mkNeovimModule {
     (vimPlugins.nvim-treesitter.withPlugins (p: [p.rust]))
   ];
 
-  extraLuaConfig = ''
+  initLua = ''
     addLspServer("rust_analyzer", {
      	settings = {
      		diagnostics = {

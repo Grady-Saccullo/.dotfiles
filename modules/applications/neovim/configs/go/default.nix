@@ -23,7 +23,7 @@ utils.mkNeovimModule {
     pkgs.unstable.gopls
   ];
 
-  extraLuaConfig = ''
+  initLua = ''
     require('go').setup()
     ${builtins.readFile ./go-lsp.lua}
   '';

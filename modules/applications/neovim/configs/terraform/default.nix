@@ -16,7 +16,7 @@ utils.mkNeovimModule {
     (vimPlugins.nvim-treesitter.withPlugins (p: [p.hcl p.terraform]))
   ];
 
-  extraLuaConfig = ''
+  initLua = ''
     addLspServer("terraformls", {})
     vim.api.nvim_create_autocmd({"BufWritePre"}, {
       pattern = {"*.tf", "*.tfvars"},

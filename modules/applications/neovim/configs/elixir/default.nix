@@ -15,7 +15,7 @@ in {
     (vimPlugins.elixir-tools-nvim)
   ];
 
-  extraLuaConfig = ''
+  initLua = ''
     -- require("elixir").setup({
     --   elixirls = {
     --     cmd = "${ls}/bin/elixir-ls"

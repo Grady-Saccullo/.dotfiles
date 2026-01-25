@@ -14,7 +14,7 @@ utils.mkNeovimModule {
   extraPackages = [
     pkgs.unstable.basedpyright
   ];
-  extraLuaConfig = ''
+  initLua = ''
     addLspServer("basedpyright", {})
   '';
 })

@@ -36,7 +36,7 @@ utils.mkNeovimModule {
       pkgs.unstable.vtsls
     ];
 
-  extraLuaConfig =
+  initLua =
     lib.optionalString (cfg.lsp == "tsls") ''
       ${builtins.readFile ./typescript-lsp-tsls.lua}
     ''

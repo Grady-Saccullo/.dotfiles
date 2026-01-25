@@ -148,7 +148,7 @@ in rec {
           enable = true;
           reattach = true;
           touchIdAuth = true;
-          watchIdAuth = true;
+          # watchIdAuth = true;
         };
       };
     };

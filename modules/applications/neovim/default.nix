@@ -59,7 +59,7 @@ in {
           vscode-langservers-extracted
         ];
 
-        extraLuaConfig = ''
+        initLua = ''
           ${builtins.readFile ./filetype.lua}
           ${builtins.readFile ./globals.lua}
           ${builtins.readFile ./highlight.lua}

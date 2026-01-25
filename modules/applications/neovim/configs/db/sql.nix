@@ -30,7 +30,7 @@ in {
     pkgs.unstable.sqls
   ];
 
-  extraLuaConfig = ''
+  initLua = ''
     addLspServer("sqls", {
       on_attach = function(client, bufnr)
         require('sqls').on_attach(client, bufnr)

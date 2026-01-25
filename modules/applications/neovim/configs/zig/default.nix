@@ -17,7 +17,7 @@ utils.mkNeovimModule {
     vimPlugins.zig-vim
   ];
 
-  extraLuaConfig = ''
+  initLua = ''
     addLspServer("zls", {
         enable_build_on_save = true
     })

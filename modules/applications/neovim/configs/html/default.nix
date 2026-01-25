@@ -14,7 +14,7 @@ utils.mkNeovimModule {
     (vimPlugins.nvim-treesitter.withPlugins (p: [p.html p.css]))
   ];
 
-  extraLuaConfig = let
+  initLua = let
     templEnabled = config.applications.neovim.go.templ.enable;
     fileTypes = ["\"html\""] ++ lib.optionals templEnabled ["\"templ\""];
   in ''
