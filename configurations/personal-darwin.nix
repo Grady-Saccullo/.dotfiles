@@ -76,9 +76,8 @@ in {
   };
 
   system.defaults.dock.persistent-apps = [
-    "${config.applications.wezterm.package}/Applications/WezTerm.app"
-    "${config.applications.brave.package}/Applications/Brave\ Browser.app"
+    config.applications.wezterm.path
+    config.applications.brave.path
     config.applications.spotify.path
-    "/System/Applications/Messages.app"
   ];
 }

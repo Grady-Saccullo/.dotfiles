@@ -3,6 +3,7 @@
   config,
   lib,
   pkgs,
+  me,
   ...
 }: let
   # it looks like during a recent update wezterm started relying on openssl,
@@ -24,6 +25,11 @@ in
       package = lib.mkOption {
         type = lib.types.package;
         default = wezterm;
+      };
+      path = lib.mkOption {
+        type = lib.types.str;
+        default = "/Users/${me.user}/Applications/Home Manager Apps/WezTerm.app";
+        description = "Path to the WezTerm application";
       };
     };
   } (cfg:
