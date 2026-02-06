@@ -22,6 +22,7 @@
     darwin.url = "github:LnL7/nix-darwin";
 
     # Applications
+    llm-agents.url = "github:numtide/llm-agents.nix";
     wezterm.url = "github:wezterm/wezterm?dir=nix";
   };
 

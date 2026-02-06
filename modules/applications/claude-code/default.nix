@@ -9,5 +9,5 @@ utils.mkAppModule {
   inherit config;
 } (cfg:
     utils.mkHomeManagerUser {
-      home.packages = [pkgs.unstable.claude-code];
+      home.packages = [pkgs.llm-agents.claude-code];
     })

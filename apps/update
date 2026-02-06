@@ -1,0 +1,44 @@
+#!/bin/bash -e
+
+flake_dir="$(cd "$(dirname "$0")/.." && pwd)"
+lock_file="$flake_dir/flake.lock"
+
+if [ ! -f "$lock_file" ]; then
+	echo "flake.lock not found at $lock_file"
+	exit 1
+fi
+
+# Get top-level input names from flake.lock (the root node's inputs)
+root_node=$(jq -r '.root' "$lock_file")
+inputs=$(jq -r --arg root "$root_node" '.nodes[$root].inputs | keys[]' "$lock_file" | sort)
+
+if [ -z "$inputs" ]; then
+	echo "No inputs found in flake.lock"
+	exit 1
+fi
+
+selected=$(printf '%s\n' "all" $inputs | fzf --multi \
+	--marker '● ' \
+	--pointer ' ' \
+	--bind 'space:toggle+down' \
+	--header "Select inputs to update (space to select, enter to confirm)")
+
+if [ -z "$selected" ]; then
+	echo "No inputs selected"
+	exit 0
+fi
+
+# If "all" was selected, update everything
+if echo "$selected" | grep -qx "all"; then
+	echo "Updating all inputs"
+	nix flake update --flake "$flake_dir"
+	exit 0
+fi
+
+args=()
+while IFS= read -r input; do
+	args+=("$input")
+done <<<"$selected"
+
+echo "Updating: ${args[*]}"
+nix flake update "${args[@]}" --flake "$flake_dir"

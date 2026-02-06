@@ -39,6 +39,7 @@ in
         delta = {
           enable = true;
           enableGitIntegration = true;
+          options.pager = "less -R --mouse";
         };
         zsh = lib.mkIf config.applications.zsh.enable {
           shellAliases = gitAliases.aliases;
