@@ -1,6 +1,6 @@
 #!/bin/bash -e
 
-flake_dir="$(cd "$(dirname "$0")/.." && pwd)"
+flake_dir="${1:-$(pwd)}"
 lock_file="$flake_dir/flake.lock"
 
 if [ ! -f "$lock_file" ]; then
