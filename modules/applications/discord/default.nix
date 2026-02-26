@@ -8,6 +8,19 @@ utils.mkAppModule {
   path = "discord";
   inherit config;
 } (cfg:
-    utils.mkHomeManagerUser {
-      home.packages = [pkgs.unstable.discord];
+    utils.mkPlatformConfig {
+      darwin = {
+        homebrew.casks = [
+          {
+            name = "discord";
+            greedy = true;
+          }
+        ];
+      };
+      nixos = utils.mkHomeManagerUser {
+        home.packages = [pkgs.unstable.discord];
+      };
+      linux = utils.mkHomeManagerUser {
+        home.packages = [pkgs.unstable.discord];
+      };
     })

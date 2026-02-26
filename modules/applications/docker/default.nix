@@ -13,6 +13,7 @@ utils.mkAppModule {
         home.packages = [
           pkgs.unstable.colima
           pkgs.unstable.docker
+          pkgs.unstable.docker-buildx
         ];
       };
       nixos = {
