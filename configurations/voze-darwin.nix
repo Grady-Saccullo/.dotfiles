@@ -32,6 +32,10 @@ in {
     discord.enable = true;
     docker.enable = true;
     github-cli.enable = true;
+    http = {
+      enable = true;
+      rest.enable = true;
+    };
     jetbrains = {
       enable = true;
       datagrip.enable = true;

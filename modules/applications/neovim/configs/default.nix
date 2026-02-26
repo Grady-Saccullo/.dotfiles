@@ -7,6 +7,7 @@
     ./elixir
     ./go
     ./html
+    ./http
     ./ocaml
     ./protobuf
     ./python

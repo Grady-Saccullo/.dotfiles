@@ -156,7 +156,7 @@ in {
             vimPlugins.cmp_luasnip
             {
               plugin = vimPlugins.fidget-nvim;
-              config = "require('fidget').setup()";
+              config = builtins.readFile ./fidget-nvim.lua;
               type = "lua";
             }
             vimPlugins.friendly-snippets
