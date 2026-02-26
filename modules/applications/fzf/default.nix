@@ -39,6 +39,27 @@ in
   } (cfg:
     utils.mkHomeManagerUser {
       programs = {
+        zsh.initContent = lib.mkIf (config.applications.zsh.enable && config.applications.ripgrep.enable) ''
+          # ripgrep->fzf->vim [QUERY]
+          rfv() (
+            RELOAD='reload:rg --column --color=always --smart-case {q} || :'
+            OPENER='if [[ $FZF_SELECT_COUNT -eq 0 ]]; then
+                      vim {1} +{2}
+                    else
+                      vim +cw -q {+f}
+                    fi'
+            fzf --disabled --ansi --multi \
+                --bind "start:$RELOAD" --bind "change:$RELOAD" \
+                --bind "enter:become:$OPENER" \
+                --bind "ctrl-o:execute:$OPENER" \
+                --bind 'alt-a:select-all,alt-d:deselect-all,ctrl-/:toggle-preview' \
+                --delimiter : \
+                --preview 'bat --style=full --color=always --highlight-line {2} {1}' \
+                --preview-window '~4,+{2}+4/3,<120(up)' \
+                --query "$*"
+          )
+        '';
+
         fzf = {
           enable = true;
           package = pkgs.unstable.fzf;

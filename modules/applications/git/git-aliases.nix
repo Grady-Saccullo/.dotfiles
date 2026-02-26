@@ -180,5 +180,30 @@
     function git_current_branch() {
       git branch --show-current
     }
+
+    # Delete all branches already merged into main
+    function gbda() {
+      git branch --no-color --merged | command grep -vE "^([+*]|\s*($(git_main_branch)|$(git_develop_branch))\s*$)" | command xargs git branch --delete 2>/dev/null
+    }
+
+    # Clone and cd into the repo
+    function gccd() {
+      command git clone --recurse-submodules "$@"
+      [[ -n "$1" ]] && cd "$(basename "''${1%.git}")"
+    }
+
+    # Rename a branch locally and on the remote
+    function grename() {
+      if [[ -z "$1" || -z "$2" ]]; then
+        echo "Usage: grename old_branch new_branch"
+        return 1
+      fi
+      git branch -m "$1" "$2"
+      if git push origin :"$1" 2>/dev/null; then
+        git push --set-upstream origin "$2"
+      else
+        echo "Branch $1 not found on remote, only renamed locally."
+      fi
+    }
   '';
 }

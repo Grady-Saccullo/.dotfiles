@@ -78,6 +78,11 @@ in rec {
 
   environment.shells = with pkgs; [bashInteractive zsh];
 
+  # Disable nix-darwin's default zshrc additions as home-manager handles these.
+  # This avoids double compinit and a useless promptinit scan.
+  programs.zsh.enableCompletion = false;
+  programs.zsh.promptInit = "";
+
   system = {
     stateVersion = self.constants.darwinStateVersion;
     primaryUser = me.user;
