@@ -53,8 +53,10 @@ in {
           lua-language-server
           nil
           ripgrep
+          shfmt
           stylua
           yaml-language-server
+          yamlfmt
           vscode-langservers-extracted
         ];
 
@@ -152,14 +154,39 @@ in {
             vimPlugins.cmp-nvim-lua
             vimPlugins.cmp-path
             vimPlugins.cmp_luasnip
-            vimPlugins.fidget-nvim
+            {
+              plugin = vimPlugins.fidget-nvim;
+              config = "require('fidget').setup()";
+              type = "lua";
+            }
             vimPlugins.friendly-snippets
-            vimPlugins.harpoon2
+            {
+              plugin = vimPlugins.harpoon2;
+              config = builtins.readFile ./harpoon.lua;
+              type = "lua";
+            }
             vimPlugins.lspkind-nvim
             vimPlugins.luasnip
-            vimPlugins.neoformat
-            vimPlugins.nvim-treesitter-context
-            vimPlugins.nvim-treesitter-textobjects
+            {
+              plugin = vimPlugins.conform-nvim;
+              config = builtins.readFile ./conform.lua;
+              type = "lua";
+            }
+            {
+              plugin = vimPlugins.nvim-treesitter-context;
+              config = "require('treesitter-context').setup()";
+              type = "lua";
+            }
+            {
+              plugin = vimPlugins.nvim-treesitter-textobjects;
+              config = builtins.readFile ./nvim-treesitter-textobjects.lua;
+              type = "lua";
+            }
+            {
+              plugin = vimPlugins.treesitter-modules-nvim;
+              config = builtins.readFile ./treesitter-modules.lua;
+              type = "lua";
+            }
             vimPlugins.plenary-nvim
             vimPlugins.telescope-fzf-native-nvim
             vimPlugins.vim-fugitive

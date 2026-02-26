@@ -8,7 +8,7 @@ vim.fn.sign_define("DapBreakpoint", {
 
 vim.fn.sign_define("DapBreakpointCondition", {
 	text = "◎",
-	DapBreakpointConditiontexthl = "DapBreakpoint",
+	texthl = "DapBreakpoint",
 	linehl = "DapBreakpoint",
 	numhl = "DapBreakpoint",
 })

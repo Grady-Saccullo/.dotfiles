@@ -7,6 +7,18 @@ local lspkind = require("lspkind")
 lspkind.init()
 
 local cmp = require("cmp")
+
+local function is_cmp_above_cursor()
+	local view = cmp.core.view.custom_entries_view
+	if view and view.entries_win and view.entries_win.win then
+		local ok, pos = pcall(vim.api.nvim_win_get_position, view.entries_win.win)
+		if ok then
+			return pos[1] + 1 < vim.fn.screenrow()
+		end
+	end
+	return false
+end
+
 cmp.setup({
 	snippet = {
 		expand = function(args)
@@ -29,6 +41,28 @@ cmp.setup({
 	mapping = cmp.mapping.preset.insert({
 		["<C-j>"] = cmp.mapping.select_next_item({ behavior = cmp.SelectBehavior.Insert }),
 		["<C-k>"] = cmp.mapping.select_prev_item({ behavior = cmp.SelectBehavior.Insert }),
+		["<Down>"] = cmp.mapping(function(fallback)
+			if cmp.visible() then
+				if is_cmp_above_cursor() then
+					cmp.select_prev_item({ behavior = cmp.SelectBehavior.Insert })
+				else
+					cmp.select_next_item({ behavior = cmp.SelectBehavior.Insert })
+				end
+			else
+				fallback()
+			end
+		end, { "i", "s" }),
+		["<Up>"] = cmp.mapping(function(fallback)
+			if cmp.visible() then
+				if is_cmp_above_cursor() then
+					cmp.select_next_item({ behavior = cmp.SelectBehavior.Insert })
+				else
+					cmp.select_prev_item({ behavior = cmp.SelectBehavior.Insert })
+				end
+			else
+				fallback()
+			end
+		end, { "i", "s" }),
 		["<C-Space>"] = cmp.mapping.complete(),
 		["<C-e>"] = cmp.mapping.abort(),
 		["<CR>"] = cmp.mapping.confirm({ select = true }),
@@ -37,11 +71,10 @@ cmp.setup({
 	sources = cmp.config.sources({
 		{ name = "nvim_lsp", priority = 8 },
 		{ name = "luasnip", priority = 7 },
-		{ name = "spell", keyword_length = 3, priority = 5, keyword_psttern = [[\w\+]] },
+		{ name = "spell", keyword_length = 3, priority = 5, keyword_pattern = [[\w\+]] },
 		{ name = "path", priority = 4 },
 	}, {
-		name = "buffer",
-		priority = 6,
+		{ name = "buffer", priority = 6 },
 	}),
 
 	sorting = {

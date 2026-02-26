@@ -1,0 +1,42 @@
+-- [START] nvim-treesitter-textobjects.lua --
+require("nvim-treesitter-textobjects").setup({
+	select = {
+		lookahead = true,
+		keymaps = {
+			["aa"] = "@parameter.outer",
+			["ia"] = "@parameter.inner",
+			["af"] = "@function.outer",
+			["if"] = "@function.inner",
+			["ac"] = "@class.outer",
+			["ic"] = "@class.inner",
+		},
+	},
+	move = {
+		set_jumps = true,
+		goto_next_start = {
+			["]m"] = "@function.outer",
+			["]]"] = "@class.outer",
+		},
+		goto_next_end = {
+			["]M"] = "@function.outer",
+			["]["] = "@class.outer",
+		},
+		goto_previous_start = {
+			["[m"] = "@function.outer",
+			["[["] = "@class.outer",
+		},
+		goto_previous_end = {
+			["[M"] = "@function.outer",
+			["[]"] = "@class.outer",
+		},
+	},
+	swap = {
+		swap_next = {
+			["<leader>a"] = "@parameter.inner",
+		},
+		swap_previous = {
+			["<leader>A"] = "@parameter.inner",
+		},
+	},
+})
+-- [END] nvim-treesitter-textobjects.lua --

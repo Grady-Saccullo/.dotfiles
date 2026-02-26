@@ -31,4 +31,11 @@ o.mouse = "a"
 -- Spellcheck --
 o.spelllang = "en_us"
 o.spell = true
+
+o.undofile = true
+o.ignorecase = true
+o.smartcase = true
+o.signcolumn = "yes"
+o.scrolloff = 8
+o.updatetime = 250
 -- [END] opt.lua --

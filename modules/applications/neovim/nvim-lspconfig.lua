@@ -1,11 +1,5 @@
 -- [START] nvim-lspconfig.lua --
 
-local function find_dir_with_files(file_names, bufnr)
-	local fname = vim.api.nvim_buf_get_name(bufnr)
-	local root_dir = vim.fs.dirname(vim.fs.find(file_names, { path = fname, upward = true })[1])
-	return root_dir ~= nil, root_dir
-end
-
 local lspconfig_custom_attach = function(client, bufnr)
 	local nmap = function(keys, func, desc)
 		if desc then
@@ -39,51 +33,6 @@ local lspconfig_custom_attach = function(client, bufnr)
 		print(vim.inspect(vim.lsp.buf.list_workspace_folders()))
 	end, "[W]orkspace [L]ist Folders")
 
-	vim.api.nvim_buf_create_user_command(bufnr, "Format", function(_)
-		vim.lsp.buf.format()
-	end, { desc = "Format current buffer with LSP" })
-
-	nmap("<leader>f", function()
-		if vim.bo.filetype == "templ" then
-			templ_format()
-			return
-		end
-
-		if client.name == "sourcekit" then
-			vim.cmd("Neoformat swiftformat")
-		elseif client.name == "vtsls" then
-			local function run_neoformat(cmd, config_dir)
-				local og_cwg = vim.fn.getcwd()
-				vim.cmd("cd " .. vim.fn.fnameescape(config_dir))
-				vim.cmd("Neoformat " .. cmd)
-				vim.cmd("cd " .. vim.fn.fnameescape(og_cwg))
-			end
-
-			local biome_exists, biome_dir = find_dir_with_files({ "biome.json", "biome.jsonc" }, bufnr)
-			local prettier_exists, prettier_dir = find_dir_with_files({
-				".prettierrc",
-				".prettierrc.json",
-				".prettierrc.yml",
-				".prettierrc.yaml",
-				".prettierrc.js",
-				"prettier.config.js",
-			}, bufnr)
-
-			if biome_exists then
-				run_neoformat("biome", biome_dir)
-			elseif prettier_exists then
-				run_neoformat("prettier", prettier_dir)
-			else
-				print("missing js/ts formatter...")
-			end
-		elseif client.name == "lua_ls" then
-			vim.cmd("Neoformat stylua")
-		elseif client.name == "nil_ls" then
-			vim.cmd("Neoformat alejandra")
-		else
-			vim.lsp.buf.format()
-		end
-	end, "[F]ormat")
 end
 
 for server, config in pairs(lsp_servers) do
