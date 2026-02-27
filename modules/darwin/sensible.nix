@@ -92,6 +92,13 @@ in rec {
         echo >&2 "setting up rosetta..."
         softwareupdate --install-rosetta --agree-to-license >/dev/null 2>&1
       '';
+
+      # Reload user preferences so changes (e.g. CustomUserPreferences) take
+      # effect immediately without requiring a logout.
+      # See: https://github.com/LnL7/nix-darwin/issues/518
+      postActivation.text = ''
+        sudo -u ${me.user} /System/Library/PrivateFrameworks/SystemAdministration.framework/Resources/activateSettings -u
+      '';
     };
 
     defaults = {
@@ -143,6 +150,42 @@ in rec {
 
       trackpad = {
         TrackpadThreeFingerDrag = true;
+      };
+
+      # Override macOS symbolic hotkeys (System Settings > Keyboard > Keyboard Shortcuts).
+      #
+      # Each entry maps a hotkey ID to its configuration. You can find IDs by running:
+      #   defaults read com.apple.symbolichotkeys AppleSymbolicHotKeys
+      #
+      # To disable a shortcut: { enabled = false; }
+      # To remap a shortcut:   { enabled = true; value = { parameters = [ascii keycode modifiers]; type = "standard"; }; }
+      #
+      # Modifier flags (combine with addition):
+      #   Shift   = 131072    Option  = 524288
+      #   Control = 262144    Command = 1048576
+      #
+      # Reference: https://github.com/LnL7/nix-darwin/issues/518
+      CustomUserPreferences = {
+        "com.apple.symbolichotkeys" = {
+          AppleSymbolicHotKeys = {
+            # Disable Ctrl+Arrow Mission Control shortcuts so they can be used
+            # for wezterm/neovim pane navigation (smart-splits).
+            "32" = {enabled = false;}; # Mission Control (Ctrl+Up)
+            "33" = {enabled = false;}; # Application Windows (Ctrl+Down)
+            "79" = {enabled = false;}; # Move left a space (Ctrl+Left)
+            "80" = {enabled = false;}; # Move right a space (Ctrl+Right)
+
+            # Remap Spotlight to Opt+Space so Cmd+Space is free for Raycast.
+            # parameters: [ascii=32 (space), keycode=49 (space), modifiers=524288 (Option)]
+            "64" = {
+              enabled = true;
+              value = {
+                parameters = [32 49 524288];
+                type = "standard";
+              };
+            };
+          };
+        };
       };
     };
 

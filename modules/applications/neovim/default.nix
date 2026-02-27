@@ -189,6 +189,7 @@ in {
             }
             vimPlugins.plenary-nvim
             vimPlugins.telescope-fzf-native-nvim
+            vimPlugins.telescope-ui-select-nvim
             vimPlugins.vim-fugitive
             vimPlugins.vim-rhubarb
             vimPlugins.vim-vinegar

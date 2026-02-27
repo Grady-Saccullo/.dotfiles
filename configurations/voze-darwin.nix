@@ -12,13 +12,7 @@ in {
   ];
 
   applications = {
-    # NOTE: 1pass updates are killin me... and causing havoc... might just be worth manually installing for darwin
-    # _1password = {
-    #   enable = true;
-    #   browserExtension.enable = true;
-    # };
     android-studio.enable = true;
-    azure-vpn.enable = true;
     claude-code.enable = true;
     betterdisplay.enable = true;
     bettersnaptool.enable = true;
@@ -32,10 +26,6 @@ in {
     discord.enable = true;
     docker.enable = true;
     github-cli.enable = true;
-    http = {
-      enable = true;
-      rest.enable = true;
-    };
     jetbrains = {
       enable = true;
       datagrip.enable = true;
@@ -54,6 +44,11 @@ in {
         sql.enable = true;
       };
       go.enable = true;
+      http = {
+        enable = true;
+        rest.enable = true;
+        kulala.enable = true;
+      };
       docker.enable = true;
       python.enable = true;
       protobuf.enable = true;
@@ -69,6 +64,12 @@ in {
       enable = true;
       browserExtension.enable = true;
     };
+    fzf.searchPaths = [
+      "$HOME/Desktop/"
+      "$HOME/Documents/"
+      "$HOME/Downloads/"
+      "$HOME/code/"
+    ];
     slack.enable = true;
     soundsource.enable = true;
     spotify.enable = true;
@@ -82,6 +83,5 @@ in {
     config.applications.slack.path
     config.applications.brave.path
     config.applications.spotify.path
-    "/System/Applications/Messages.app"
   ];
 }

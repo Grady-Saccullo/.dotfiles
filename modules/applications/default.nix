@@ -2,7 +2,6 @@
   imports = [
     ./1password
     ./android-studio
-    ./azure-vpn
     ./bat
     ./betterdisplay
     ./bettersnaptool

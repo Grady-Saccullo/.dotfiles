@@ -11,7 +11,7 @@ utils.mkAppModule {
   extraOptions = {
     package = lib.mkOption {
       type = lib.types.package;
-      default = pkgs.unstable.jetbrains.idea-ultimate;
+      default = pkgs.unstable.jetbrains.idea;
     };
   };
 } (cfg:

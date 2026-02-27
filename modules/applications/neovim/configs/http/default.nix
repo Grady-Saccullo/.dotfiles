@@ -6,7 +6,7 @@
 }:
 utils.mkNeovimModule {
   inherit config pkgs;
-  imports = [./rest.nix];
+  imports = [./rest.nix ./kulala.nix];
   path = "http";
 } ({vimPlugins, ...}: {
   plugins = [
