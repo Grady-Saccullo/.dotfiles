@@ -1,6 +1,4 @@
-# Dotty Files
-
-> Readme is now accurate but still a wip for new very modular setup
+# `.dotfiles`
 
 ## Getting Started
 - Have a valid nix installation (nix/nixos)
@@ -43,40 +41,49 @@ any path differences.
 ### `/apps`
 Contains scripts available within a nix develop shell.
 
-Run with nix run `.#<command>`.
+Run with `nix run .#<command>`.
 
-- `switch`: build and switch configuration
-- `test`: test the current configuration
+- `switch`: build and switch configuration, outputs package changes, and pushes to cachix
+- `test`: test the current configuration without switching
 - `format`: format the repo with [alejandra](https://github.com/kamadorueda/alejandra)
-
+- `update`: interactively select flake inputs to update via fzf
 
 ### `/configurations`
-Contains the root machine confis which get pulled into the main flake.nix. All of these
+Contains the root machine configs which get pulled into the main flake.nix. All of these
 configurations are built upon the modules pulled into the root flake.nix.
 
-### `/modules/applications` 
-Contains all of the shared "applications" which can be turned on through .enable. The reasoning
-for this style was so that I could easily share a given application between multiple machine
+Current configurations:
+- `personal-darwin` — personal macOS machine
+- `voze-darwin` — work macOS machine
+
+### `/modules/applications`
+Contains all of the shared "applications" which can be turned on through `.enable`. The reasoning
+for this style was so that I could easily share a given "application" between multiple machine
 types (`darwin`, `nixos`, or `linux` which is just any other distro not nixos). I wasn't a fan of
-how many configs spread applications to be shared across multiple files and felt this made 
+how many configs spread applications to be shared across multiple files and felt this made
 upkeep more painful so this was my solution. Even though this is called application it contains
-anything from gui applications to toolling to a cli.
+anything from gui apps to cli tooling.
+
+Neovim has its own sub-module system under `configs/` for per-language/plugin support.
 
 ### `/modules/darwin`
 Contains shared darwin configurations to be pulled into `/configurations` through the `darwinModules`
 set in the root flake.nix. Currently only contains `sensible`.
 
-### `/modules/flake-parts` 
+### `/modules/shared`
+Contains shared configurations across all platforms. Currently holds shared nix settings.
+
+### `/modules/flake-parts`
 Contains shared options/imports for the root flake.nix to be used with flake-parts. Some things
 in here such as utils are not actually flake-parts specific and probably need to be refactored out.
 
 ### `/modules/home-manager`
-Contains shared per platform homemanager configurations to be pulled into `/configurations`
+Contains shared per platform home-manager configurations to be pulled into `/configurations`
 through the `homeManagerModules` set in the root flake.nix. Currently only contains `darwin`.
 
 ### `/overlays`
-Contains overlays, specifically only need package overlays for now so there is only
-a default.nix file in there.
+Contains package overlays. Right now these pull in `unstable`, `stable`, and specific package
+fixes for `wezterm` and `yaml-language-server`.
 
 ---
 ##### Notes
