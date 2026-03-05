@@ -6,7 +6,37 @@
 - Have a valid nix installation (nix/nixos)
 - Create a nix shell with necessary tooling for initial setup: `nix-shell -p gnumake git`.
 - Clone repo
+- [Set up Cachix](#cachix) (required for private cache access)
 - Run `nix run .#switch <config-name>`
+
+## Cachix
+
+A private [Cachix](https://cachix.org) binary cache (`grady-saccullo.cachix.org`) is used to
+avoid redundant builds across machines. When you run `nix run .#switch`, the Nix daemon checks
+this cache (along with the public `nix-community` and `numtide` caches) for pre-built derivations
+before building from source. After a successful switch, the build output is pushed back to the
+cache so other machines can pull it.
+
+Because the cache is private, the Nix daemon needs credentials to fetch from it. Nix supports
+this through a [netrc](https://everything.curl.dev/usingcurl/netrc) file — the same format
+`curl` uses for HTTP authentication. The daemon reads this file and attaches the credentials
+when making requests to the cache.
+
+### Setup
+
+Create the netrc file with your Cachix auth token (found on the
+[Cachix dashboard](https://app.cachix.org)):
+
+```bash
+sudo sh -c 'cat > /etc/nix/netrc << EOF
+machine grady-saccullo.cachix.org password <CACHIX_AUTH_TOKEN>
+EOF'
+sudo chmod 600 /etc/nix/netrc
+```
+
+This tells the Nix daemon: when connecting to `grady-saccullo.cachix.org`, authenticate with
+the given token. The file lives at `/etc/nix/netrc` so it works on both macOS and Linux without
+any path differences.
 
 ## Project Structure
 

@@ -43,7 +43,15 @@ Linux)
 	;;
 esac
 
+echo ""
+echo "=== Package changes ==="
+current=$(readlink /nix/var/nix/profiles/system | grep -o '[0-9]*')
+previous=$((current - 1))
+nix store diff-closures "/nix/var/nix/profiles/system-${previous}-link" "/nix/var/nix/profiles/system-${current}-link" 2>/dev/null || true
+
 if command -v cachix &>/dev/null; then
-	echo "pushing to cachix..."
+	echo ""
+	echo "=== Cachix ==="
+	echo "pushing to binary cache..."
 	cachix push grady-saccullo ./result
 fi

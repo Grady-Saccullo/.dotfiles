@@ -6,6 +6,7 @@
 
     settings = {
       trusted-users = ["root" "${me.user}"];
+      netrc-file = "/etc/nix/netrc";
       extra-substituters = [
         "https://cache.numtide.com"
         "https://grady-saccullo.cachix.org"
