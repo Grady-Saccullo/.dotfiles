@@ -8,6 +8,7 @@
 in rec {
   imports = [
     (inputs.nix-homebrew.darwinModules.nix-homebrew)
+    ../shared/nix.nix
   ];
 
   users.users.${me.user} = {
@@ -40,17 +41,8 @@ in rec {
     };
 
     extraOptions = ''
-      experimental-features = nix-command flakes
       extra-platforms = aarch64-darwin x86_64-darwin
     '';
-
-    settings = {
-      trusted-users = ["root" "${me.user}"];
-      extra-substituters = ["https://cache.numtide.com"];
-      extra-trusted-public-keys = [
-        "niks3.numtide.com-1:DTx8wZduET09hRmMtKdQDxNNthLQETkc/yaX7M4qK0g="
-      ];
-    };
   };
 
   homebrew = {

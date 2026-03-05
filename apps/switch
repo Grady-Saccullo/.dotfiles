@@ -18,27 +18,32 @@ function build() {
 }
 
 case $(uname -o) in
-	Darwin)
-		build "darwinConfigurations.$config_name.system"
+Darwin)
+	build "darwinConfigurations.$config_name.system"
 
-		sudo ./result/sw/bin/darwin-rebuild switch \
+	sudo ./result/sw/bin/darwin-rebuild switch \
+		--show-trace \
+		--flake ".#$config_name" "$@"
+	;;
+Linux)
+	if [ -f /etc/NIXOS ]; then
+		build "nixosConfigurations.$config_name.system"
+		sudo nixos-rebuild switch \
 			--show-trace \
 			--flake ".#$config_name" "$@"
-		;;
-	Linux)
-		if [ -f /etc/NIXOS ]; then
-			build "nixosConfigurations.$config_name.system"
-			sudo nixos-rebuild switch \
-				--show-trace \
-				--flake ".#$config_name" "$@"
-		else
-			echo "Need to implement/port over linux"
-			exit 1
-		fi
-
-		;;
-	*)
-		echo "System type $(uname -o) not supported"
+	else
+		echo "Need to implement/port over linux"
 		exit 1
-		;;
+	fi
+
+	;;
+*)
+	echo "System type $(uname -o) not supported"
+	exit 1
+	;;
 esac
+
+if command -v cachix &>/dev/null; then
+	echo "pushing to cachix..."
+	cachix push grady-saccullo ./result
+fi

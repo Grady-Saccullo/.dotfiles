@@ -9,7 +9,7 @@
       type = "app";
       program = "${(pkgs.writeScriptBin name ''
         #!/usr/bin/env bash
-        PATH=${lib.makeBinPath [pkgs.alejandra pkgs.jq pkgs.fzf]}:$PATH
+        PATH=${lib.makeBinPath [pkgs.unstable.alejandra pkgs.unstable.jq pkgs.unstable.fzf pkgs.unstable.cachix]}:$PATH
         echo "Running ${name} for ${system}"
         exec ${self}/apps/${name} "$@"
       '')}/bin/${name}";
