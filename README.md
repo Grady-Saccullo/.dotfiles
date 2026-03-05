@@ -1,4 +1,6 @@
-# `.dotfiles`
+<p align="center">
+  <img src="background.png" alt="dotfiles" />
+</p>
 
 ## Getting Started
 - Have a valid nix installation (nix/nixos)
