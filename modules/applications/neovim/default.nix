@@ -73,9 +73,11 @@ in {
           local lsp_servers = {
             bashls = {},
             lua_ls = {
-              Lua = {
-                workspace = { checkThirdParty = false },
-                telemetry = { enable = false },
+              settings = {
+                Lua = {
+                  workspace = { checkThirdParty = false },
+                  telemetry = { enable = false },
+                },
               },
             },
             yamlls = {

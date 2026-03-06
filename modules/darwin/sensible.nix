@@ -167,6 +167,11 @@ in rec {
             "79" = {enabled = false;}; # Move left a space (Ctrl+Left)
             "80" = {enabled = false;}; # Move right a space (Ctrl+Right)
 
+            # Disable Ctrl+Space input source switching so it can be used
+            # for neovim completion (cmp) and incremental selection (treesitter).
+            "60" = {enabled = false;}; # Select the previous input source (Ctrl+Space)
+            "61" = {enabled = false;}; # Select the next input source (Ctrl+Option+Space)
+
             # Remap Spotlight to Opt+Space so Cmd+Space is free for Raycast.
             # parameters: [ascii=32 (space), keycode=49 (space), modifiers=524288 (Option)]
             "64" = {

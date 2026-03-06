@@ -54,7 +54,7 @@ for server, config in pairs(lsp_servers) do
 		capabilities = capabilities,
 	}, config)
 
-	vim.lsp.enable(server)
 	vim.lsp.config(server, meshed_config)
+	vim.lsp.enable(server)
 end
 -- [END] nvim-lspconfig.lua --
