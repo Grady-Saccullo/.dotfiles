@@ -20,8 +20,8 @@ utils.mkAppModule {
           }
           // {
             launchd.user.agents.raycast = {
-              command = "open ${pkgs.unstable.raycast}/Applications/Raycast.app";
               serviceConfig = {
+                ProgramArguments = ["${pkgs.unstable.raycast}/Applications/Raycast.app/Contents/MacOS/Raycast"];
                 RunAtLoad = true;
               };
             };

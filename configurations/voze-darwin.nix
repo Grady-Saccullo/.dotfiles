@@ -70,18 +70,17 @@ in {
       "$HOME/Downloads/"
       "$HOME/code/"
     ];
-    slack.enable = true;
     soundsource.enable = true;
     spotify.enable = true;
     wezterm.enable = true;
     xcode.enable = true;
-    zoom.enable = true;
   };
 
   system.defaults.dock.persistent-apps = [
     config.applications.wezterm.path
-    config.applications.slack.path
+    "/Applications/Slack.app" # Not managed by nix
     config.applications.brave.path
     config.applications.spotify.path
+    config.applications.discord.path
   ];
 }
