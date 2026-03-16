@@ -2,12 +2,29 @@
   utils,
   config,
   pkgs,
+  lib,
+  machineType,
   ...
-}:
-utils.mkAppModule {
-  path = "discord";
-  inherit config;
-} (cfg:
+}: let
+  isDarwin = machineType == "darwin";
+in
+  utils.mkAppModule {
+    path = "discord";
+    inherit config;
+    extraOptions = {
+      package = lib.mkOption {
+        type = lib.types.package;
+        default = pkgs.unstable.discord;
+      };
+      path = lib.mkOption {
+        type = lib.types.str;
+        default =
+          if isDarwin
+          then "/Applications/Discord.app"
+          else "${config.applications.discord.package}/Applications/Discord.app";
+      };
+    };
+  } (cfg:
     utils.mkPlatformConfig {
       darwin = {
         homebrew.casks = [
@@ -18,9 +35,9 @@ utils.mkAppModule {
         ];
       };
       nixos = utils.mkHomeManagerUser {
-        home.packages = [pkgs.unstable.discord];
+        home.packages = [cfg.package];
       };
       linux = utils.mkHomeManagerUser {
-        home.packages = [pkgs.unstable.discord];
+        home.packages = [cfg.package];
       };
     })
