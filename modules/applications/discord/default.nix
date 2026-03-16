@@ -35,7 +35,7 @@ in
         ];
       };
       nixos = utils.mkHomeManagerUser {
-        home.packages = [cfg.discord];
+        home.packages = [cfg.package];
       };
       linux = utils.mkHomeManagerUser {
         home.packages = [cfg.package];
