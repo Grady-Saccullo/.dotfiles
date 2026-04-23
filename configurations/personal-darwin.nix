@@ -14,7 +14,7 @@ in {
   applications = {
     aerospace = {
       enable = true;
-      profile = "personal";
+      settings = import ./personal-configs/aerospace.nix;
     };
     claude-code.enable = true;
     android-studio.enable = true;

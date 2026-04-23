@@ -9,10 +9,10 @@ utils.mkAppModule {
   path = "aerospace";
   inherit config;
   extraOptions = {
-    profile = lib.mkOption {
-      type = lib.types.enum ["personal" "voze"];
-      default = "personal";
-      description = "Which aerospace profile to use. Names mirror host config names.";
+    settings = lib.mkOption {
+      type = lib.types.attrs;
+      default = {};
+      description = "Attrset forwarded to nix-darwin's services.aerospace.settings. Per-host configs live under configurations/<host>-configs/aerospace.nix.";
     };
   };
 } (cfg:
@@ -21,10 +21,7 @@ utils.mkAppModule {
         services.aerospace = {
           enable = true;
           package = pkgs.unstable.aerospace;
-          settings =
-            if cfg.profile == "personal"
-            then import ./personal.nix
-            else import ./voze.nix;
+          inherit (cfg) settings;
         };
       };
       nixos = "aerospace is only supported on darwin";

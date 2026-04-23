@@ -14,7 +14,7 @@ in {
   applications = {
     aerospace = {
       enable = true;
-      profile = "voze";
+      settings = import ./voze-configs/aerospace.nix;
     };
     android-studio.enable = true;
     claude-code.enable = true;
