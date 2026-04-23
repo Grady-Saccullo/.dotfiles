@@ -2,6 +2,7 @@
   utils,
   config,
   lib,
+  pkgs,
   ...
 }:
 utils.mkAppModule {
@@ -11,27 +12,21 @@ utils.mkAppModule {
     profile = lib.mkOption {
       type = lib.types.enum ["personal" "voze"];
       default = "personal";
-      description = "Which aerospace profile to use (selects the shipped TOML). Names mirror host config names.";
+      description = "Which aerospace profile to use. Names mirror host config names.";
     };
   };
 } (cfg:
     utils.mkPlatformConfig {
-      darwin = lib.mkMerge [
-        {
-          homebrew.casks = [
-            {
-              name = "aerospace";
-              greedy = true;
-            }
-          ];
-        }
-        (utils.mkHomeManagerUser {
-          xdg.configFile."aerospace/aerospace.toml".source =
+      darwin = {
+        services.aerospace = {
+          enable = true;
+          package = pkgs.unstable.aerospace;
+          settings =
             if cfg.profile == "personal"
-            then ./personal.toml
-            else ./voze.toml;
-        })
-      ];
+            then import ./personal.nix
+            else import ./voze.nix;
+        };
+      };
       nixos = "aerospace is only supported on darwin";
       linux = "aerospace is only supported on darwin";
     })
