@@ -1,6 +1,7 @@
 {...}: {
   imports = [
     ./1password
+    ./aerospace
     ./android-studio
     ./bat
     ./betterdisplay
