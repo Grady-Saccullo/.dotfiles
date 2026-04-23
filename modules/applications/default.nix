@@ -36,6 +36,7 @@
     ./utm
     ./wezterm
     ./xcode
+    ./yazi
     ./zoom
     ./zoxide
     ./zsh
