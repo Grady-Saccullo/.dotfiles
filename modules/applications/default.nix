@@ -22,6 +22,7 @@
     ./github-cli
     ./hoppscotch
     ./jetbrains
+    ./jj
     ./jq
     ./neovim
     ./podman
