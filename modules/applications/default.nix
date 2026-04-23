@@ -37,6 +37,7 @@
     ./wezterm
     ./xcode
     ./zoom
+    ./zoxide
     ./zsh
   ];
 }
