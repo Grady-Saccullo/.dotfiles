@@ -1,6 +1,7 @@
 {...}: {
   imports = [
     ./1password
+    ./aerospace
     ./android-studio
     ./bat
     ./betterdisplay
@@ -21,6 +22,7 @@
     ./github-cli
     ./hoppscotch
     ./jetbrains
+    ./jj
     ./jq
     ./neovim
     ./podman
@@ -36,7 +38,9 @@
     ./utm
     ./wezterm
     ./xcode
+    ./yazi
     ./zoom
+    ./zoxide
     ./zsh
   ];
 }

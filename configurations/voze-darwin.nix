@@ -12,6 +12,10 @@ in {
   ];
 
   applications = {
+    aerospace = {
+      enable = true;
+      settings = import ./voze-configs/aerospace.nix;
+    };
     android-studio.enable = true;
     claude-code.enable = true;
     betterdisplay.enable = true;

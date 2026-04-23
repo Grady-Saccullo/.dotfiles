@@ -4,6 +4,12 @@ local act = wezterm.action
 -- Smart splits plugin for seamless nvim/wezterm pane navigation
 local smart_splits = wezterm.plugin.require("https://github.com/mrjones2014/smart-splits.nvim")
 
+-- Fuzzy workspace switcher (tmux-sessionizer equivalent, uses zoxide).
+local workspace_switcher = wezterm.plugin.require("https://github.com/MLFlexer/smart_workspace_switcher.wezterm")
+
+-- Persist + restore workspaces/tabs/panes across wezterm restarts.
+local resurrect = wezterm.plugin.require("https://github.com/MLFlexer/resurrect.wezterm")
+
 local config = {
 	color_scheme = "oxocarbon-dark",
 	font = wezterm.font("JetBrains Mono", { weight = "Book" }),
@@ -21,6 +27,8 @@ local config = {
 	check_for_updates = false,
 	enable_tab_bar = true,
 	tab_bar_at_bottom = true,
+	audible_bell = "Disabled",
+	scrollback_lines = 10000,
 	leader = {
 		key = "a",
 		mods = "CTRL",
@@ -155,6 +163,56 @@ local config = {
 			mods = "LEADER",
 			action = act({ CloseCurrentPane = { confirm = true } }),
 		},
+		-- Workspaces (sessionizer-style)
+		{
+			key = "s",
+			mods = "LEADER",
+			action = workspace_switcher.switch_workspace(),
+		},
+		{
+			key = "o",
+			mods = "LEADER",
+			action = act.SwitchWorkspaceRelative(1),
+		},
+		{
+			key = "O",
+			mods = "LEADER|SHIFT",
+			action = act.SwitchWorkspaceRelative(-1),
+		},
+		-- Resurrect: save/load workspace state
+		{
+			key = "S",
+			mods = "LEADER|SHIFT",
+			action = wezterm.action_callback(function(win, pane)
+				resurrect.state_manager.save_state(resurrect.workspace_state.get_workspace_state())
+			end),
+		},
+		{
+			key = "R",
+			mods = "LEADER|SHIFT",
+			action = wezterm.action_callback(function(win, pane)
+				resurrect.fuzzy_loader.fuzzy_load(win, pane, function(id, label)
+					local type = string.match(id, "^([^/]+)")
+					id = string.match(id, "([^/]+)$")
+					id = string.match(id, "(.+)%..+$")
+					local opts = {
+						relative = true,
+						restore_text = true,
+						on_pane_restore = resurrect.tab_state.default_on_pane_restore,
+					}
+					if type == "workspace" then
+						local state = resurrect.state_manager.load_state(id, "workspace")
+						resurrect.workspace_state.restore_workspace(state, opts)
+					elseif type == "window" then
+						local state = resurrect.state_manager.load_state(id, "window")
+						resurrect.window_state.restore_window(pane:window(), state, opts)
+					elseif type == "tab" then
+						local state = resurrect.state_manager.load_state(id, "tab")
+						resurrect.tab_state.restore_tab(pane:tab(), state, opts)
+					end
+				end)
+			end),
+		},
 	},
 }
 
@@ -169,5 +227,40 @@ smart_splits.apply_to_config(config, {
 		resize = "CTRL|SHIFT",
 	},
 })
+
+-- Prefix workspace names in the picker for easier scanning.
+workspace_switcher.workspace_formatter = function(label)
+	return wezterm.format({
+		{ Attribute = { Italic = true } },
+		{ Foreground = { Color = "#33b1ff" } },
+		{ Text = "󱂬 " .. label },
+	})
+end
+
+-- Periodically snapshot the active workspace so ungraceful exits keep it.
+wezterm.on("resurrect.periodic_save", function()
+	resurrect.state_manager.write_current_state()
+end)
+resurrect.state_manager.periodic_save({
+	interval_seconds = 15 * 60,
+	save_workspaces = true,
+	save_windows = true,
+	save_tabs = true,
+})
+
+-- Auto-save whenever a new workspace is created via the switcher.
+wezterm.on("smart_workspace_switcher.workspace_switcher.created", function(window, _, label)
+	local workspace_state = resurrect.workspace_state
+	workspace_state.restore_workspace(resurrect.state_manager.load_state(label, "workspace"), {
+		window = window,
+		relative = true,
+		restore_text = true,
+		on_pane_restore = resurrect.tab_state.default_on_pane_restore,
+	})
+end)
+wezterm.on("smart_workspace_switcher.workspace_switcher.chosen", function(window, _, label)
+	local workspace_state = resurrect.workspace_state
+	resurrect.state_manager.save_state(workspace_state.get_workspace_state())
+end)
 
 return config
