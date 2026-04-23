@@ -30,6 +30,7 @@
     ./soundsource
     ./spotify
     ./starship
+    ./tailscale
     ./tmux
     ./todoist
     ./utm

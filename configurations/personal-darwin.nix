@@ -70,6 +70,7 @@ in {
       "$HOME/personal/"
     ];
     spotify.enable = true;
+    tailscale.enable = true;
     utm.enable = true;
     wezterm.enable = true;
     xcode.enable = true;

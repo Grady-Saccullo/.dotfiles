@@ -14,18 +14,14 @@ utils.mkAppModule {
 } (cfg:
     lib.mkMerge [
       (utils.mkPlatformConfig {
-        darwin =
-          utils.mkHomeManagerUser {
-            home.packages = [pkgs.unstable.raycast];
-          }
-          // {
-            launchd.user.agents.raycast = {
-              serviceConfig = {
-                ProgramArguments = ["${pkgs.unstable.raycast}/Applications/Raycast.app/Contents/MacOS/Raycast"];
-                RunAtLoad = true;
-              };
-            };
-          };
+        darwin = {
+          homebrew.casks = [
+            {
+              name = "raycast";
+              greedy = true;
+            }
+          ];
+        };
         nixos = "raycast is only supported on darwin";
         linux = "raycast is only supported on darwin";
       })
