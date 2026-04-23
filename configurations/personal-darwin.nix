@@ -12,6 +12,10 @@ in {
   ];
 
   applications = {
+    aerospace = {
+      enable = true;
+      profile = "personal";
+    };
     claude-code.enable = true;
     android-studio.enable = true;
     betterdisplay.enable = true;
