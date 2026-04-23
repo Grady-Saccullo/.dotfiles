@@ -4,6 +4,9 @@ local act = wezterm.action
 -- Smart splits plugin for seamless nvim/wezterm pane navigation
 local smart_splits = wezterm.plugin.require("https://github.com/mrjones2014/smart-splits.nvim")
 
+-- Fuzzy workspace switcher (tmux-sessionizer equivalent, uses zoxide).
+local workspace_switcher = wezterm.plugin.require("https://github.com/MLFlexer/smart_workspace_switcher.wezterm")
+
 local config = {
 	color_scheme = "oxocarbon-dark",
 	font = wezterm.font("JetBrains Mono", { weight = "Book" }),
@@ -157,6 +160,22 @@ local config = {
 			mods = "LEADER",
 			action = act({ CloseCurrentPane = { confirm = true } }),
 		},
+		-- Workspaces (sessionizer-style)
+		{
+			key = "s",
+			mods = "LEADER",
+			action = workspace_switcher.switch_workspace(),
+		},
+		{
+			key = "o",
+			mods = "LEADER",
+			action = act.SwitchWorkspaceRelative(1),
+		},
+		{
+			key = "O",
+			mods = "LEADER|SHIFT",
+			action = act.SwitchWorkspaceRelative(-1),
+		},
 	},
 }
 
@@ -171,5 +190,14 @@ smart_splits.apply_to_config(config, {
 		resize = "CTRL|SHIFT",
 	},
 })
+
+-- Prefix workspace names in the picker for easier scanning.
+workspace_switcher.workspace_formatter = function(label)
+	return wezterm.format({
+		{ Attribute = { Italic = true } },
+		{ Foreground = { Color = "#33b1ff" } },
+		{ Text = "󱂬 " .. label },
+	})
+end
 
 return config
