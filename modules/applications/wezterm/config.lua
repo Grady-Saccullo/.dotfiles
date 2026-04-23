@@ -7,6 +7,9 @@ local smart_splits = wezterm.plugin.require("https://github.com/mrjones2014/smar
 -- Fuzzy workspace switcher (tmux-sessionizer equivalent, uses zoxide).
 local workspace_switcher = wezterm.plugin.require("https://github.com/MLFlexer/smart_workspace_switcher.wezterm")
 
+-- Persist + restore workspaces/tabs/panes across wezterm restarts.
+local resurrect = wezterm.plugin.require("https://github.com/MLFlexer/resurrect.wezterm")
+
 local config = {
 	color_scheme = "oxocarbon-dark",
 	font = wezterm.font("JetBrains Mono", { weight = "Book" }),
@@ -176,6 +179,40 @@ local config = {
 			mods = "LEADER|SHIFT",
 			action = act.SwitchWorkspaceRelative(-1),
 		},
+		-- Resurrect: save/load workspace state
+		{
+			key = "S",
+			mods = "LEADER|SHIFT",
+			action = wezterm.action_callback(function(win, pane)
+				resurrect.state_manager.save_state(resurrect.workspace_state.get_workspace_state())
+			end),
+		},
+		{
+			key = "R",
+			mods = "LEADER|SHIFT",
+			action = wezterm.action_callback(function(win, pane)
+				resurrect.fuzzy_loader.fuzzy_load(win, pane, function(id, label)
+					local type = string.match(id, "^([^/]+)")
+					id = string.match(id, "([^/]+)$")
+					id = string.match(id, "(.+)%..+$")
+					local opts = {
+						relative = true,
+						restore_text = true,
+						on_pane_restore = resurrect.tab_state.default_on_pane_restore,
+					}
+					if type == "workspace" then
+						local state = resurrect.state_manager.load_state(id, "workspace")
+						resurrect.workspace_state.restore_workspace(state, opts)
+					elseif type == "window" then
+						local state = resurrect.state_manager.load_state(id, "window")
+						resurrect.window_state.restore_window(pane:window(), state, opts)
+					elseif type == "tab" then
+						local state = resurrect.state_manager.load_state(id, "tab")
+						resurrect.tab_state.restore_tab(pane:tab(), state, opts)
+					end
+				end)
+			end),
+		},
 	},
 }
 
@@ -199,5 +236,31 @@ workspace_switcher.workspace_formatter = function(label)
 		{ Text = "󱂬 " .. label },
 	})
 end
+
+-- Periodically snapshot the active workspace so ungraceful exits keep it.
+wezterm.on("resurrect.periodic_save", function()
+	resurrect.state_manager.write_current_state()
+end)
+resurrect.state_manager.periodic_save({
+	interval_seconds = 15 * 60,
+	save_workspaces = true,
+	save_windows = true,
+	save_tabs = true,
+})
+
+-- Auto-save whenever a new workspace is created via the switcher.
+wezterm.on("smart_workspace_switcher.workspace_switcher.created", function(window, _, label)
+	local workspace_state = resurrect.workspace_state
+	workspace_state.restore_workspace(resurrect.state_manager.load_state(label, "workspace"), {
+		window = window,
+		relative = true,
+		restore_text = true,
+		on_pane_restore = resurrect.tab_state.default_on_pane_restore,
+	})
+end)
+wezterm.on("smart_workspace_switcher.workspace_switcher.chosen", function(window, _, label)
+	local workspace_state = resurrect.workspace_state
+	resurrect.state_manager.save_state(workspace_state.get_workspace_state())
+end)
 
 return config
