@@ -9,9 +9,9 @@ utils.mkAppModule {
   inherit config;
   extraOptions = {
     profile = lib.mkOption {
-      type = lib.types.enum ["personal" "work"];
+      type = lib.types.enum ["personal" "voze"];
       default = "personal";
-      description = "Which aerospace profile to use (selects the shipped TOML).";
+      description = "Which aerospace profile to use (selects the shipped TOML). Names mirror host config names.";
     };
   };
 } (cfg:
@@ -29,7 +29,7 @@ utils.mkAppModule {
           xdg.configFile."aerospace/aerospace.toml".source =
             if cfg.profile == "personal"
             then ./personal.toml
-            else ./work.toml;
+            else ./voze.toml;
         })
       ];
       nixos = "aerospace is only supported on darwin";

@@ -14,7 +14,7 @@ in {
   applications = {
     aerospace = {
       enable = true;
-      profile = "work";
+      profile = "voze";
     };
     android-studio.enable = true;
     claude-code.enable = true;
