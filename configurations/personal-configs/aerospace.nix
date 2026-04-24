@@ -1,63 +1,12 @@
-{
-  automatically-unhide-macos-hidden-apps = true;
-  default-root-container-layout = "tiles";
-  default-root-container-orientation = "horizontal";
-
-  gaps = {
-    inner.horizontal = 4;
-    inner.vertical = 4;
-    outer.left = 4;
-    outer.right = 4;
-    outer.top = 4;
-    outer.bottom = 4;
-  };
-
-  mode.main.binding = {
-    alt-h = "focus left";
-    alt-j = "focus down";
-    alt-k = "focus up";
-    alt-l = "focus right";
-
-    alt-shift-h = "move left";
-    alt-shift-j = "move down";
-    alt-shift-k = "move up";
-    alt-shift-l = "move right";
-
-    alt-minus = "resize smart -50";
-    alt-equal = "resize smart +50";
-
-    alt-slash = "layout tiles horizontal vertical";
-    alt-comma = "layout accordion horizontal vertical";
-    alt-f = "fullscreen";
-    alt-shift-space = "layout floating tiling";
-
-    alt-1 = "workspace 1";
-    alt-2 = "workspace 2";
-    alt-3 = "workspace 3";
-    alt-tab = "workspace-back-and-forth";
-
-    alt-shift-1 = "move-node-to-workspace 1";
-    alt-shift-2 = "move-node-to-workspace 2";
-    alt-shift-3 = "move-node-to-workspace 3";
-
-    alt-r = "mode resize";
-    alt-shift-c = "reload-config";
-  };
-
-  mode.resize.binding = {
-    h = "resize width -50";
-    j = "resize height +50";
-    k = "resize height -50";
-    l = "resize width +50";
-    equal = "balance-sizes";
-    enter = "mode main";
-    esc = "mode main";
-  };
-
-  on-window-detected = [
-    {
-      "if" = {app-id = "com.spotify.client";};
-      run = "move-node-to-workspace 3";
-    }
-  ];
-}
+let
+  shared = import ../shared-configs/aerospace.nix;
+in
+  shared
+  // {
+    on-window-detected = [
+      {
+        "if" = {app-id = "com.spotify.client";};
+        run = "move-node-to-workspace 3";
+      }
+    ];
+  }
