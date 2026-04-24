@@ -19,7 +19,7 @@ in {
     claude-code.enable = true;
     android-studio.enable = true;
     betterdisplay.enable = true;
-    bettersnaptool.enable = true;
+    bettersnaptool.enable = false;
     bitwarden = {
       enable = true;
       browserExtension.enable = true;
