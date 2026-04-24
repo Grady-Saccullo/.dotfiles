@@ -28,14 +28,31 @@
     alt-j = "focus --boundaries all-monitors-outer-frame --boundaries-action wrap-around-all-monitors down";
     alt-k = "focus --boundaries all-monitors-outer-frame --boundaries-action wrap-around-all-monitors up";
     alt-l = "focus --boundaries all-monitors-outer-frame --boundaries-action wrap-around-all-monitors right";
+    alt-left = "focus --boundaries all-monitors-outer-frame --boundaries-action wrap-around-all-monitors left";
+    alt-down = "focus --boundaries all-monitors-outer-frame --boundaries-action wrap-around-all-monitors down";
+    alt-up = "focus --boundaries all-monitors-outer-frame --boundaries-action wrap-around-all-monitors up";
+    alt-right = "focus --boundaries all-monitors-outer-frame --boundaries-action wrap-around-all-monitors right";
 
     alt-shift-h = "move left";
     alt-shift-j = "move down";
     alt-shift-k = "move up";
     alt-shift-l = "move right";
+    alt-shift-left = "move left";
+    alt-shift-down = "move down";
+    alt-shift-up = "move up";
+    alt-shift-right = "move right";
 
-    alt-minus = "resize smart -50";
-    alt-equal = "resize smart +50";
+    cmd-alt-shift-h = "join-with left";
+    cmd-alt-shift-j = "join-with down";
+    cmd-alt-shift-k = "join-with up";
+    cmd-alt-shift-l = "join-with right";
+    cmd-alt-shift-left = "join-with left";
+    cmd-alt-shift-down = "join-with down";
+    cmd-alt-shift-up = "join-with up";
+    cmd-alt-shift-right = "join-with right";
+
+    alt-minus = "resize smart -250";
+    alt-equal = "resize smart +250";
 
     alt-slash = "layout tiles horizontal vertical";
     alt-comma = "layout accordion horizontal vertical";
@@ -57,21 +74,25 @@
     alt-shift-5 = "move-node-to-workspace 5";
     alt-shift-6 = "move-node-to-workspace 6";
 
-    alt-bracket-left = "focus-monitor prev";
-    alt-bracket-right = "focus-monitor next";
+    alt-leftSquareBracket = "focus-monitor prev";
+    alt-rightSquareBracket = "focus-monitor next";
 
-    alt-shift-bracket-left = "move-node-to-monitor prev";
-    alt-shift-bracket-right = "move-node-to-monitor next";
+    alt-shift-leftSquareBracket = "move-node-to-monitor prev";
+    alt-shift-rightSquareBracket = "move-node-to-monitor next";
 
     alt-r = "mode resize";
     alt-shift-c = "reload-config";
   };
 
   mode.resize.binding = {
-    h = "resize width -50";
-    j = "resize height +50";
-    k = "resize height -50";
-    l = "resize width +50";
+    h = "resize width -250";
+    j = "resize height +250";
+    k = "resize height -250";
+    l = "resize width +250";
+    left = "resize width -250";
+    down = "resize height +250";
+    up = "resize height -250";
+    right = "resize width +250";
     equal = "balance-sizes";
     enter = "mode main";
     esc = "mode main";
@@ -104,7 +125,7 @@
     }
     {
       "if" = {app-id = "com.hnc.Discord";};
-      run = "move-node-to-workspace 6";
+      run = "move-node-to-workspace 5";
     }
   ];
 }
