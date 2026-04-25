@@ -10,6 +10,8 @@ local workspace_switcher = wezterm.plugin.require("https://github.com/MLFlexer/s
 -- Persist + restore workspaces/tabs/panes across wezterm restarts.
 local resurrect = wezterm.plugin.require("https://github.com/MLFlexer/resurrect.wezterm")
 
+local tabline = wezterm.plugin.require("https://github.com/michaelbrusegard/tabline.wez")
+
 local config = {
 	color_scheme = "oxocarbon-dark",
 	font = wezterm.font("JetBrains Mono", { weight = "Book" }),
@@ -28,6 +30,9 @@ local config = {
 	enable_tab_bar = true,
 	tab_bar_at_bottom = true,
 	audible_bell = "Disabled",
+	show_new_tab_button_in_tab_bar = false,
+	tab_max_width = 32,
+	status_update_interval = 500,
 	scrollback_lines = 10000,
 	leader = {
 		key = "a",
@@ -35,6 +40,26 @@ local config = {
 		timeout_milliseconds = 2000,
 	},
 	keys = {
+		{
+			key = "LeftArrow",
+			mods = "OPT",
+			action = act.SendString("\x1bb"),
+		},
+		{
+			key = "RightArrow",
+			mods = "OPT",
+			action = act.SendString("\x1bf"),
+		},
+		{
+			key = "UpArrow",
+			mods = "SHIFT",
+			action = act.ScrollToPrompt(-1),
+		},
+		{
+			key = "DownArrow",
+			mods = "SHIFT",
+			action = act.ScrollToPrompt(1),
+		},
 		{
 			key = "-",
 			mods = "LEADER",
@@ -226,6 +251,30 @@ smart_splits.apply_to_config(config, {
 		move = "CTRL",
 		resize = "CTRL|SHIFT",
 	},
+})
+
+tabline.setup({
+	options = {
+		icons_enabled = true,
+		theme = "oxocarbon-dark",
+	},
+	sections = {
+		tabline_a = { "mode" },
+		tabline_b = { "workspace" },
+		tabline_c = { " " },
+		tab_active = {
+			"index",
+			{ "parent", padding = 0 },
+			"/",
+			{ "cwd", padding = { left = 0, right = 1 } },
+			{ "zoomed", padding = 0 },
+		},
+		tab_inactive = { "index", { "process", padding = { left = 0, right = 1 } } },
+		tabline_x = {},
+		tabline_y = { "datetime" },
+		tabline_z = { "domain" },
+	},
+	extensions = { "resurrect", "smart_workspace_switcher" },
 })
 
 -- Prefix workspace names in the picker for easier scanning.
