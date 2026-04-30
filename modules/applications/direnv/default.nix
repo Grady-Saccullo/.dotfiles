@@ -13,5 +13,8 @@ utils.mkAppModule {
         enable = true;
         enableZshIntegration = config.applications.zsh.enable;
         nix-direnv.enable = true;
+        # Suppress the noisy `direnv: export +VAR +VAR ...` env-diff dump on
+        # every shell entry. Keeps the concise `direnv: loading` status line.
+        config.global.hide_env_diff = true;
       };
     })

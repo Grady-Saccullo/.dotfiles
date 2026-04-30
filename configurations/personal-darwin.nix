@@ -65,7 +65,7 @@ in {
     };
     podman.enable = true;
     raycast.enable = true;
-    # soundsource.enable = true;
+    soundsource.enable = true;
     fzf.searchPaths = [
       "$HOME/Desktop/"
       "$HOME/Documents/"
@@ -74,6 +74,7 @@ in {
       "$HOME/personal/"
     ];
     spotify.enable = true;
+    steam.enable = true;
     tailscale.enable = true;
     utm.enable = true;
     wezterm.enable = true;

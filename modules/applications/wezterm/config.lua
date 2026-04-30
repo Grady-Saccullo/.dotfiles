@@ -12,6 +12,24 @@ local resurrect = wezterm.plugin.require("https://github.com/MLFlexer/resurrect.
 
 local tabline = wezterm.plugin.require("https://github.com/michaelbrusegard/tabline.wez")
 
+local wezterm = require("wezterm")
+local config = wezterm.config_builder and wezterm.config_builder() or {}
+
+-- Wezsesh
+local wezsesh_root = "/Users/hackerman/code/grady-saccullo/wezsesh/plugin"
+local wezsesh_binary = "/Users/hackerman/code/grady-saccullo/wezsesh/wezsesh"
+
+package.path = wezsesh_root
+	.. "/?.lua;"
+	.. wezsesh_root
+	.. "/?/init.lua;"
+	.. wezsesh_root
+	.. "/wezsesh/?.lua;"
+	.. wezsesh_root
+	.. "/wezsesh/?/init.lua;"
+	.. package.path
+local wezsesh = dofile(wezsesh_root .. "/init.lua")
+
 local oxocarbon = {
 	background = "#161616",
 	foreground = "#ffffff",
@@ -78,6 +96,7 @@ local config = {
 		timeout_milliseconds = 2000,
 	},
 	keys = {
+		{ key = "L", mods = "CTRL|SHIFT", action = wezterm.action.ShowDebugOverlay },
 		{
 			key = "LeftArrow",
 			mods = "OPT",
@@ -232,6 +251,13 @@ local config = {
 			mods = "LEADER",
 			action = workspace_switcher.switch_workspace(),
 		},
+		-- {
+		-- 	key = "W",
+		-- 	mods = "LEADER|SHIFT",
+		-- 	action = wezterm.action_callback(function(window, pane)
+		-- 		workspace_manager(window, pane)
+		-- 	end),
+		-- },
 		{
 			key = "o",
 			mods = "LEADER",
@@ -250,32 +276,6 @@ local config = {
 				resurrect.state_manager.save_state(resurrect.workspace_state.get_workspace_state())
 			end),
 		},
-		{
-			key = "R",
-			mods = "LEADER|SHIFT",
-			action = wezterm.action_callback(function(win, pane)
-				resurrect.fuzzy_loader.fuzzy_load(win, pane, function(id, label)
-					local type = string.match(id, "^([^/]+)")
-					id = string.match(id, "([^/]+)$")
-					id = string.match(id, "(.+)%..+$")
-					local opts = {
-						relative = true,
-						restore_text = true,
-						on_pane_restore = resurrect.tab_state.default_on_pane_restore,
-					}
-					if type == "workspace" then
-						local state = resurrect.state_manager.load_state(id, "workspace")
-						resurrect.workspace_state.restore_workspace(state, opts)
-					elseif type == "window" then
-						local state = resurrect.state_manager.load_state(id, "window")
-						resurrect.window_state.restore_window(pane:window(), state, opts)
-					elseif type == "tab" then
-						local state = resurrect.state_manager.load_state(id, "tab")
-						resurrect.tab_state.restore_tab(pane:tab(), state, opts)
-					end
-				end)
-			end),
-		},
 	},
 }
 
@@ -291,24 +291,30 @@ smart_splits.apply_to_config(config, {
 	},
 })
 
--- Show explicit tab title if set (via Leader+,), otherwise show parent/current dir.
-local function tab_title_or_cwd(tab)
-	if tab.tab_title and #tab.tab_title > 0 then
-		return tab.tab_title
-	end
-	local pane = tab.active_pane
-	local cwd_uri = pane and pane.current_working_dir
-	if cwd_uri then
-		local path = (cwd_uri.file_path or tostring(cwd_uri)):gsub("/$", "")
-		local parent = path:match("([^/]+)/[^/]+$")
-		local current = path:match("([^/]+)$") or path
-		if parent then
-			return parent .. "/" .. current
-		end
-		return current
-	end
-	return (pane and pane.title) or ""
-end
+wezsesh.apply_to_config(config, {
+	binary = wezsesh_binary,
+	resurrect = resurrect,
+	snapshot_dir = wezterm.home_dir .. "/Library/Application Support/wezterm/resurrect",
+	state_dir = wezterm.home_dir .. "/.local/state/wezsesh",
+	data_dir = wezterm.home_dir .. "/.local/share/wezsesh",
+	runtime_dir = "/tmp/wezsesh",
+	log_level = "debug",
+	-- dir_providers feed the picker with rows that are neither live
+	-- nor saved (the "external" source). Selecting one renames the
+	-- current workspace to the picked name and `cd`s the active pane
+	-- into the supplied path — replaces the smart_workspace_switcher
+	-- + zoxide flow.
+	--
+	-- Each entry is a typed config table. The Go binary executes
+	-- them natively (shell-out for `command`, fs walk for
+	-- `directory`, literal list for `static`). Fields:
+	--   command:   argv (required), limit (default 200), timeout_ms (default 5000)
+	--   directory: path (required), depth (default 2), limit, include_hidden
+	--   static:    paths (required)
+	dir_providers = {
+		{ type = "command", argv = { "zoxide", "query", "-l" }, limit = 200 },
+	},
+})
 
 tabline.setup({
 	options = {
@@ -328,12 +334,12 @@ tabline.setup({
 		tabline_c = { " " },
 		tab_active = {
 			"index",
-			{ tab_title_or_cwd, padding = { left = 1, right = 1 } },
+			{ "tab", padding = { left = 1, right = 1 } },
 			{ "zoomed", padding = 0 },
 		},
 		tab_inactive = {
 			"index",
-			{ tab_title_or_cwd, padding = { left = 1, right = 1 } },
+			{ "tab", padding = { left = 1, right = 1 } },
 		},
 		tabline_x = {},
 		tabline_y = { "datetime" },

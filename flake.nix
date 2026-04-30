@@ -1,9 +1,22 @@
 {
   description = "Nix system manager";
 
+  # Personal binary cache, scoped to this flake only. Kept out of the
+  # machine-wide nix-darwin substituters on purpose: as a global substituter
+  # it leaked into every unrelated devenv project, whose cache probe hits this
+  # private cache unauthenticated and warns `HTTP error 401`. Scoping it here
+  # means only `nix run .#switch` (operations on this flake) uses it. The
+  # daemon authenticates via /etc/nix/netrc (see README).
+  nixConfig = {
+    extra-substituters = ["https://grady-saccullo.cachix.org"];
+    extra-trusted-public-keys = [
+      "grady-saccullo.cachix.org-1:eYGgNiaxvbtKg9XDaDw8POg+R92uwljqdlcE32nL9ts="
+    ];
+  };
+
   inputs = {
     nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.05";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.11";
     home-manager.inputs.nixpkgs.follows = "nixpkgs-unstable";
     home-manager.url = "github:nix-community/home-manager/master";
 
