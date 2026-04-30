@@ -10,7 +10,47 @@ local workspace_switcher = wezterm.plugin.require("https://github.com/MLFlexer/s
 -- Persist + restore workspaces/tabs/panes across wezterm restarts.
 local resurrect = wezterm.plugin.require("https://github.com/MLFlexer/resurrect.wezterm")
 
+local tabline = wezterm.plugin.require("https://github.com/michaelbrusegard/tabline.wez")
+
+local oxocarbon = {
+	background = "#161616",
+	foreground = "#ffffff",
+	cursor_bg = "#ffffff",
+	cursor_border = "#ffffff",
+	cursor_fg = "#161616",
+	ansi = { "#262626", "#ee5396", "#42be65", "#ffe97b", "#33b1ff", "#ff7eb6", "#3ddbd9", "#dde1e6" },
+	brights = { "#393939", "#ee5396", "#42be65", "#ffe97b", "#33b1ff", "#ff7eb6", "#3ddbd9", "#ffffff" },
+	tab_bar = {
+		background = "rgba(0,0,0,0)",
+		active_tab = {
+			bg_color = "#161616",
+			fg_color = "#ff7eb6",
+			intensity = "Normal",
+			italic = false,
+			strikethrough = false,
+			underline = "None",
+		},
+		inactive_tab = {
+			bg_color = "#262626",
+			fg_color = "#ffffff",
+			intensity = "Normal",
+			italic = false,
+			strikethrough = false,
+			underline = "None",
+		},
+		new_tab = {
+			bg_color = "#262626",
+			fg_color = "#ffffff",
+			intensity = "Normal",
+			italic = false,
+			strikethrough = false,
+			underline = "None",
+		},
+	},
+}
+
 local config = {
+	color_schemes = { ["oxocarbon-dark"] = oxocarbon },
 	color_scheme = "oxocarbon-dark",
 	font = wezterm.font("JetBrains Mono", { weight = "Book" }),
 	window_close_confirmation = "NeverPrompt",
@@ -28,6 +68,9 @@ local config = {
 	enable_tab_bar = true,
 	tab_bar_at_bottom = true,
 	audible_bell = "Disabled",
+	show_new_tab_button_in_tab_bar = false,
+	tab_max_width = 32,
+	status_update_interval = 500,
 	scrollback_lines = 10000,
 	leader = {
 		key = "a",
@@ -35,6 +78,26 @@ local config = {
 		timeout_milliseconds = 2000,
 	},
 	keys = {
+		{
+			key = "LeftArrow",
+			mods = "OPT",
+			action = act.SendString("\x1bb"),
+		},
+		{
+			key = "RightArrow",
+			mods = "OPT",
+			action = act.SendString("\x1bf"),
+		},
+		{
+			key = "UpArrow",
+			mods = "SHIFT",
+			action = act.ScrollToPrompt(-1),
+		},
+		{
+			key = "DownArrow",
+			mods = "SHIFT",
+			action = act.ScrollToPrompt(1),
+		},
 		{
 			key = "-",
 			mods = "LEADER",
@@ -226,6 +289,57 @@ smart_splits.apply_to_config(config, {
 		move = "CTRL",
 		resize = "CTRL|SHIFT",
 	},
+})
+
+-- Show explicit tab title if set (via Leader+,), otherwise show parent/current dir.
+local function tab_title_or_cwd(tab)
+	if tab.tab_title and #tab.tab_title > 0 then
+		return tab.tab_title
+	end
+	local pane = tab.active_pane
+	local cwd_uri = pane and pane.current_working_dir
+	if cwd_uri then
+		local path = (cwd_uri.file_path or tostring(cwd_uri)):gsub("/$", "")
+		local parent = path:match("([^/]+)/[^/]+$")
+		local current = path:match("([^/]+)$") or path
+		if parent then
+			return parent .. "/" .. current
+		end
+		return current
+	end
+	return (pane and pane.title) or ""
+end
+
+tabline.setup({
+	options = {
+		icons_enabled = true,
+		theme = oxocarbon,
+	},
+	sections = {
+		tabline_a = {
+			{
+				"mode",
+				cond = function(window)
+					return window:active_key_table() ~= nil
+				end,
+			},
+		},
+		tabline_b = { "workspace" },
+		tabline_c = { " " },
+		tab_active = {
+			"index",
+			{ tab_title_or_cwd, padding = { left = 1, right = 1 } },
+			{ "zoomed", padding = 0 },
+		},
+		tab_inactive = {
+			"index",
+			{ tab_title_or_cwd, padding = { left = 1, right = 1 } },
+		},
+		tabline_x = {},
+		tabline_y = { "datetime" },
+		tabline_z = { "domain" },
+	},
+	extensions = { "resurrect", "smart_workspace_switcher" },
 })
 
 -- Prefix workspace names in the picker for easier scanning.
