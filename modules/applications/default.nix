@@ -32,6 +32,7 @@
     ./soundsource
     ./spotify
     ./starship
+    ./steam
     ./tailscale
     ./tmux
     ./todoist

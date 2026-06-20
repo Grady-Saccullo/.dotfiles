@@ -37,6 +37,7 @@ in
       programs.wezterm = {
         enable = true;
         package = cfg.package;
+        enableZshIntegration = config.applications.zsh.enable;
         extraConfig = builtins.readFile ./config.lua;
       };
     })

@@ -84,6 +84,8 @@ utils.mkAppModule {
           zle -N rationalise-dot
           bindkey . rationalise-dot
           bindkey -M isearch . self-insert
+
+          WEZSESH_KEEP_PANE=1
         '';
         autosuggestion.enable = true;
         syntaxHighlighting.enable = true;

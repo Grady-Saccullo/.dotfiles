@@ -12,14 +12,20 @@
 ## Cachix
 
 A private [Cachix](https://cachix.org) binary cache (`grady-saccullo.cachix.org`) is used to
-avoid redundant builds across machines. When you run `nix run .#switch`, the Nix daemon checks
-this cache (along with the public `nix-community` and `numtide` caches) for pre-built derivations
-before building from source. After a successful switch, the build output is pushed back to the
-cache so other machines can pull it.
+avoid redundant builds across machines. When you run `nix run .#switch`, Nix checks this cache
+(along with the public `nix-community` and `numtide` caches) for pre-built derivations before
+building from source. After a successful switch, the build output is pushed back to the cache
+so other machines can pull it.
 
-Because the cache is private, the Nix daemon needs credentials to fetch from it. Nix supports
+This cache is configured in `flake.nix`'s `nixConfig`, scoped to this flake — **not** in the
+machine-wide `nix.settings` (`modules/shared/nix.nix`, which keeps only the public caches). As
+a global substituter it leaked into every unrelated `devenv` project, whose cache probe hits
+this private cache unauthenticated and emits `HTTP error 401` warnings. Flake-scoping confines
+it to operations on this flake.
+
+Because the cache is private, Nix needs credentials to fetch from it. Nix supports
 this through a [netrc](https://everything.curl.dev/usingcurl/netrc) file — the same format
-`curl` uses for HTTP authentication. The daemon reads this file and attaches the credentials
+`curl` uses for HTTP authentication. Nix reads this file and attaches the credentials
 when making requests to the cache.
 
 ### Setup
@@ -28,15 +34,21 @@ Create the netrc file with your Cachix auth token (found on the
 [Cachix dashboard](https://app.cachix.org)):
 
 ```bash
-sudo sh -c 'cat > /etc/nix/netrc << EOF
+sudo sh -c 'umask 022; cat > /etc/nix/netrc << EOF
 machine grady-saccullo.cachix.org password <CACHIX_AUTH_TOKEN>
 EOF'
-sudo chmod 600 /etc/nix/netrc
+sudo chmod 0644 /etc/nix/netrc
 ```
 
-This tells the Nix daemon: when connecting to `grady-saccullo.cachix.org`, authenticate with
-the given token. The file lives at `/etc/nix/netrc` so it works on both macOS and Linux without
-any path differences.
+This tells Nix: when connecting to `grady-saccullo.cachix.org`, authenticate with the given
+token. The file lives at `/etc/nix/netrc` so it works on both macOS and Linux without any
+path differences.
+
+The mode is `0644` (not `0600`) on purpose: during `nix run .#switch`, Nix queries this cache
+both as root (the `nix-darwin` daemon) and as your user (flake evaluation / substituter
+probing). If the file is only root-readable, the user-side queries can't authenticate and the
+private cache returns `HTTP 401` warnings. A read-only token for a personal cache at `0644` on
+a single-user machine is a negligible exposure — do not "harden" this back to `0600`.
 
 ## Project Structure
 
