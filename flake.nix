@@ -3,7 +3,7 @@
 
   # Personal binary cache, scoped to this flake only. Kept out of the
   # machine-wide nix-darwin substituters on purpose: as a global substituter
-  # it leaked into every unrelated devenv project, whose cache probe hits this
+  # it leaked into every unrelated project, whose cache probe hits this
   # private cache unauthenticated and warns `HTTP error 401`. Scoping it here
   # means only `nix run .#switch` (operations on this flake) uses it. The
   # daemon authenticates via /etc/nix/netrc (see README).
@@ -16,7 +16,7 @@
 
   inputs = {
     nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.11";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";
     home-manager.inputs.nixpkgs.follows = "nixpkgs-unstable";
     home-manager.url = "github:nix-community/home-manager/master";
 
