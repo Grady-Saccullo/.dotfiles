@@ -15,20 +15,24 @@ local tabline = wezterm.plugin.require("https://github.com/michaelbrusegard/tabl
 local wezterm = require("wezterm")
 local config = wezterm.config_builder and wezterm.config_builder() or {}
 
--- Wezsesh
-local wezsesh_root = "/Users/hackerman/code/grady-saccullo/wezsesh/plugin"
-local wezsesh_binary = "/Users/hackerman/code/grady-saccullo/wezsesh/wezsesh"
+-- Wezsesh (toggled via nix: applications.wezterm.wezsesh.enable -> WEZSESH_ENABLED)
+local wezsesh = nil
+local wezsesh_binary = nil
+if WEZSESH_ENABLED then
+	local wezsesh_root = "/Users/hackerman/code/grady-saccullo/wezsesh/plugin"
+	wezsesh_binary = "/Users/hackerman/code/grady-saccullo/wezsesh/wezsesh"
 
-package.path = wezsesh_root
-	.. "/?.lua;"
-	.. wezsesh_root
-	.. "/?/init.lua;"
-	.. wezsesh_root
-	.. "/wezsesh/?.lua;"
-	.. wezsesh_root
-	.. "/wezsesh/?/init.lua;"
-	.. package.path
-local wezsesh = dofile(wezsesh_root .. "/init.lua")
+	package.path = wezsesh_root
+		.. "/?.lua;"
+		.. wezsesh_root
+		.. "/?/init.lua;"
+		.. wezsesh_root
+		.. "/wezsesh/?.lua;"
+		.. wezsesh_root
+		.. "/wezsesh/?/init.lua;"
+		.. package.path
+	wezsesh = dofile(wezsesh_root .. "/init.lua")
+end
 
 local oxocarbon = {
 	background = "#161616",
@@ -291,30 +295,32 @@ smart_splits.apply_to_config(config, {
 	},
 })
 
-wezsesh.apply_to_config(config, {
-	binary = wezsesh_binary,
-	resurrect = resurrect,
-	snapshot_dir = wezterm.home_dir .. "/Library/Application Support/wezterm/resurrect",
-	state_dir = wezterm.home_dir .. "/.local/state/wezsesh",
-	data_dir = wezterm.home_dir .. "/.local/share/wezsesh",
-	runtime_dir = "/tmp/wezsesh",
-	log_level = "debug",
-	-- dir_providers feed the picker with rows that are neither live
-	-- nor saved (the "external" source). Selecting one renames the
-	-- current workspace to the picked name and `cd`s the active pane
-	-- into the supplied path — replaces the smart_workspace_switcher
-	-- + zoxide flow.
-	--
-	-- Each entry is a typed config table. The Go binary executes
-	-- them natively (shell-out for `command`, fs walk for
-	-- `directory`, literal list for `static`). Fields:
-	--   command:   argv (required), limit (default 200), timeout_ms (default 5000)
-	--   directory: path (required), depth (default 2), limit, include_hidden
-	--   static:    paths (required)
-	dir_providers = {
-		{ type = "command", argv = { "zoxide", "query", "-l" }, limit = 200 },
-	},
-})
+if WEZSESH_ENABLED then
+	wezsesh.apply_to_config(config, {
+		binary = wezsesh_binary,
+		resurrect = resurrect,
+		snapshot_dir = wezterm.home_dir .. "/Library/Application Support/wezterm/resurrect",
+		state_dir = wezterm.home_dir .. "/.local/state/wezsesh",
+		data_dir = wezterm.home_dir .. "/.local/share/wezsesh",
+		runtime_dir = "/tmp/wezsesh",
+		log_level = "debug",
+		-- dir_providers feed the picker with rows that are neither live
+		-- nor saved (the "external" source). Selecting one renames the
+		-- current workspace to the picked name and `cd`s the active pane
+		-- into the supplied path — replaces the smart_workspace_switcher
+		-- + zoxide flow.
+		--
+		-- Each entry is a typed config table. The Go binary executes
+		-- them natively (shell-out for `command`, fs walk for
+		-- `directory`, literal list for `static`). Fields:
+		--   command:   argv (required), limit (default 200), timeout_ms (default 5000)
+		--   directory: path (required), depth (default 2), limit, include_hidden
+		--   static:    paths (required)
+		dir_providers = {
+			{ type = "command", argv = { "zoxide", "query", "-l" }, limit = 200 },
+		},
+	})
+end
 
 tabline.setup({
 	options = {

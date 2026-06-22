@@ -31,6 +31,11 @@ in
         default = "/Users/${me.user}/Applications/Home Manager Apps/WezTerm.app";
         description = "Path to the WezTerm application";
       };
+      wezsesh.enable = lib.mkOption {
+        type = lib.types.bool;
+        default = true;
+        description = "Enable the wezsesh plugin in the WezTerm config";
+      };
     };
   } (cfg:
     utils.mkHomeManagerUser {
@@ -38,6 +43,11 @@ in
         enable = true;
         package = cfg.package;
         enableZshIntegration = config.applications.zsh.enable;
-        extraConfig = builtins.readFile ./config.lua;
+        extraConfig =
+          ''
+            -- injected by nix: applications.wezterm.wezsesh.enable
+            WEZSESH_ENABLED = ${lib.boolToString cfg.wezsesh.enable}
+          ''
+          + builtins.readFile ./config.lua;
       };
     })
