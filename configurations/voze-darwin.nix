@@ -76,7 +76,10 @@ in {
     ];
     soundsource.enable = true;
     spotify.enable = true;
-    wezterm.enable = true;
+    wezterm = {
+      enable = true;
+      wezsesh.enable = false;
+    };
     xcode.enable = true;
   };
 
