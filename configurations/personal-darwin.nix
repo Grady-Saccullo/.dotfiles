@@ -77,7 +77,10 @@ in {
     steam.enable = true;
     tailscale.enable = true;
     utm.enable = true;
-    wezterm.enable = true;
+    wezterm = {
+      enable = true;
+      wezsesh.enable = false;
+    };
     xcode.enable = true;
   };
 
