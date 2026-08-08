@@ -29,6 +29,7 @@ in {
     discord.enable = true;
     docker.enable = true;
     github-cli.enable = true;
+    halloy.enable = true;
     hoppscotch.enable = true;
     neovim = {
       enable = true;

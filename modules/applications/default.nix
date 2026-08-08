@@ -20,6 +20,7 @@
     ./fzf
     ./git
     ./github-cli
+    ./halloy
     ./hoppscotch
     ./jetbrains
     ./jj

@@ -65,10 +65,14 @@ in
           package = pkgs.unstable.fzf;
           enableZshIntegration = config.applications.zsh.enable;
           defaultCommand = "fd -t f -H . ${searchPaths}";
-          fileWidgetCommand = "fd -t f -H . ${searchPaths}";
-          fileWidgetOptions = fileOptions;
-          changeDirWidgetCommand = "{ fd -t d -H . ${searchPaths}; echo ${searchPaths} | tr ' ' '\\n'; } | sort -u";
-          changeDirWidgetOptions = baseOptions;
+          fileWidget = {
+            command = "fd -t f -H . ${searchPaths}";
+            options = fileOptions;
+          };
+          changeDirWidget = {
+            command = "{ fd -t d -H . ${searchPaths}; echo ${searchPaths} | tr ' ' '\\n'; } | sort -u";
+            options = baseOptions;
+          };
           tmux.enableShellIntegration = config.applications.tmux.enable;
         };
 
