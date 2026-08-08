@@ -3,7 +3,7 @@
   unstableOverlay = import ./unstable.nix {inherit inputs;};
   yamlLanguageServerOverlay = import ./yaml-language-server.nix;
   weztermOverlay = import ./wezterm.nix {inherit inputs;};
-  llmAgentsOverlay = inputs.llm-agents.overlays.default;
+  llmAgentsOverlay = inputs.llm-agents.overlays.shared-nixpkgs;
 in
   final: prev:
     (stableOverlay final prev)
