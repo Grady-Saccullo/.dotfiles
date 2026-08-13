@@ -30,6 +30,7 @@ in {
     discord.enable = true;
     docker.enable = true;
     github-cli.enable = true;
+    halloy.enable = true;
     jetbrains = {
       enable = true;
       datagrip.enable = true;
