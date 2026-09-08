@@ -134,16 +134,8 @@ in {
       exitNode = true;
     };
 
-    proxy = {
-      enable = true;
-      services = {
-        ha = "http://127.0.0.1:8123";
-        zigbee = "http://127.0.0.1:8080";
-        nodered = "http://127.0.0.1:1880";
-        dns = "http://127.0.0.1:3000";
-        grafana = "http://127.0.0.1:3001";
-      };
-    };
+    # Service modules register their own https://<name>.home.arpa entries.
+    proxy.enable = true;
 
     monitoring.enable = true;
 

@@ -24,8 +24,8 @@ utils.mkHomelabModule {
     };
     openFirewall = lib.mkOption {
       type = lib.types.bool;
-      default = true;
-      description = "Expose :8123 directly (the proxy is the intended path).";
+      default = false;
+      description = "Expose :8123 directly. Off: the caddy proxy is the only entry point.";
     };
     extraComponents = lib.mkOption {
       type = lib.types.listOf lib.types.str;
@@ -47,18 +47,6 @@ in {
         ensureDBOwnership = true;
       }
     ];
-  };
-
-  ###########################################################################
-  # Camera streaming backend (Ring, Sonos, webOS, ...)
-  ###########################################################################
-  services.go2rtc = {
-    enable = true;
-    settings = {
-      api.listen = "127.0.0.1:1984";
-      rtsp.listen = "127.0.0.1:8554";
-      webrtc.listen = ":8555";
-    };
   };
 
   ###########################################################################
@@ -119,7 +107,9 @@ in {
         purge_keep_days = 14;
       };
 
-      go2rtc.url = "http://127.0.0.1:1984";
+      # HA starts and manages its own go2rtc (the module puts the binary on
+      # PATH when the component is enabled). Streams for Ring/Sonos/webOS.
+      go2rtc = {};
 
       "automation ui" = "!include automations.yaml";
       "script ui" = "!include scripts.yaml";
@@ -132,12 +122,14 @@ in {
   };
 
   systemd.services.home-assistant = {
-    after = ["postgresql.service" "mosquitto.service" "go2rtc.service"];
+    after = ["postgresql.service" "mosquitto.service"];
     wants = ["postgresql.service"];
   };
 
+  homelab.proxy.services.ha = lib.mkDefault "http://127.0.0.1:8123";
+
   networking.firewall = {
-    allowedTCPPorts = [cfg.homekitPort];
-    allowedUDPPorts = [5353]; # mDNS: HomeKit, Sonos, Apple TV, Matter
+    allowedTCPPorts = [cfg.homekitPort 8555]; # 8555: go2rtc WebRTC (camera live view)
+    allowedUDPPorts = [5353 8555]; # 5353 mDNS: HomeKit, Sonos, Apple TV, Matter
   };
 })

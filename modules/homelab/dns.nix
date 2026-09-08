@@ -51,9 +51,10 @@ in {
     enable = true;
     resolveLocalQueries = false;
     settings.server = {
-      interface = lib.mkForce ["127.0.0.1" "::1"];
+      # do-ip6 is off below, so no ::1 listener (unbound refuses to bind it)
+      interface = lib.mkForce ["127.0.0.1"];
       port = unboundPort;
-      access-control = lib.mkForce ["127.0.0.0/8 allow" "::1/128 allow"];
+      access-control = lib.mkForce ["127.0.0.0/8 allow"];
 
       do-ip6 = false;
       prefer-ip6 = false;
@@ -141,6 +142,8 @@ in {
       ${lib.getExe pkgs.yq-go} -i '.users = [{"name": "admin", "password": "'"$hash"'"}]' ${configFile}
     ''}"
   ];
+
+  homelab.proxy.services.dns = lib.mkDefault "http://127.0.0.1:${toString cfg.webPort}";
 
   networking.firewall = {
     allowedTCPPorts = [53];

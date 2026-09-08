@@ -19,14 +19,29 @@ in {
       type = types.path;
       description = "Encrypted sops yaml file holding this host's secrets.";
     };
+    cachixNetrc = mkOption {
+      type = types.bool;
+      default = true;
+      description = ''
+        Install /etc/nix/netrc from the `nix/netrc` secret so builds on this
+        host can pull from the private cachix cache declared in flake.nix
+        (otherwise every build warns HTTP 401). Same 0644 rationale as the
+        README's macOS setup.
+      '';
+    };
   };
 
   config = mkIf cfg.enable {
     sops = {
       defaultSopsFile = cfg.file;
-      # Derive the host's age identity from its ssh host key, so no extra
-      # key material has to be provisioned onto the box.
+      # The host's age identity is derived from its ssh host key. Ship that
+      # key at install time with `nixos-anywhere --extra-files` (see the
+      # runbook) so even the first activation can decrypt.
       age.sshKeyPaths = ["/etc/ssh/ssh_host_ed25519_key"];
+      secrets."nix/netrc" = mkIf cfg.cachixNetrc {
+        path = "/etc/nix/netrc";
+        mode = "0644";
+      };
     };
   };
 }

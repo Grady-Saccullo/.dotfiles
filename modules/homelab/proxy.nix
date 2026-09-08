@@ -19,7 +19,10 @@ utils.mkHomelabModule {
     services = lib.mkOption {
       type = lib.types.attrsOf lib.types.str;
       default = {};
-      description = "short name -> upstream URL, served as <name>.<domain>.";
+      description = ''
+        short name -> upstream URL, served as https://<name>.<domain>.
+        Service modules register themselves here; add extra entries freely.
+      '';
     };
   };
 } (cfg: let

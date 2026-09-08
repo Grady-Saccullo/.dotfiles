@@ -30,7 +30,10 @@ utils.mkHomelabModule {
     useRoutingFeatures = "server";
     openFirewall = true;
     authKeyFile = config.sops.secrets."tailscale/auth_key".path;
-    extraUpFlags =
+    # `tailscale up` only runs when the node needs to log in, so anything in
+    # extraUpFlags is frozen at first join. `tailscale set` runs on every
+    # start; routes/exit node/ssh live there so config changes take effect.
+    extraSetFlags =
       ["--ssh"]
       ++ lib.optional (cfg.advertiseRoutes != [])
       "--advertise-routes=${lib.concatStringsSep "," cfg.advertiseRoutes}"

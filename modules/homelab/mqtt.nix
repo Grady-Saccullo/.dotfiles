@@ -21,8 +21,10 @@ utils.mkHomelabModule {
     };
   };
 } (cfg: {
-  sops.secrets."mqtt/hass".owner = "mosquitto";
-  sops.secrets."mqtt/zigbee2mqtt".owner = "mosquitto";
+  # The module hands password files to mosquitto through systemd
+  # credentials (read as root), so no ownership tweaks are needed.
+  sops.secrets."mqtt/hass" = {};
+  sops.secrets."mqtt/zigbee2mqtt" = {};
 
   services.mosquitto = {
     enable = true;
@@ -38,7 +40,10 @@ utils.mkHomelabModule {
             passwordFile = config.sops.secrets."mqtt/hass".path;
           };
           zigbee2mqtt = {
-            acl = ["readwrite #"];
+            acl = [
+              "readwrite zigbee2mqtt/#"
+              "readwrite homeassistant/#" # MQTT discovery + HA birth/will
+            ];
             passwordFile = config.sops.secrets."mqtt/zigbee2mqtt".path;
           };
         };

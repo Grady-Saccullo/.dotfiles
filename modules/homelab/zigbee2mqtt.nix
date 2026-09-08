@@ -35,15 +35,20 @@ utils.mkHomelabModule {
   mqttPort = toString config.homelab.mqtt.port;
 in {
   sops.secrets."zigbee2mqtt/network_key" = {};
+  sops.secrets."zigbee2mqtt/auth_token" = {};
   sops.secrets."mqtt/zigbee2mqtt" = {};
 
+  # Rendered next to configuration.yaml; values are referenced from the
+  # settings below with the documented `'!secret.yaml <key>'` syntax.
   sops.templates."zigbee2mqtt-secret.yaml" = {
     path = "${dataDir}/secret.yaml";
     owner = "zigbee2mqtt";
     mode = "0400";
+    restartUnits = ["zigbee2mqtt.service"];
     content = ''
       network_key: ${config.sops.placeholder."zigbee2mqtt/network_key"}
       mqtt_password: ${config.sops.placeholder."mqtt/zigbee2mqtt"}
+      auth_token: ${config.sops.placeholder."zigbee2mqtt/auth_token"}
     '';
   };
 
@@ -60,19 +65,22 @@ in {
           if cfg.openFirewall
           then "0.0.0.0"
           else "127.0.0.1";
+        # the frontend can pair and control every device; never leave it open
+        auth_token = "!secret.yaml auth_token";
+        url = "https://zigbee.${config.homelab.domain}";
       };
       mqtt = {
         server = "mqtt://127.0.0.1:${mqttPort}";
         base_topic = "zigbee2mqtt";
         user = "zigbee2mqtt";
-        password = "!secret mqtt_password";
+        password = "!secret.yaml mqtt_password";
       };
       serial = {
         port = cfg.serialPort;
         inherit (cfg) adapter;
       };
       advanced = {
-        network_key = "!secret network_key";
+        network_key = "!secret.yaml network_key";
         inherit (cfg) channel;
         log_level = "info";
         last_seen = "ISO_8601";
@@ -80,8 +88,8 @@ in {
     };
   };
 
-  users.users.zigbee2mqtt.extraGroups = ["dialout"];
   systemd.services.zigbee2mqtt.after = ["mosquitto.service"];
+  homelab.proxy.services.zigbee = lib.mkDefault "http://127.0.0.1:8080";
 
   networking.firewall.allowedTCPPorts = lib.optional cfg.openFirewall 8080;
 })

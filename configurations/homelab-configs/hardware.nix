@@ -13,6 +13,7 @@
 
   boot = {
     loader.systemd-boot.enable = true;
+    loader.systemd-boot.configurationLimit = 10;
     loader.efi.canTouchEfiVariables = true;
     initrd.availableKernelModules = ["xhci_pci" "ahci" "nvme" "usb_storage" "sd_mod" "sdhci_pci"];
     kernelModules = ["kvm-intel"];

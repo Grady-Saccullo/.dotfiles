@@ -41,6 +41,8 @@ in {
     ];
   };
 
+  homelab.proxy.services.grafana = lib.mkDefault "http://127.0.0.1:3001";
+
   services.grafana = {
     enable = true;
     settings = {
