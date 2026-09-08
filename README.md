@@ -61,6 +61,7 @@ Run with `nix run .#<command>`.
 - `test`: test the current configuration without switching
 - `format`: format the repo with [alejandra](https://github.com/kamadorueda/alejandra)
 - `update`: interactively select flake inputs to update via fzf
+- `deploy`: build a NixOS configuration locally and activate it on a remote host over ssh
 
 ### `/configurations`
 Contains the root machine configs which get pulled into the main flake.nix. All of these
@@ -69,6 +70,7 @@ configurations are built upon the modules pulled into the root flake.nix.
 Current configurations:
 - `personal-darwin` — personal macOS machine
 - `voze-darwin` — work macOS machine
+- `hackerpi-nixos` — Raspberry Pi homelab (DNS, Home Assistant, Zigbee, MQTT); see [docs/homelab.md](docs/homelab.md)
 
 ### `/modules/applications`
 Contains all of the shared "applications" which can be turned on through `.enable`. The reasoning

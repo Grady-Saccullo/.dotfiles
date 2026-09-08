@@ -117,6 +117,34 @@
     config = lib.mkIf enable (configFn cfg);
   };
 
+  # Creates a homelab (system service) module. Same shape as mkAppModule but
+  # the options live under `homelab.<name>` and the config function returns
+  # *system* configuration (services.*, networking.*, ...) rather than a
+  # home-manager user block.
+  #
+  #   { utils, config, ... }: utils.mkHomelabModule {
+  #     path = "mqtt";
+  #     inherit config;
+  #     extraOptions = { port = lib.mkOption {...}; };
+  #   } (cfg: { services.mosquitto.enable = true; })
+  mkHomelabModule = {
+    path,
+    config,
+    extraOptions ? {},
+    default ? false,
+    imports ? [],
+  }: configFn: let
+    paths = pathList path;
+    cfg = lib.attrByPath paths {} config.homelab;
+    enableOption =
+      (lib.mkEnableOption ("homelab " + lib.concatStringsSep " / " paths))
+      // lib.optionalAttrs default {default = true;};
+  in {
+    inherit imports;
+    options.homelab = lib.setAttrByPath paths ({enable = enableOption;} // extraOptions);
+    config = lib.mkIf cfg.enable (configFn cfg);
+  };
+
   mkNeovimModule = {
     path,
     config,

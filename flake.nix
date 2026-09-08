@@ -34,26 +34,49 @@
     darwin.inputs.nixpkgs.follows = "nixpkgs-unstable";
     darwin.url = "github:LnL7/nix-darwin";
 
+    # NixOS / homelab
+    nixos-hardware.url = "github:NixOS/nixos-hardware";
+    sops-nix.url = "github:Mic92/sops-nix";
+    sops-nix.inputs.nixpkgs.follows = "nixpkgs";
+
+    # Optional: a *private* repo holding non-secret-but-private homelab data
+    # (device inventories, MAC addresses, network topology). Secrets proper
+    # live encrypted in ./secrets via sops-nix and are safe in this public
+    # repo; this input is only for things you'd rather not publish in plain
+    # text. See docs/homelab.md "Secrets and private data".
+    #
+    # homelab-private.url = "git+ssh://git@github.com/grady-saccullo/homelab-private";
+    # homelab-private.flake = false;
+
     # Applications
     llm-agents.url = "github:numtide/llm-agents.nix";
     wezterm.url = "github:wezterm/wezterm?dir=nix";
   };
 
   outputs = inputs @ {self, ...}: let
+    overlays = [(import ./overlays {inherit inputs;})];
+
+    # Darwin machines: unstable as the base package set (see overlays/).
     pkgsFor = system:
       import inputs.nixpkgs-unstable {
         localSystem = system;
-        overlays = [(import ./overlays {inherit inputs;})];
+        inherit overlays;
         config = {
           allowUnfree = true;
           allowUnsupportedSystem = true;
         };
       };
 
-    nixpkgsModule = system: {
-      nixpkgs.hostPlatform = system;
-      nixpkgs.pkgs = pkgsFor system;
-    };
+    # NixOS servers: the *stable* release as the base package set, so the
+    # service modules (home-assistant, adguardhome, ...) and their packages
+    # move in lockstep with the release branch. `pkgs.unstable.*` is still
+    # available through the overlay for individual newer packages.
+    stablePkgsFor = system:
+      import inputs.nixpkgs {
+        localSystem = system;
+        inherit overlays;
+        config.allowUnfree = true;
+      };
 
     mkDarwinHost = {
       system,
@@ -75,7 +98,39 @@
         modules = [
           configPath
           ./modules/flake-parts/common.nix
-          (nixpkgsModule system)
+          {
+            nixpkgs.hostPlatform = system;
+            nixpkgs.pkgs = pkgsFor system;
+          }
+        ];
+      };
+
+    mkNixosHost = {
+      system,
+      user,
+      hostName,
+      configPath,
+    }: let
+      machineType = "nixos";
+      me = {inherit user;};
+    in
+      inputs.nixpkgs.lib.nixosSystem {
+        inherit system;
+        specialArgs = {
+          inherit inputs me machineType hostName;
+          utils = import ./modules/flake-parts/utils.nix {
+            inherit me machineType;
+            inherit (inputs.nixpkgs) lib;
+          };
+        };
+        modules = [
+          configPath
+          ./modules/flake-parts/common.nix
+          {
+            networking.hostName = hostName;
+            nixpkgs.hostPlatform = system;
+            nixpkgs.pkgs = stablePkgsFor system;
+          }
         ];
       };
   in
@@ -102,10 +157,16 @@
 
         homeManagerModules = {
           darwinModule = ./modules/home-manager/darwin.nix;
+          nixosModule = ./modules/home-manager/nixos.nix;
         };
 
         darwinModules = {
           sensible = ./modules/darwin/sensible.nix;
+        };
+
+        nixosModules = {
+          sensible = ./modules/nixos/sensible.nix;
+          homelab = ./modules/homelab;
         };
 
         darwinConfigurations = {
@@ -119,6 +180,20 @@
             system = "aarch64-darwin";
             user = "grady-saccullo";
             configPath = ./configurations/voze-darwin.nix;
+          };
+        };
+
+        nixosConfigurations = {
+          # Raspberry Pi 4 homelab node: DNS, Home Assistant, Zigbee, MQTT.
+          # Build the SD/SSD image with:
+          #   nix build .#nixosConfigurations.hackerpi.config.system.build.images.sd-card
+          # Deploy to a running host with:
+          #   nix run .#deploy hackerpi
+          hackerpi = mkNixosHost {
+            system = "aarch64-linux";
+            user = "hackerman";
+            hostName = "hackerpi";
+            configPath = ./configurations/hackerpi-nixos.nix;
           };
         };
       };

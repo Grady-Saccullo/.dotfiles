@@ -1,0 +1,40 @@
+#!/bin/bash -e
+# Build a nixosConfiguration locally (on macOS via nix.linux-builder) and
+# activate it on the remote host over SSH.
+#
+#   nix run .#deploy <config-name> [ssh-target] [-- extra nixos-rebuild args]
+#
+# Examples:
+#   nix run .#deploy hackerpi                    # ssh target defaults to the config name
+#   nix run .#deploy hackerpi hackerman@192.168.1.2
+#   nix run .#deploy hackerpi hackerpi -- boot   # switch on next boot instead of now
+
+if [[ $# == 0 ]]; then
+	echo "usage: deploy <config name> [ssh target] [-- <action>]"
+	exit 1
+fi
+
+config_name="$1"
+shift
+target="$config_name"
+if [[ $# -gt 0 && "$1" != "--" ]]; then
+	target="$1"
+	shift
+fi
+[[ "${1:-}" == "--" ]] && shift
+action="${1:-switch}"
+
+nixos-rebuild "$action" \
+	--flake ".#$config_name" \
+	--build-host localhost \
+	--target-host "$target" \
+	--sudo \
+	--show-trace
+
+if command -v cachix &>/dev/null; then
+	echo ""
+	echo "=== Cachix ==="
+	echo "pushing $config_name closure to binary cache..."
+	nix build --no-link --print-out-paths ".#nixosConfigurations.$config_name.config.system.build.toplevel" |
+		cachix push grady-saccullo
+fi
