@@ -1,5 +1,6 @@
-# hackerpi: the homelab node. Replaces the Debian + docker-compose stack
-# (pi-docker-stuff) with native NixOS services. See docs/homelab.md.
+# homelab: x86 micro PC running the house services. Replaces the Raspberry
+# Pi's Debian + docker-compose stack (pi-docker-stuff) with native NixOS
+# services. See docs/homelab.md.
 {
   inputs,
   config,
@@ -13,7 +14,7 @@ in {
     self.nixosModules.homelab
     self.homeManagerModules.nixosModule
     self.applications
-    ./hackerpi-configs/hardware.nix
+    ./homelab-configs/hardware.nix
   ];
 
   time.timeZone = "America/Los_Angeles";
@@ -23,8 +24,8 @@ in {
     # "ssh-ed25519 AAAA... hackerman@mbp"
   ];
 
-  # Static LAN address. The router hands this IP out as the DNS server, so
-  # it must not change.
+  # Static LAN address. The router hands this IP out as the DNS server. It
+  # inherits the Pi's address at cutover so no client config changes.
   networking = {
     useDHCP = false;
     interfaces.${config.homelab.lan.interface}.ipv4.addresses = [
@@ -49,7 +50,7 @@ in {
 
     secrets = {
       enable = true;
-      file = ../secrets/hackerpi.yaml;
+      file = ../secrets/homelab.yaml;
     };
 
     # AdGuard Home (replaces Pi-hole) in front of a local recursive Unbound.

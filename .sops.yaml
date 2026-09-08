@@ -3,15 +3,15 @@
 # from its ssh host key, so the host can decrypt at activation.
 #
 # Get a host's key after first boot:
-#   ssh hackerpi 'cat /etc/ssh/ssh_host_ed25519_key.pub' | ssh-to-age
+#   ssh homelab 'cat /etc/ssh/ssh_host_ed25519_key.pub' | ssh-to-age
 # Make a personal key once:
 #   age-keygen -o ~/.config/sops/age/keys.txt
 keys:
   - &admin  age1REPLACEME_personal_age_public_key
-  - &hackerpi age1REPLACEME_hackerpi_host_age_public_key
+  - &homelab age1REPLACEME_homelab_host_age_public_key
 creation_rules:
-  - path_regex: secrets/hackerpi\.yaml$
+  - path_regex: secrets/homelab\.yaml$
     key_groups:
       - age:
           - *admin
-          - *hackerpi
+          - *homelab

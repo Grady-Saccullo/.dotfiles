@@ -49,8 +49,9 @@ in {
 
   networking.firewall.enable = true;
 
-  # Small-board sensible defaults.
   zramSwap.enable = true;
+  services.smartd.enable = lib.mkDefault true;
+  services.fstrim.enable = true;
   boot.tmp.cleanOnBoot = true;
   services.journald.extraConfig = "SystemMaxUse=500M";
 

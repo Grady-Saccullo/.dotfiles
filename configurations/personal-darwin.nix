@@ -85,24 +85,6 @@ in {
     xcode.enable = true;
   };
 
-  # Linux VM builder so `nix run .#deploy hackerpi` can build aarch64-linux
-  # closures locally before pushing them to the Pi (building on the Pi
-  # itself is slow and memory-starved). First switch downloads the VM image.
-  nix.linux-builder = {
-    enable = true;
-    ephemeral = true;
-    maxJobs = 4;
-    config = {
-      virtualisation = {
-        cores = 6;
-        darwin-builder = {
-          diskSize = 40 * 1024;
-          memorySize = 8 * 1024;
-        };
-      };
-    };
-  };
-
   system.defaults.dock.persistent-apps = [
     config.applications.wezterm.path
     config.applications.brave.path

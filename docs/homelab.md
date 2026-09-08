@@ -1,8 +1,9 @@
-# hackerpi homelab
+# homelab
 
 Native NixOS replacement for the Debian 11 + docker-compose stack that ran
-in `~/pi-docker-stuff` on the Raspberry Pi 4. Everything is a NixOS
-service; there is no container runtime on the box.
+in `~/pi-docker-stuff` on the Raspberry Pi 4. The Pi is retired; the
+services move to an x86 micro PC. Everything is a NixOS service; there is
+no container runtime on the box.
 
 ## What replaced what
 
@@ -23,7 +24,7 @@ service; there is no container runtime on the box.
 | (nothing)                       | `services.matter-server`                      | Matter devices for the new place |
 
 Module options live under `homelab.*` (see `modules/homelab/`), enabled
-from `configurations/hackerpi-nixos.nix`.
+from `configurations/homelab-nixos.nix`.
 
 ## Secrets and private data
 
@@ -39,178 +40,176 @@ The dotfiles repo is public. Two mechanisms:
    (`homelab-private`, commented out in `flake.nix`). Only add it if you
    actually want to hide topology; LAN IPs and Zigbee friendly names are
    not worth the friction. If you do: `homelab-private.flake = false` and
-   `import "${inputs.homelab-private}/hackerpi.nix"` from the host config.
+   `import "${inputs.homelab-private}/homelab.nix"` from the host config.
    Private inputs need ssh auth wherever `nix flake update` or a build runs,
    which with the deploy flow below is only the Mac.
 
 Keys every enabled module expects are listed in
-`secrets/hackerpi.example.yaml`. sops-nix fails activation on a missing key.
+`secrets/homelab.example.yaml`. sops-nix fails activation on a missing key.
 
 ## Build and deploy flow
 
-Building on a 4 GB Pi is painful, so builds happen on the Mac:
+The micro PC builds its own closures; the Mac only needs ssh.
 
-- `nix.linux-builder` is enabled in `configurations/personal-darwin.nix`
-  (aarch64-linux VM). First `nix run .#switch personal` downloads it.
-- `nix run .#deploy hackerpi [user@host]` builds locally, pushes the closure
-  over ssh, activates it with sudo, then pushes to cachix.
-- `nix build .#nixosConfigurations.hackerpi.config.system.build.images.sd-card`
-  produces a bootable image for first install.
+- `nix run .#install homelab root@<ip>`: one-time install with
+  nixos-anywhere. Boots the target's disko layout, formats the disk,
+  installs. Destructive.
+- `nix run .#deploy homelab [user@host]`: copies the flake, builds on the
+  target, activates with sudo. Use `-- boot` to defer activation.
+- Later, GitHub Actions can build every configuration and push to cachix so
+  deploys become pure downloads.
 
 ## Migration runbook
 
-The Pi's EEPROM boot order is SD first, then USB. Debian lives on the USB
-SSD. That gives a free rollback: NixOS on the SD card, pull the card to
-get Debian back. Keep Debian untouched until step 7.
+Debian on the Pi keeps running until the last step, so DNS for the house is
+never down for more than the IP handover.
 
-### 0. Before touching the Pi (on Debian)
+### 0. On the Pi (Debian), now
 
 ```sh
-# influx is burning CPU for nothing; stop it now
-cd ~/pi-docker-stuff && docker stop influxdb portainer
-
-# state that carries over (~500 MB without influx/pihole logs)
-tar czf ~/homelab-state.tgz -C ~/pi-docker-stuff \
-  home-assistant/config zigbee-2-mqtt/data node-red/data mosquitto/data
+cd ~/pi-docker-stuff && docker stop influxdb portainer   # nothing reads them
 ```
 
-Also copy the two values you'll need for secrets out of
-`zigbee-2-mqtt/data/configuration.yaml` (`advanced.network_key`) and note
-the Node-RED admin password (`adminAuth` in `node-red/data/settings.js`).
+Copy out of `zigbee-2-mqtt/data/configuration.yaml` the `advanced.network_key`
+value, and note the Node-RED admin password (`adminAuth` in
+`node-red/data/settings.js`). Make sure you can ssh from the Mac to the Pi;
+step 4 pulls state over that connection.
 
-### 1. Keys and secrets (on the Mac)
-
-```sh
-age-keygen -o ~/.config/sops/age/keys.txt      # once; put the public key in .sops.yaml as &admin
-cp secrets/hackerpi.example.yaml secrets/hackerpi.yaml
-$EDITOR secrets/hackerpi.yaml                     # fill in real values
-```
-
-You cannot encrypt for the host yet (no host key exists). Encrypt for your
-own key only for now and add the host after first boot:
+### 1. Keys and secrets (Mac)
 
 ```sh
-sops --encrypt --in-place secrets/hackerpi.yaml
+age-keygen -o ~/.config/sops/age/keys.txt        # once; public key -> .sops.yaml &admin
+cp secrets/homelab.example.yaml secrets/homelab.yaml
+$EDITOR secrets/homelab.yaml
+sops --encrypt --in-place secrets/homelab.yaml   # host key gets added in step 3
 ```
 
 Add your ssh public key to `users.users.<me>.openssh.authorizedKeys.keys`
-in `configurations/hackerpi-nixos.nix`.
+in `configurations/homelab-nixos.nix`.
 
-### 2. Image
+### 2. Prepare the micro PC
+
+- BIOS: UEFI mode, secure boot off, "power on after power loss" on.
+- Boot the NixOS minimal installer ISO from USB, set a root password
+  (`sudo passwd`), note the IP (`ip a`) and the boot disk id
+  (`ls -l /dev/disk/by-id`).
+- Put that id in `configurations/homelab-configs/hardware.nix`.
+- Give it a temporary address other than 192.168.1.2 for now: set
+  `homelab.lan.address` to a free IP, e.g. `192.168.1.3`, until cutover.
 
 ```sh
-nix run .#switch personal        # picks up linux-builder
-nix build .#nixosConfigurations.hackerpi.config.system.build.images.sd-card
-# write result/sd-image/*.img to the 32 GB SD card (currently mmcblk0 in the Pi, unused)
+nix run .#install homelab root@<installer-ip>
 ```
 
 ### 3. First boot
 
-Insert the SD card, power cycle. The Pi comes up on 192.168.1.2 (static),
-so the house's DNS keeps working, now via AdGuard Home. Then:
-
 ```sh
-ssh hackerman@192.168.1.2 'cat /etc/ssh/ssh_host_ed25519_key.pub' | ssh-to-age
-# put the result in .sops.yaml as &hackerpi, then re-encrypt:
-sops updatekeys secrets/hackerpi.yaml
-nix run .#deploy hackerpi
+ssh hackerman@192.168.1.3 'cat /etc/ssh/ssh_host_ed25519_key.pub' | ssh-to-age
+# add as &homelab in .sops.yaml, then:
+sops updatekeys secrets/homelab.yaml
+nix run .#deploy homelab hackerman@192.168.1.3
 ```
 
-Activation will fail on the first boot's sops step because the host key
-wasn't a recipient; the deploy above fixes that. Everything is stateless up
-to here.
+The first activation failed at the sops step (host wasn't a recipient);
+this deploy fixes it and brings every service up empty.
 
-### 4. Copy state (on the Pi, as root)
-
-The Debian SSD is mounted read-only at `/mnt/legacy`.
+### 4. Copy state from the Pi (on the micro PC, as root)
 
 ```sh
-L=/mnt/legacy/home/Patchwork7770/pi-docker-stuff
+P=Patchwork7770@192.168.1.2:pi-docker-stuff
 systemctl stop home-assistant zigbee2mqtt node-red
 
-# Home Assistant: everything except the db, logs and pip deps
+# Home Assistant: everything except db, logs, pip deps
 rsync -a --exclude 'home-assistant_v2.db*' --exclude '*.log*' --exclude deps \
-  $L/home-assistant/config/ /var/lib/hass/
-rm -f /var/lib/hass/configuration.yaml          # Nix writes this
-# adaptive_lighting now comes from nixpkgs; keep hacs + nodered components
-rm -rf /var/lib/hass/custom_components/adaptive_lighting
+  $P/home-assistant/config/ /var/lib/hass/
+rm -f /var/lib/hass/configuration.yaml                 # Nix owns this
+rm -rf /var/lib/hass/custom_components/adaptive_lighting   # now from nixpkgs
 chown -R hass:hass /var/lib/hass
 
 # Zigbee2MQTT: paired devices, coordinator backup, database
-rsync -a $L/zigbee-2-mqtt/data/ /var/lib/zigbee2mqtt/
-# devices/groups move out of configuration.yaml into their own files
+rsync -a $P/zigbee-2-mqtt/data/ /var/lib/zigbee2mqtt/
 python3 - <<'PY'
 import yaml
 old = yaml.safe_load(open('/var/lib/zigbee2mqtt/configuration.yaml'))
 yaml.safe_dump(old.get('devices', {}), open('/var/lib/zigbee2mqtt/devices.yaml', 'w'))
 yaml.safe_dump(old.get('groups', {}), open('/var/lib/zigbee2mqtt/groups.yaml', 'w'))
 PY
-rm /var/lib/zigbee2mqtt/configuration.yaml      # Nix writes this
+rm /var/lib/zigbee2mqtt/configuration.yaml             # Nix owns this
 chown -R zigbee2mqtt:zigbee2mqtt /var/lib/zigbee2mqtt
 
 # Node-RED
-rsync -a $L/node-red/data/ /var/lib/node-red/
+rsync -a $P/node-red/data/ /var/lib/node-red/
 chown -R node-red:node-red /var/lib/node-red
+```
 
+Then move the Zigbee dongle from the Pi to the micro PC (its
+`/dev/serial/by-id` name travels with it) and start things:
+
+```sh
 systemctl start zigbee2mqtt home-assistant node-red
 ```
 
-Then in the HA UI:
+In the HA UI:
 
 - MQTT integration: reconfigure to `127.0.0.1`, user `hass`, the sops password.
-- Ring: add the core integration, remove the ring-mqtt entities.
+- Ring: add the core integration, remove ring-mqtt entities.
 - Matter: add integration, server `ws://127.0.0.1:5580/ws`.
 - Recorder starts empty on PostgreSQL. 14 days of history is the loss.
 
 If Node-RED should keep its `adminAuth`, set
-`homelab.node-red.settingsFile = "/var/lib/node-red/settings.js"` and deploy.
+`homelab.node-red.settingsFile = "/var/lib/node-red/settings.js"`.
 
-### 5. Verify
+### 5. Verify on the temporary IP
 
 ```sh
-dig @192.168.1.2 doubleclick.net           # blocked
-dig @192.168.1.2 ha.home.arpa              # 192.168.1.2
-curl -k https://ha.home.arpa               # HA login
+dig @192.168.1.3 doubleclick.net           # blocked
+dig @192.168.1.3 ha.home.arpa              # answers 192.168.1.3 for now
+curl -k https://ha.home.arpa               # after trusting the Caddy root cert
 systemctl --failed
 ```
 
-Trust Caddy's root cert on your devices:
+Caddy root cert to trust on devices:
 `/var/lib/caddy/.local/share/caddy/pki/authorities/local/root.crt`.
+Tailscale: approve subnet route and exit node in the admin console, set
+nameserver to this host, and optionally restrict it to `home.arpa`.
 
-Tailscale: approve the subnet route and exit node in the admin console;
-set DNS -> nameserver 192.168.1.2, "override local DNS", restrict to
-`home.arpa` if you prefer split DNS.
+### 6. Cutover
 
-### 6. Cut over WireGuard clients
+1. Power off the Pi.
+2. Set `homelab.lan.address = "192.168.1.2"` and deploy. Every client on
+   the LAN and every phone using the router's DNS setting now talks to the
+   new box without any change.
+3. Remove the router port forward for 51820; phones use Tailscale.
 
-Phones/laptops use Tailscale. Remove the router port forward for 51820.
+Keep the Pi's SSD around for a couple of weeks as the fallback (plug it
+back in and boot, and you are back on the old stack).
 
-### 7. Root on the SSD
+### 7. Afterwards
 
-Once stable for a couple of weeks: write the same image to the SSD
-(`dd` from the Mac or from the Pi with the SD as root), boot with the SD
-card removed, delete the `/mnt/legacy` mount from `hardware.nix`. The
-Debian install is gone at this point; make sure `homelab-state.tgz` is
-somewhere else first. Optionally enable `homelab.backup` now with the SD
-card (or a NAS) as the restic repository.
+- Enable `homelab.backup` with a repository on the media box or a NAS.
+- Reuse the Pi as a second AdGuard Home + Unbound instance (same `dns.nix`,
+  `aarch64-linux` config) and advertise both DNS servers from the router,
+  so a reboot of the main box never takes the house offline.
 
 ## New-home checklist
 
-- Does the new router let you set the DHCP-advertised DNS server? If not,
-  turn on `services.adguardhome.settings.dhcp` and let the Pi do DHCP.
-- Re-check Zigbee channel vs. the new Wi-Fi channels (`homelab.zigbee2mqtt.channel`).
+- Does the new router let you set the DHCP-advertised DNS server and
+  static leases? If not, enable `services.adguardhome.settings.dhcp` and
+  let this box do DHCP.
+- Re-check the Zigbee channel against the new Wi-Fi channels
+  (`homelab.zigbee2mqtt.channel`).
 - Decide on Node-RED vs. HA automations + blueprints. Both run for now.
 - Buy a domain for public certs if the internal CA annoys you.
-- Pi 4 is fine for this load without Influx; a Pi 5 or N100 box would be a
-  drop-in (`hardware.nix` is the only hardware-specific file).
+- Second micro PC as media box: Jellyfin with QuickSync, ZFS, restic target.
+  `hardware.nix` is the only file to copy and adjust.
 
 ## Not yet verified
 
 This scaffold was written without a Nix evaluator available. Expect the
-first `nix flake check` / build on the Mac to surface small option-name
-mismatches. Things to double check against the 26.05 module docs:
+first `nix flake check` / build to surface small option-name mismatches.
+Double check against the 26.05 module docs:
 
 - `pkgs.home-assistant-custom-components.adaptive_lighting` attribute name
 - AdGuard Home config path used in `dns.nix` (`/var/lib/AdGuardHome/AdGuardHome.yaml`)
 - `services.node-red.configFile` accepting a non-store path
-- `image.modules.sd-card` being available for aarch64 in 26.05
+- disko partition attribute names for the current disko release

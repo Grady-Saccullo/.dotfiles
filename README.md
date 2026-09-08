@@ -70,7 +70,7 @@ configurations are built upon the modules pulled into the root flake.nix.
 Current configurations:
 - `personal-darwin` — personal macOS machine
 - `voze-darwin` — work macOS machine
-- `hackerpi-nixos` — Raspberry Pi homelab (DNS, Home Assistant, Zigbee, MQTT); see [docs/homelab.md](docs/homelab.md)
+- `homelab-nixos` — x86 micro PC homelab (DNS, Home Assistant, Zigbee, MQTT); see [docs/homelab.md](docs/homelab.md)
 
 ### `/modules/applications`
 Contains all of the shared "applications" which can be turned on through `.enable`. The reasoning

@@ -35,9 +35,10 @@
     darwin.url = "github:LnL7/nix-darwin";
 
     # NixOS / homelab
-    nixos-hardware.url = "github:NixOS/nixos-hardware";
     sops-nix.url = "github:Mic92/sops-nix";
     sops-nix.inputs.nixpkgs.follows = "nixpkgs";
+    disko.url = "github:nix-community/disko";
+    disko.inputs.nixpkgs.follows = "nixpkgs";
 
     # Optional: a *private* repo holding non-secret-but-private homelab data
     # (device inventories, MAC addresses, network topology). Secrets proper
@@ -141,7 +142,7 @@
         ./modules/flake-parts/apps.nix
       ];
 
-      systems = ["aarch64-darwin" "aarch64-linux"];
+      systems = ["aarch64-darwin" "aarch64-linux" "x86_64-linux"];
 
       perSystem = {system, ...}: {
         _module.args.pkgs = pkgsFor system;
@@ -184,16 +185,16 @@
         };
 
         nixosConfigurations = {
-          # Raspberry Pi 4 homelab node: DNS, Home Assistant, Zigbee, MQTT.
-          # Build the SD/SSD image with:
-          #   nix build .#nixosConfigurations.hackerpi.config.system.build.images.sd-card
-          # Deploy to a running host with:
-          #   nix run .#deploy hackerpi
-          hackerpi = mkNixosHost {
-            system = "aarch64-linux";
+          # x86 micro PC homelab node: DNS, Home Assistant, Zigbee, MQTT.
+          # First install (wipes the disk, see docs/homelab.md):
+          #   nix run .#install homelab root@<ip>
+          # Subsequent deploys:
+          #   nix run .#deploy homelab
+          homelab = mkNixosHost {
+            system = "x86_64-linux";
             user = "hackerman";
-            hostName = "hackerpi";
-            configPath = ./configurations/hackerpi-nixos.nix;
+            hostName = "homelab";
+            configPath = ./configurations/homelab-nixos.nix;
           };
         };
       };
