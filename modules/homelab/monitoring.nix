@@ -8,6 +8,7 @@
   utils,
   config,
   lib,
+  hosts,
   ...
 }:
 utils.mkHomelabModule {
@@ -15,6 +16,7 @@ utils.mkHomelabModule {
   inherit config;
 } (cfg: let
   domain = config.homelab.domain;
+  nodeTargets = lib.mapAttrsToList (name: h: "${h.address}:9100") hosts;
 in {
   sops.secrets."grafana/admin_password".owner = "grafana";
 
@@ -23,12 +25,6 @@ in {
     listenAddress = "127.0.0.1";
     port = 9090;
     retentionTime = "30d";
-    exporters.node = {
-      enable = true;
-      listenAddress = "127.0.0.1";
-      port = 9100;
-      enabledCollectors = ["systemd"];
-    };
     alertmanagers = [{static_configs = [{targets = ["127.0.0.1:9093"];}];}];
     rules = [
       (builtins.toJSON {
@@ -72,7 +68,7 @@ in {
     scrapeConfigs = [
       {
         job_name = "node";
-        static_configs = [{targets = ["127.0.0.1:9100"];}];
+        static_configs = [{targets = nodeTargets;}];
       }
       # {
       #   job_name = "home-assistant";

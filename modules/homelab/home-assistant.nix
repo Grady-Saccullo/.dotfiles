@@ -69,6 +69,7 @@ in {
         "sonos"
         "spotify"
         "thread"
+        "unifi" # presence / device tracking from the UniFi gateway
         "webostv"
         # replacements / new-home additions
         "ring" # replaces ring-mqtt

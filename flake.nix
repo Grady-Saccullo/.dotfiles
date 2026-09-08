@@ -55,7 +55,11 @@
   };
 
   outputs = inputs @ {self, ...}: let
+    inherit (inputs.nixpkgs) lib;
     overlays = [(import ./overlays {inherit inputs;})];
+
+    # NixOS hosts as data (address, roles, ...). See hosts/default.nix.
+    hosts = import ./hosts;
 
     # Darwin machines: unstable as the base package set (see overlays/).
     pkgsFor = system:
@@ -90,7 +94,7 @@
       inputs.darwin.lib.darwinSystem {
         inherit system;
         specialArgs = {
-          inherit inputs me machineType;
+          inherit inputs me machineType hosts;
           utils = import ./modules/flake-parts/utils.nix {
             inherit me machineType;
             inherit (inputs.nixpkgs-unstable) lib;
@@ -106,31 +110,29 @@
         ];
       };
 
-    mkNixosHost = {
-      system,
-      user,
-      hostName,
-      configPath,
-    }: let
+    mkNixosHost = hostName: host: let
       machineType = "nixos";
-      me = {inherit user;};
+      me = {inherit (host) user;};
     in
-      inputs.nixpkgs.lib.nixosSystem {
-        inherit system;
+      lib.nixosSystem {
+        inherit (host) system;
         specialArgs = {
-          inherit inputs me machineType hostName;
+          inherit inputs me machineType hostName hosts;
           utils = import ./modules/flake-parts/utils.nix {
-            inherit me machineType;
-            inherit (inputs.nixpkgs) lib;
+            inherit me machineType lib;
           };
         };
         modules = [
-          configPath
+          (./hosts + "/${hostName}")
           ./modules/flake-parts/common.nix
+          ./modules/roles
           {
             networking.hostName = hostName;
-            nixpkgs.hostPlatform = system;
-            nixpkgs.pkgs = stablePkgsFor system;
+            nixpkgs.hostPlatform = host.system;
+            nixpkgs.pkgs = stablePkgsFor host.system;
+            homelab.lan.address = lib.mkDefault host.address;
+            homelab.roles = lib.genAttrs host.roles (_: {enable = true;});
+            homelab.secrets.file = lib.mkDefault (./secrets + "/${hostName}.yaml");
           }
         ];
       };
@@ -146,6 +148,15 @@
 
       perSystem = {system, ...}: {
         _module.args.pkgs = pkgsFor system;
+
+        # `nix flake check` builds every NixOS host for this platform (CI).
+        checks =
+          lib.mapAttrs' (
+            name: _:
+              lib.nameValuePair "nixos-${name}"
+              self.nixosConfigurations.${name}.config.system.build.toplevel
+          )
+          (lib.filterAttrs (_: h: h.system == system) hosts);
       };
 
       flake = {
@@ -168,6 +179,7 @@
         nixosModules = {
           sensible = ./modules/nixos/sensible.nix;
           homelab = ./modules/homelab;
+          roles = ./modules/roles;
         };
 
         darwinConfigurations = {
@@ -184,19 +196,12 @@
           };
         };
 
-        nixosConfigurations = {
-          # x86 micro PC homelab node: DNS, Home Assistant, Zigbee, MQTT.
-          # First install (wipes the disk, see docs/homelab.md):
-          #   nix run .#install homelab root@<ip>
-          # Subsequent deploys:
-          #   nix run .#deploy homelab
-          homelab = mkNixosHost {
-            system = "x86_64-linux";
-            user = "hackerman";
-            hostName = "homelab";
-            configPath = ./configurations/homelab-nixos.nix;
-          };
-        };
+        # One configuration per entry in hosts/default.nix.
+        # First install (wipes the disk, see docs/homelab.md):
+        #   nix run .#install <host> root@<ip>
+        # Subsequent deploys:
+        #   nix run .#deploy <host>
+        nixosConfigurations = lib.mapAttrs mkNixosHost hosts;
       };
     };
 }

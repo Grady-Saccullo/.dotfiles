@@ -3,12 +3,24 @@
 {
   pkgs,
   lib,
+  config,
   me,
   inputs,
+  hosts,
+  hostName,
   ...
 }: let
   inherit (inputs) self;
+  keys = import ../../hosts/keys.nix;
+  otherHosts = lib.filterAttrs (n: h: n != hostName && h.sshHostKey != null) hosts;
 in {
+  assertions = [
+    {
+      assertion = keys.admin != [];
+      message = "hosts/keys.nix: add at least one admin ssh public key (password auth is disabled)";
+    }
+  ];
+
   imports = [../shared/nix.nix];
 
   nix = {
@@ -29,7 +41,16 @@ in {
     isNormalUser = true;
     extraGroups = ["wheel" "dialout"];
     shell = pkgs.zsh;
+    openssh.authorizedKeys.keys = keys.admin;
   };
+
+  # Every other host in hosts/default.nix is pre-trusted.
+  programs.ssh.knownHosts =
+    lib.mapAttrs (name: h: {
+      hostNames = [name "${name}.${config.homelab.domain}" h.address];
+      publicKey = h.sshHostKey;
+    })
+    otherHosts;
   # Single-admin homelab: passwordless sudo so remote `nixos-rebuild --sudo`
   # deploys don't hang waiting on a tty. Flip to true if the box ever gets a
   # second user.
@@ -48,6 +69,15 @@ in {
   };
 
   networking.firewall.enable = true;
+
+  # Every host exports node metrics; the monitoring role scrapes them all.
+  services.prometheus.exporters.node = {
+    enable = lib.mkDefault true;
+    listenAddress = lib.mkDefault config.homelab.lan.address;
+    port = 9100;
+    enabledCollectors = ["systemd"];
+  };
+  networking.firewall.allowedTCPPorts = [9100];
 
   zramSwap.enable = true;
   services.smartd.enable = lib.mkDefault true;

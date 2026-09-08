@@ -10,6 +10,7 @@
   config,
   lib,
   pkgs,
+  hosts,
   ...
 }:
 utils.mkHomelabModule {
@@ -18,8 +19,22 @@ utils.mkHomelabModule {
   extraOptions = {
     blockLists = lib.mkOption {
       type = lib.types.attrsOf lib.types.str;
-      default = {};
       description = "Blocklist name -> URL (AdGuard/hosts format).";
+      # The hagezi lists supersede most of the ~50 small single-purpose
+      # lists the Pi-hole was pulling; the rest are still maintained.
+      default = {
+        "HaGeZi Multi PRO" = "https://raw.githubusercontent.com/hagezi/dns-blocklists/main/adblock/pro.txt";
+        "HaGeZi Threat Intelligence" = "https://raw.githubusercontent.com/hagezi/dns-blocklists/main/adblock/tif.txt";
+        "HaGeZi Gambling" = "https://raw.githubusercontent.com/hagezi/dns-blocklists/main/adblock/gambling-onlydomains.txt";
+        "StevenBlack" = "https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts";
+        "OISD small" = "https://small.oisd.nl";
+        "Firebog EasyPrivacy" = "https://v.firebog.net/hosts/Easyprivacy.txt";
+        "Firebog AdGuard DNS" = "https://v.firebog.net/hosts/AdguardDNS.txt";
+        "Firebog Admiral" = "https://v.firebog.net/hosts/Admiral.txt";
+        "URLhaus" = "https://urlhaus.abuse.ch/downloads/hostfile";
+        "Perflyst Amazon FireTV" = "https://raw.githubusercontent.com/Perflyst/PiHoleBlocklist/master/AmazonFireTV.txt";
+        "NextDNS native Samsung" = "https://raw.githubusercontent.com/nextdns/native-tracking-domains/main/domains/samsung";
+      };
     };
     userRules = lib.mkOption {
       type = lib.types.listOf lib.types.str;
@@ -144,6 +159,11 @@ in {
   ];
 
   homelab.proxy.services.dns = lib.mkDefault "http://127.0.0.1:${toString cfg.webPort}";
+
+  # <host>.<domain> for every machine in hosts/default.nix
+  homelab.dns.hosts =
+    lib.mapAttrs' (name: h: lib.nameValuePair "${name}.${config.homelab.domain}" h.address)
+    hosts;
 
   networking.firewall = {
     allowedTCPPorts = [53];

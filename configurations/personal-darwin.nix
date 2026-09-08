@@ -75,6 +75,7 @@ in {
       "$HOME/personal/"
     ];
     spotify.enable = true;
+    ssh.enable = true;
     steam.enable = true;
     tailscale.enable = true;
     utm.enable = true;
