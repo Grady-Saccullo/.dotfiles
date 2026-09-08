@@ -16,6 +16,14 @@ in {
     ./proxy.nix
     ./monitoring.nix
     ./backup.nix
+    ./music-assistant.nix
+    ./voice.nix
+    ./esphome.nix
+    ./ntfy.nix
+    ./dhcp.nix
+    ./unifi.nix
+    ./jellyfin.nix
+    ./maintenance.nix
   ];
 
   options.homelab = {
