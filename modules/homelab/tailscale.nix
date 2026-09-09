@@ -1,8 +1,9 @@
 # Tailscale replaces the WireGuard container: no port forward, no public IP
 # in a config file, devices already on the tailnet from the Macs. As a
-# subnet router + exit node it exposes the LAN (and its DNS) to the tailnet;
-# set "Override local DNS" -> this host's address in the admin console so
-# ad blocking and *.home.arpa work remotely.
+# subnet router it exposes the Infra and IoT VLANs to the tailnet (no exit
+# node: it drains phone batteries and the family uses Nabu Casa for HA).
+# In the admin console: approve the routes, set the tailnet nameserver to
+# the DNS VIP restricted to the home domain, enable SSH check mode.
 {
   utils,
   config,
@@ -41,4 +42,5 @@ utils.mkHomelabModule {
   };
 
   networking.firewall.trustedInterfaces = ["tailscale0"];
+  networking.firewall.checkReversePath = "loose";
 })

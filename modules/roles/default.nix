@@ -11,46 +11,32 @@
   on = mkDefault true;
 in {
   options.homelab.roles = {
-    dns.enable = mkEnableOption "LAN DNS: AdGuard Home + Unbound";
-    home-automation.enable = mkEnableOption "Home Assistant and friends";
-    monitoring.enable = mkEnableOption "Prometheus, Alertmanager, Grafana";
+    dns.enable = mkEnableOption "LAN DNS: Blocky behind the keepalived VIP";
+    home-automation.enable = mkEnableOption "the Home Assistant OS VM and its automations daemon";
+    monitoring.enable = mkEnableOption "Prometheus, Alertmanager, Grafana, Gatus, Homepage";
     media.enable = mkEnableOption "Jellyfin media server";
-    # Only for a network WITHOUT a UniFi gateway (UDM/UCG already runs the
-    # controller, DHCP, VLANs and mDNS reflection).
-    network.enable = mkEnableOption "self-hosted UniFi controller + Kea DHCP";
   };
 
   config = mkMerge [
-    # Every NixOS host: secrets, remote access, https front door.
+    # Every NixOS host: secrets, remote access, https front door, push.
     {
       homelab.secrets.enable = on;
       homelab.tailscale.enable = on;
       homelab.proxy.enable = on;
+      homelab.ntfy.enable = on;
     }
     (mkIf cfg.dns.enable {
       homelab.dns.enable = on;
     })
     (mkIf cfg.home-automation.enable {
-      homelab = {
-        mqtt.enable = on;
-        zigbee2mqtt.enable = on;
-        home-assistant.enable = on;
-        matter.enable = on;
-        music-assistant.enable = on;
-        voice.enable = on;
-        esphome.enable = on;
-        ntfy.enable = on;
-      };
+      homelab.hass.enable = on;
+      homelab.automations.enable = on;
     })
     (mkIf cfg.monitoring.enable {
       homelab.monitoring.enable = on;
     })
     (mkIf cfg.media.enable {
       homelab.jellyfin.enable = on;
-    })
-    (mkIf cfg.network.enable {
-      homelab.unifi.enable = on;
-      homelab.dhcp.enable = on;
     })
   ];
 }

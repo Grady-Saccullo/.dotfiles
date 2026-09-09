@@ -1,0 +1,25 @@
+# Home Assistant configuration, owned by this repo and pushed into the
+# HAOS VM by the hass-sync unit on every deploy. UI-edited automations,
+# scripts and scenes keep living in their own files via the includes.
+homeassistant:
+  name: Home
+  packages: !include_dir_named packages
+  external_url: !secret external_url
+
+default_config:
+
+http:
+  use_x_forwarded_for: true
+  # Caddy on the NixOS host reaches the VM from its Infra address
+  trusted_proxies:
+    - 192.168.1.2
+
+logger:
+  default: warning
+
+automation ui: !include automations.yaml
+script ui: !include scripts.yaml
+scene ui: !include scenes.yaml
+
+# Assist: sentences in custom_sentences/en, actions below
+intent_script: !include intent_scripts.yaml

@@ -1,251 +1,186 @@
 # homelab
 
-Native NixOS replacement for the Debian 11 + docker-compose stack that ran
-in `~/pi-docker-stuff` on the Raspberry Pi 4. The Pi is retired; the
-services move to x86 micro PCs. Everything is a NixOS service; there is no
-container runtime on any box.
+The house runs on two x86 micro PCs under NixOS 26.05. Home Assistant is
+Home Assistant OS in a libvirt VM on the IoT VLAN; everything else is a
+native NixOS service. The rationale, research and equipment list live in
+the published plan ("Just-Works Homelab"); this file is the operating
+manual for the repo.
 
 ## Layout
 
 ```
-hosts/default.nix          one entry per NixOS machine: address, roles, ssh host key
-hosts/keys.nix             admin ssh public keys installed on every host
-hosts/<name>/default.nix   host-only settings (timezone, static IP, zigbee port, ...)
-hosts/<name>/hardware.nix  boot, disko disk layout, udev rules
-modules/roles/             dns | home-automation | monitoring | media | network
-modules/homelab/<svc>.nix  one native service each, `homelab.<svc>.enable`
-modules/nixos/sensible.nix base for every NixOS host (users, ssh, nix, watchdog)
-secrets/<host>.yaml        sops-encrypted secrets, one file per host
-apps/install, apps/deploy  nixos-anywhere first install / nixos-rebuild over ssh
-.github/workflows/nix.yml  builds every host on CI and pushes to cachix
+hosts/default.nix           one entry per NixOS machine: address, roles, ssh host key
+hosts/keys.nix              admin ssh public keys installed on every host
+hosts/homelab/default.nix   host settings: domain, VLANs, DNS lists, add-ons, VM address
+hosts/homelab/hardware.nix  boot, disko btrfs subvolumes, btrbk, udev
+hosts/homelab/hass/         Home Assistant configuration, pushed into the VM
+automations/                the TypeScript automations daemon
+modules/roles/              dns | home-automation | monitoring | media
+modules/homelab/<svc>.nix   one native service each, `homelab.<svc>.enable`
+modules/nixos/sensible.nix  base for every NixOS host
+secrets/<host>.yaml         sops-encrypted secrets, one file per host
+apps/install, apps/deploy   nixos-anywhere first install / nixos-rebuild over ssh
+.github/workflows/nix.yml   builds every host, validates the HA config, pushes to cachix
 ```
 
-Adding a machine is one entry in `hosts/default.nix` plus a `hosts/<name>/`
-directory. Everything else (ssh config on the Macs, known_hosts on every
-host, DNS names, Prometheus targets, flake checks) is derived from it.
+## What runs where
 
-## What replaced what
-
-| Old (docker)                    | New (NixOS)                                    | Why |
-| ------------------------------- | ---------------------------------------------- | --- |
-| pihole-unbound                  | `services.adguardhome` + `services.unbound`    | Declarative, per-client rules, UI edits merge back, still recursive |
-| home-assistant container        | `services.home-assistant`                      | Same app, packaged; config is Nix, UI-edited files still `!include`d |
-| mariadb (recorder)              | `services.postgresql`, peer auth over socket    | No password to manage; recorder keeps 14 days anyway |
-| influxdb (269 GB, 41 % CPU)     | HA long-term statistics; Prometheus + Grafana  | Nothing read the Influx data |
-| ring-mqtt                       | HA core `ring` integration + HA-managed go2rtc | No nixpkgs package; the core integration does live view now |
-| mosquitto (anonymous, loopback) | `services.mosquitto`, users + LAN listener      | ESPHome/Shelly devices can publish directly |
-| zigbee2mqtt container           | `services.zigbee2mqtt`                         | Same coordinator + network key, no re-pairing |
-| node-red container              | `services.node-red` (migration only)           | See "Automations as code" |
-| linuxserver/wireguard           | `services.tailscale` subnet router + exit node  | No port forward, no hard-coded public IP, Tailscale SSH |
-| portainer                       | `systemctl` / `journalctl`                     | |
-| nginx (dead since 2022)         | `services.caddy`, internal TLS                 | `https://<svc>.home.arpa` for everything |
-| Sonos app                       | Music Assistant                                | See "Music" |
-| google_translate TTS            | wyoming piper + faster-whisper + openWakeWord  | Local voice for Assist |
-| (nothing)                       | Matter server, ESPHome dashboard, ntfy         | New-home devices and cloud-free push |
-| (nothing)                       | Alertmanager -> HA webhook, restic backups     | There were no alerts or backups |
+| Layer | Where | Module |
+| --- | --- | --- |
+| DNS: Blocky behind a keepalived VIP, encrypted upstreams, HaGeZi lists | NixOS, every `dns` host | `dns.nix` |
+| TLS: wildcard cert by ACME DNS-01 on Cloudflare, stock Caddy | NixOS | `proxy.nix` |
+| Home Assistant OS VM, IoT-bridge NIC, Zigbee dongle passthrough | NixOS libvirt | `hass-vm.nix` |
+| HA config push + add-on reconcile | NixOS oneshots on every deploy | `hass-vm.nix` |
+| Mosquitto, Zigbee2MQTT, ring-mqtt, Speech-to-Phrase, whisper, piper, SSH | HAOS add-ons | `hosts/homelab/default.nix` |
+| Automations daemon | NixOS systemd | `automations.nix` |
+| Prometheus, Alertmanager, Grafana, Gatus, Homepage, heartbeat | NixOS | `monitoring.nix` |
+| ntfy | NixOS | `ntfy.nix` |
+| restic to B2 with healthchecks pings | NixOS | `backup.nix` |
+| NUT for the UPS | NixOS | `ups.nix` |
+| Tailscale subnet router | NixOS | `tailscale.nix` |
+| Jellyfin | NixOS, `media` host | `jellyfin.nix` |
 
 ## Network
 
-The UniFi gateway keeps doing what it does best: DHCP with static leases,
-VLANs, the controller, mDNS reflection. The homelab box only needs:
+UniFi zone-based firewall, one zone per VLAN: Infra (both boxes, the DNS
+VIP, Caddy), Personal, Work, IoT (TVs, Sonos, Apple TVs, Hue, the HA VM,
+Voice PE, printer), Untrusted (guest Wi-Fi, cloud gadgets, the server's
+remote power plug), Cameras if Protect arrives.
 
-- The gateway's DHCP handing out `192.168.1.2` as the DNS server.
-- An **IoT VLAN** for the TV, Sonos, Ring, ESPHome and Zigbee-adjacent
-  devices, with the homelab box allowed to reach it (HA, mDNS, MQTT) and
-  the IoT side allowed to reach only the box. This is the new-house
-  security win; DNS blocking of TV telemetry is a weak substitute.
-- Tailscale: approve the subnet route and exit node, set the tailnet DNS
-  nameserver to `192.168.1.2` (optionally split on `home.arpa`), and
-  restrict Tailscale SSH in the ACL to your user.
+| # | From | To | Match | Action |
+| --- | --- | --- | --- | --- |
+| 1 | Personal, Work | IoT (Work: the "cast targets" device group) | any | Allow, auto-return |
+| 2 | IoT | Personal, Work | TCP 1400, 3400, 3401, 3500 | Allow (Sonos events) |
+| 3 | IoT (Apple TV) | Personal, Work | UDP 49152–65535 | Allow only if AirPlay drops |
+| 4 | IoT (HA VM) | Infra (this host) | TCP 2049, 3493 | Allow (backups NFS, UPS) |
+| 5 | All | Infra, DNS VIP only | TCP+UDP 53 | Allow |
+| 6 | All | External | TCP 853, DoH app category | Block |
+| NAT | each LAN interface | | dst port 53 | DNAT to the VIP |
+| default | IoT, Untrusted | Personal, Work, Infra | any | Block |
 
-The `network` role (self-hosted controller + Kea DHCP) exists for a network
-without a UniFi gateway and stays off here. HA's `unifi` integration gives
-presence detection from the gateway.
+Settings: mDNS proxy on Personal, Work and IoT (custom: `_airplay`,
+`_raop`, `_hap`, `_sonos`, `_spotify-connect`, `_companion-link`,
+`_googlecast`), off elsewhere. IGMP snooping on with unknown multicast
+flooded on the IoT VLAN. Wi-Fi multicast enhancement off on the IoT SSID.
+IPv6 on IoT only. DHCP hands out the DNS VIP on every network; the HA VM
+gets a fixed lease matching `homelab.hass.address`.
 
-## Automations as code
+On the host, `network.nix` puts the untagged NIC on Infra and tags the IoT
+VLAN into `br-iot`, which only the VM uses.
 
-Node-RED did the complex flows (MQTT devices, ESP devices, lighting,
-activity, audio, Sonos). Recommendation: keep HA as the bus and put the
-logic in one small service you own, deployed from this flake like every
-other service.
+## Secrets
 
-- HA exposes everything over one websocket: every state change as an
-  event, every action as a service call. MQTT stays available for
-  low-latency device work. That is the whole interface.
-- **Digital Alchemy** (TypeScript) is the best fit for your toolchain: it
-  generates types for your actual entities, so `hass.entity.light.kitchen`
-  is checked at compile time, and it runs as a plain Node process. Write
-  it as a normal repo, build it with Nix, expose it as
-  `homelab.automations` running as a systemd unit. AppDaemon (Python) is
-  the established alternative and is packaged in nixpkgs.
-- HA's own automations + blueprints stay for the trivial stuff (motion ->
-  light) where a YAML file beats code.
-- Node-RED remains installed only to read the old flows while porting;
-  set `homelab.node-red.enable = false` in `hosts/homelab/default.nix`
-  when done.
+sops-nix, one encrypted file per host in `secrets/`, recipients in
+`.sops.yaml` (your age key plus the host's ssh-derived key). Every key an
+enabled module needs is listed in `secrets/homelab.example.yaml`.
+Add-on options and HA's `secrets.yaml` are rendered by sops at activation,
+so passwords never enter the Nix store.
 
-## Music
+## Build and deploy
 
-Music Assistant (`homelab.music-assistant`, on in the home-automation role)
-is the answer to both problems:
+- `nix run .#install homelab root@<installer-ip> -- --extra-files <dir>`:
+  one-time nixos-anywhere install. Destructive.
+- `nix run .#deploy homelab`: copies the flake, builds on the target,
+  activates. `hass-sync` and `hass-addons` re-run when their inputs change.
+- CI builds the host, validates `hosts/homelab/hass` with the official HA
+  container, and pushes to cachix. Add `CACHIX_AUTH_TOKEN` to the repo.
+- No auto-upgrade. Deploy by hand on a schedule after a green CI run.
 
-- It has its own clean web UI (installable as a PWA on phones and a wall
-  tablet) that non-technical people can use: pick a room, pick a
-  playlist, play. Nobody needs the HA app for music.
-- It drives Sonos today and whatever replaces Sonos tomorrow: AirPlay 2
-  speakers, WiiM, Chromecast, DLNA, and **Snapcast** for a DIY multi-room
-  build (a Pi Zero 2 or ESP32 with a DAC per room, all sample-synced, MA
-  runs the Snapcast server itself). Sources: Spotify, local library,
-  radio, YouTube Music, Tidal, Qobuz.
-- Physical controls: Zigbee buttons/dials (IKEA Symfonisk controller,
-  Hue tap) mapped in automations to MA players. Guests never open an app.
-- Everything MA does is also an HA media_player, so the automations-as-code
-  service can script it (announcements, follow-me audio, wake-up).
+## Runbook
 
-If MA's UI still isn't right for the household, a small custom PWA over
-HA's websocket API is a weekend project; the state and controls are all
-there.
+### 0. Before the move, on the Mac
 
-## Secrets and private data
+1. Buy the domain, put its DNS on Cloudflare, create a token scoped
+   Zone:Read + DNS:Edit. Set `homelab.domain` and `proxy.acmeEmail`.
+2. `age-keygen`, add your key to `.sops.yaml`; add your ssh public key to
+   `hosts/keys.nix`.
+3. Generate the host ssh key locally and add its age form to `.sops.yaml`:
+   ```sh
+   install -d -m755 /tmp/homelab/etc/ssh
+   ssh-keygen -t ed25519 -N "" -f /tmp/homelab/etc/ssh/ssh_host_ed25519_key
+   ssh-to-age < /tmp/homelab/etc/ssh/ssh_host_ed25519_key.pub   # -> &homelab
+   ```
+4. Generate the HA ssh keypair (`hass/ssh_key`, `hass/ssh_pubkey`),
+   create the healthchecks.io checks, the B2 bucket, the Tailscale auth
+   key. Fill `secrets/homelab.yaml` from the example and encrypt it. The
+   `hass/token` comes later, after HA's first login.
+5. On the Pi: `docker stop influxdb portainer`, then in HA take a full
+   backup (Settings > System > Backups) and download it. Copy the Zigbee
+   data directory too:
+   `rsync -a pi:pi-docker-stuff/zigbee-2-mqtt/data/ ./z2m-data/`.
 
-The repo is public. Two mechanisms:
+### 1. Install the micro PC
 
-1. **Secrets** (passwords, keys, tokens) are encrypted with sops-nix and
-   committed in `secrets/`. Recipients: your personal age key and each
-   host's age key derived from its ssh host key (`.sops.yaml`).
-2. **Private-but-not-secret data** can live in a private repo pulled in as
-   a flake input (`homelab-private`, commented out in `flake.nix`). Only
-   worth it if you want to hide topology; LAN IPs and Zigbee names are not.
-
-Keys every enabled module expects are listed in
-`secrets/homelab.example.yaml`. sops-nix fails activation on a missing key.
-
-## Build and deploy flow
-
-- `nix run .#install homelab root@<ip>` one-time install with
-  nixos-anywhere. Formats the disk per its disko layout. Destructive.
-- `nix run .#deploy homelab` copies the flake, builds on the target,
-  activates with sudo. `-- boot` defers activation.
-- CI (`.github/workflows/nix.yml`) builds every NixOS host and pushes to
-  cachix on each push to main. Add `CACHIX_AUTH_TOKEN` to the repo secrets
-  once; deploys then become downloads and
-  `homelab.maintenance.autoUpgrade` becomes safe to enable.
-
-## Migration runbook
-
-Debian on the Pi keeps running until cutover.
-
-### 0. On the Pi (Debian), now
-
-```sh
-cd ~/pi-docker-stuff && docker stop influxdb portainer
-```
-
-Values to carry into secrets: `advanced.network_key` from
-`zigbee-2-mqtt/data/configuration.yaml`, `_credentialSecret` from
-`node-red/data/.config.runtime.json`.
-
-### 1. Keys and secrets (Mac)
-
-```sh
-age-keygen -o ~/.config/sops/age/keys.txt       # once; public key -> .sops.yaml &admin
-ssh-keygen -t ed25519 -N "" -f /tmp/homelab/etc/ssh/ssh_host_ed25519_key
-ssh-to-age < /tmp/homelab/etc/ssh/ssh_host_ed25519_key.pub   # -> .sops.yaml &homelab
-cp secrets/homelab.example.yaml secrets/homelab.yaml
-$EDITOR secrets/homelab.yaml
-sops --encrypt --in-place secrets/homelab.yaml
-```
-
-Put your ssh public key in `hosts/keys.nix`. Generating the host key here
-and shipping it at install (next step) means the very first activation can
-already decrypt; there is no failed-first-boot dance.
-
-### 2. Install the micro PC
-
-- BIOS: UEFI, secure boot off, **power on after AC loss** on.
-- Boot the NixOS minimal ISO, `sudo passwd`, note `ip a` and the boot
-  disk from `ls -l /dev/disk/by-id`; put the latter in
-  `hosts/homelab/hardware.nix`.
-- Give the box a temporary address: set `address = "192.168.1.3"` in
-  `hosts/default.nix` until cutover.
+BIOS: UEFI, secure boot off, power on after AC loss. Boot the NixOS
+installer, `sudo passwd`, note `ip link` (set `homelab.lan.interface`) and
+the boot disk id (`hosts/homelab/hardware.nix`). For the first days set
+`address` in `hosts/default.nix` to a spare Infra IP so the Pi keeps
+serving DNS.
 
 ```sh
 chmod 600 /tmp/homelab/etc/ssh/ssh_host_ed25519_key
 nix run .#install homelab root@<installer-ip> -- --extra-files /tmp/homelab
-nix run .#deploy homelab hackerman@192.168.1.3       # first full activation
-ssh-keyscan -t ed25519 192.168.1.3                   # -> sshHostKey in hosts/default.nix
 ```
 
-### 3. Copy state from the Pi (on the micro PC, as root)
+The first activation seeds the HAOS disk and starts the VM. `hass-sync`
+and `hass-addons` will fail until HA is onboarded; that is expected.
+
+### 2. Seed Home Assistant
+
+1. Open `http://<hass address>:8123`, choose "restore from backup", upload
+   the Pi's backup. HA restores users, integrations, automations, HACS
+   remnants, everything in `.storage`.
+2. Create a long-lived token (profile > security), put it in
+   `secrets/homelab.yaml` as `hass/token` and in `ha-automations.env`.
+3. `nix run .#deploy homelab`. `hass-addons` registers the repositories,
+   installs Mosquitto, Zigbee2MQTT, ring-mqtt, Speech-to-Phrase, whisper,
+   piper and SSH with their options; `hass-sync` pushes
+   `hosts/homelab/hass` and `secrets.yaml`, then reloads.
+4. Before starting Zigbee2MQTT for the first time, copy the Pi's Zigbee
+   data into the add-on's directory so the network key and pairings carry
+   over: `scp -r ./z2m-data/* root@<hass>:/config/zigbee2mqtt/` (the
+   add-on's `data_path`). Delete the old `configuration.yaml` inside it;
+   the add-on writes its own from the options. Move the dongle over, start
+   the add-on, check the devices are online.
+5. Settings > System > Storage: add the NFS backup share
+   (`<host infra IP>:/var/lib/hass-backups`) and make it the default;
+   set the backup schedule. Save the encryption key in 1Password.
+6. In the HA UI: MQTT integration to `core-mosquitto`, user `hass`; add
+   Wyoming for whisper, piper and Speech-to-Phrase; add ring-mqtt's
+   devices; Matter only if a device forces it.
+
+### 3. Verify
 
 ```sh
-P=Patchwork7770@192.168.1.2:pi-docker-stuff
-systemctl stop home-assistant zigbee2mqtt node-red
-
-rsync -a --exclude 'home-assistant_v2.db*' --exclude '*.log*' --exclude deps \
-  $P/home-assistant/config/ /var/lib/hass/
-rm -f /var/lib/hass/configuration.yaml                     # Nix owns this
-rm -rf /var/lib/hass/custom_components/adaptive_lighting   # now from nixpkgs
-chown -R hass:hass /var/lib/hass
-
-rsync -a $P/zigbee-2-mqtt/data/ /var/lib/zigbee2mqtt/
-python3 - <<'PY'
-import yaml
-old = yaml.safe_load(open('/var/lib/zigbee2mqtt/configuration.yaml'))
-yaml.safe_dump(old.get('devices', {}), open('/var/lib/zigbee2mqtt/devices.yaml', 'w'))
-yaml.safe_dump(old.get('groups', {}), open('/var/lib/zigbee2mqtt/groups.yaml', 'w'))
-PY
-rm /var/lib/zigbee2mqtt/configuration.yaml                 # Nix owns this
-chown -R zigbee2mqtt:zigbee2mqtt /var/lib/zigbee2mqtt
-
-rsync -a $P/node-red/data/ /var/lib/node-red/
-chown -R node-red:node-red /var/lib/node-red
-```
-
-Move the Zigbee dongle over (its `/dev/serial/by-id` name travels with
-it), then `systemctl start zigbee2mqtt home-assistant node-red`.
-
-In the HA UI: MQTT integration -> `127.0.0.1`, user `hass`; add Ring
-(core), Matter (`ws://127.0.0.1:5580/ws`), Music Assistant, Wyoming
-(whisper `tcp://127.0.0.1:10300`, piper `:10200`, openWakeWord `:10400`),
-ntfy. Recorder starts empty on PostgreSQL; 14 days of history is the loss.
-
-### 4. Verify on the temporary IP
-
-```sh
-dig @192.168.1.3 doubleclick.net           # blocked
-dig @192.168.1.3 ha.home.arpa              # 192.168.1.3 for now
+dig @<dns vip> doubleclick.net          # 0.0.0.0
+dig @<dns vip> ha.<domain>              # host infra IP
+curl -sS https://ha.<domain>/api/       # 401 with a valid public cert
 systemctl --failed
+virsh list                              # haos running
 ```
 
-Trust the Caddy root cert on your devices:
-`/var/lib/caddy/.local/share/caddy/pki/authorities/local/root.crt`.
+### 4. Cutover
 
-### 5. Cutover
+Power off the Pi, set `address` back to `192.168.1.2`, deploy, point the
+UniFi DHCP DNS field at the VIP, remove the WireGuard port forward. Keep
+the Pi's SSD for two weeks.
 
-1. Power off the Pi.
-2. `address = "192.168.1.2"` in `hosts/default.nix`, deploy. Every LAN
-   client keeps working without changes.
-3. Remove the gateway port forward for 51820; phones use Tailscale.
+### 5. Afterwards
 
-Keep the Pi's SSD for a couple of weeks as the fallback.
+Second box with `roles = ["dns" "media"]`: the VIP fails over, restic gets
+a second target. Enable `homelab.automations` once the lock file and hash
+exist (see `automations/README.md`). Enable `monitoring.unifi` after
+creating the local read-only user on the console.
 
-### 6. Afterwards
-
-- Enable `homelab.backup` with a repository on the media box or a NAS,
-  plus an offsite copy (Backblaze B2 via `environmentFile`).
-- Bring the Pi back as a second DNS node (`roles = ["dns"]`,
-  `aarch64-linux`) and advertise both resolvers from the gateway.
-- Media box: copy `hosts/homelab/hardware.nix`, add a `media` entry with
-  `roles = ["media" "dns"]`, ZFS for the library, Jellyfin with QuickSync.
-
-## Not yet verified
+## Known gaps
 
 Written without a Nix evaluator; the first `nix flake check` will surface
-small option-name mismatches. Least certain:
+option-name mismatches. Least certain, in order:
 
-- `services.music-assistant.providers` names, and whether the module opens
-  its ports itself (8095/8097 are opened explicitly here).
-- `services.wyoming.*` option names in 26.05.
-- disko partition attribute names for the current disko release.
-- `programs.ssh.enableDefaultConfig` on the home-manager revision in use.
+- NixVirt template arguments (`bridge_name`, `storage_vol` as a path) and
+  the shape of `base.devices` used for the overrides in `hass-vm.nix`.
+- HAOS add-on slugs for ring-mqtt and Speech-to-Phrase; confirm in the
+  add-on's URL.
+- The Mosquitto add-on's option schema (the `logins` list).
+- `services.prometheus.exporters.unpoller` option names.
+- Alertmanager posting to ntfy delivers raw JSON; acceptable, ugly.

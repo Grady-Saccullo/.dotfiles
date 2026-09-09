@@ -1,0 +1,19 @@
+# Actions for the custom sentences in custom_sentences/en/*.yaml.
+PlayFavorite:
+  action:
+    - action: media_player.play_media
+      target:
+        area_id: "{{ area }}"
+      data:
+        media_content_type: favorite_item_id
+        media_content_id: "{{ favorite }}"
+  speech:
+    text: "Playing {{ favorite_name }} in the {{ area }}"
+
+LaundryStatus:
+  speech:
+    text: >-
+      {% set s = states('sensor.washer_state') %}
+      {% if s == 'running' %}The washer is running.
+      {% elif s == 'finished' %}The washer finished {{ relative_time(states.sensor.washer_state.last_changed) }} ago.
+      {% else %}The washer is idle.{% endif %}

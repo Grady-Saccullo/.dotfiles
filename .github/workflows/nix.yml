@@ -21,6 +21,17 @@ jobs:
       - run: nix flake check --no-build --show-trace
       - run: nix build --print-build-logs .#checks.x86_64-linux.nixos-homelab
 
+  home-assistant:
+    name: validate Home Assistant config
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: frenck/action-home-assistant@v1
+        with:
+          path: hosts/homelab/hass
+          secrets: fakesecrets.yaml
+          version: stable
+
   darwin:
     name: evaluate darwin hosts
     runs-on: macos-15

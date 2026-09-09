@@ -39,6 +39,11 @@
     sops-nix.inputs.nixpkgs.follows = "nixpkgs";
     disko.url = "github:nix-community/disko";
     disko.inputs.nixpkgs.follows = "nixpkgs";
+    # Declarative libvirt domains for the Home Assistant OS VM. Track the
+    # flake, not a tagged release: VLAN tags, USB startupPolicy and backing
+    # stores all landed after v0.6.0.
+    nixvirt.url = "github:AshleyYakeley/NixVirt";
+    nixvirt.inputs.nixpkgs.follows = "nixpkgs";
 
     # Optional: a *private* repo holding non-secret-but-private homelab data
     # (device inventories, MAC addresses, network topology). Secrets proper

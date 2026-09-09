@@ -1,0 +1,16 @@
+# Alertmanager posts critical alerts to /api/webhook/alertmanager.
+automation:
+  - id: alertmanager_webhook
+    alias: Alertmanager to phones
+    triggers:
+      - trigger: webhook
+        webhook_id: alertmanager
+        allowed_methods: [POST]
+        local_only: true
+    actions:
+      - action: notify.everyone
+        data:
+          title: "{{ trigger.json.status | title }}: {{ trigger.json.commonLabels.alertname }}"
+          message: >-
+            {% for a in trigger.json.alerts %}{{ a.annotations.summary }}{% if not loop.last %}
+            {% endif %}{% endfor %}

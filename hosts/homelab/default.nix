@@ -1,6 +1,7 @@
-# homelab: x86 micro PC running the house services. Replaces the Raspberry
-# Pi's Debian + docker-compose stack (pi-docker-stuff). Roles come from
-# hosts/default.nix; only host-specific settings live here.
+# homelab: x86 micro PC running the house. Roles come from hosts/default.nix
+# (dns, home-automation, monitoring); only host-specific settings live here.
+# Home Assistant OS runs as a VM on the IoT VLAN; everything else is a
+# native NixOS service. See docs/homelab.md.
 {
   inputs,
   config,
@@ -18,89 +19,151 @@ in {
 
   time.timeZone = "America/Los_Angeles";
 
-  # Static LAN address (hosts/default.nix). The router hands this IP out as
-  # the DNS server; it inherits the Pi's address at cutover.
-  networking = {
-    useDHCP = false;
-    interfaces.${config.homelab.lan.interface}.ipv4.addresses = [
-      {
-        address = config.homelab.lan.address;
-        prefixLength = 24;
-      }
-    ];
-    defaultGateway = config.homelab.lan.gateway;
-    nameservers = ["127.0.0.1"]; # resolves through its own AdGuard Home
-  };
-
   homelab = {
-    domain = "home.arpa";
+    # TODO: a domain you own, with DNS on Cloudflare. Certificates for
+    # *.home.example.com are issued through DNS-01; nothing is exposed.
+    domain = "home.example.com";
+
     lan = {
-      interface = "eth0";
+      interface = "eno1"; # `ip link` on the installer
+      address = "192.168.1.2";
       cidr = "192.168.1.0/24";
       gateway = "192.168.1.1";
     };
-
-    # Carried over from the Pi-hole domainlist (allow / deny / regex).
-    dns.userRules = [
-      "@@||open.spotify.com^"
-      "@@||alive.github.com^"
-      "@@||cdn.jsdelivr.net^"
-      "@@||cdn.shopify.com^"
-      "@@||i.scdn.co^"
-      "@@||googleapis.com^"
-      "@@||split.io^"
-      "@@||activitypub.rocks^"
-      "@@||sentry.io^"
-      "@@||amplitude.com^"
-      "@@||heapanalytics.com^"
-      "@@||cdn.heapanalytics.com^"
-      "@@||facebook.com^"
-      "@@||fbcdn.net^"
-      "@@||fb.me^"
-      "@@||redirector.gvt1.com^"
-      "@@||branch.io^"
-      "@@||script.google.com^"
-      "@@||rippling.com^"
-      "||updates.bravesoftware.com^"
-      "||cletra.com^"
-      "||googlesyndication.com^"
-      "||googletagmanager.com^"
-      "||2mdn.net^"
-      # LG webOS TV telemetry / ads
-      "||alphonso.tv^"
-      "||lgsmartad.com^"
-      "||lgtvcommon.com^"
-      "||lgtvsdp.com^"
-      "||lgsmartplatform.com^"
-      "||nextlgsdp.com^"
-      "||ueiwsp.com^"
-    ];
-
-    zigbee2mqtt = {
-      serialPort = "/dev/serial/by-id/usb-ITead_Sonoff_Zigbee_3.0_USB_Dongle_Plus_4ae1008bcc60ec11962b417625bfaa52-if00-port0";
-      channel = 11;
+    iot = {
+      vlan = 30;
+      cidr = "10.30.0.0/24";
     };
 
-    home-assistant.homekitPort = 21065;
-
-    # Kept only to migrate the existing flows. The replacement is
-    # automations-as-code against HA's websocket API (docs/homelab.md,
-    # "Automations as code"); turn this off once the flows are ported.
-    node-red.enable = true;
-
-    tailscale = {
-      advertiseRoutes = [config.homelab.lan.cidr];
-      exitNode = true;
+    dns = {
+      vip = "192.168.1.53";
+      priority = 150; # this box holds the VIP when both DNS hosts are up
+      # Carried over from the Pi-hole allow / deny lists.
+      allow = [
+        "open.spotify.com"
+        "alive.github.com"
+        "cdn.jsdelivr.net"
+        "cdn.shopify.com"
+        "i.scdn.co"
+        "googleapis.com"
+        "split.io"
+        "activitypub.rocks"
+        "sentry.io"
+        "amplitude.com"
+        "heapanalytics.com"
+        "facebook.com"
+        "fbcdn.net"
+        "fb.me"
+        "redirector.gvt1.com"
+        "branch.io"
+        "script.google.com"
+        "rippling.com"
+      ];
+      deny = [
+        "updates.bravesoftware.com"
+        "cletra.com"
+        "googlesyndication.com"
+        "googletagmanager.com"
+        "2mdn.net"
+        # LG webOS TV telemetry / ads
+        "alphonso.tv"
+        "lgsmartad.com"
+        "lgtvcommon.com"
+        "lgtvsdp.com"
+        "lgsmartplatform.com"
+        "nextlgsdp.com"
+        "ueiwsp.com"
+      ];
     };
 
-    # Turn on after a restic repository + password are in secrets/.
+    proxy.acmeEmail = "gradysaccullo@gmail.com";
+
+    hass = {
+      address = "10.30.0.10"; # fixed lease in UniFi for the VM's MAC
+      configDir = ./hass;
+      # Slugs: Settings > Add-ons > (add-on) > URL shows the slug.
+      addons = {
+        core_mosquitto = {
+          logins = [
+            {
+              username = "hass";
+              password = config.sops.placeholder."mqtt/hass";
+            }
+            {
+              username = "zigbee2mqtt";
+              password = config.sops.placeholder."mqtt/zigbee2mqtt";
+            }
+          ];
+          require_certificate = false;
+          certfile = "fullchain.pem";
+          keyfile = "privkey.pem";
+          customize = {
+            active = false;
+            folder = "mosquitto";
+          };
+        };
+        "45df7312_zigbee2mqtt" = {
+          data_path = "/config/zigbee2mqtt";
+          socat = {
+            enabled = false;
+            master = "pty,raw,echo=0,link=/tmp/ttyZ2M,mode=777";
+            slave = "tcp-listen:8485,keepalive,nodelay,reuseaddr,keepidle=1,keepintvl=1,keepcnt=5";
+            options = "-d -d";
+            log = false;
+          };
+          mqtt = {
+            server = "mqtt://core-mosquitto:1883";
+            user = "zigbee2mqtt";
+            password = config.sops.placeholder."mqtt/zigbee2mqtt";
+          };
+          serial = {
+            port = "/dev/serial/by-id/usb-ITead_Sonoff_Zigbee_3.0_USB_Dongle_Plus_4ae1008bcc60ec11962b417625bfaa52-if00-port0";
+            adapter = "zstack";
+          };
+        };
+        "03b2ae9d_ring-mqtt" = {
+          mqtt_url = "mqtt://hass:${config.sops.placeholder."mqtt/hass"}@core-mosquitto:1883";
+          enable_cameras = true;
+          enable_modes = false;
+          enable_panic = false;
+          hass_topic = "homeassistant/status";
+          ring_topic = "ring";
+        };
+        core_ssh = {
+          authorized_keys = [config.sops.placeholder."hass/ssh_pubkey"];
+          password = "";
+          apks = [];
+          server.tcp_forwarding = false;
+        };
+        core_speech-to-phrase = {};
+        core_whisper = {
+          model = "base-int8";
+          language = "en";
+          beam_size = 1;
+        };
+        core_piper = {
+          voice = "en_US-lessac-medium";
+        };
+      };
+    };
+
+    # Enable after `npm install` in ./automations produced package-lock.json
+    # and `prefetch-npm-deps` gave the hash.
+    automations.enable = false;
+
+    tailscale.advertiseRoutes = [config.homelab.lan.cidr config.homelab.iot.cidr];
+
+    ups.enable = true;
+
+    monitoring.unifi = {
+      enable = false; # turn on after creating the local read-only user on the console
+      url = "https://192.168.1.1";
+    };
+
     backup = {
-      enable = false;
-      repository = "/mnt/backup/restic";
+      enable = true;
+      repository = "b2:homelab-backups:homelab";
     };
-
-    # Turn on once CI builds this configuration on every push to main.
-    maintenance.autoUpgrade.enable = false;
   };
 
   # CLI comfort on the box itself (all home-manager based, shared with the

@@ -82,7 +82,9 @@ targets are all derived from this file.
 
 ### `/modules/homelab` and `/modules/roles`
 Native NixOS service modules (`homelab.<service>.enable`) and the roles that
-bundle them (`dns`, `home-automation`, `monitoring`, `media`, `network`).
+bundle them (`dns`, `home-automation`, `monitoring`, `media`). Home Assistant
+itself is a Home Assistant OS VM declared in `hass-vm.nix`; its config lives
+in `hosts/<name>/hass/` and is pushed on every deploy.
 
 ### `/modules/applications`
 Contains all of the shared "applications" which can be turned on through `.enable`. The reasoning

@@ -1,5 +1,7 @@
 # Generic x86 micro PC (Dell OptiPlex Micro / Lenovo Tiny / HP EliteDesk
-# Mini class). UEFI + systemd-boot, single disk laid out by disko.
+# Mini class). UEFI + systemd-boot, single disk laid out by disko as btrfs
+# subvolumes so /var/lib gets hourly snapshots (NixOS generations roll back
+# the system; snapshots roll back the state).
 #
 # Fill in `device` with the stable /dev/disk/by-id/... path of the boot disk
 # before running `nix run .#install homelab root@<ip>`; nixos-anywhere
@@ -16,18 +18,12 @@
     loader.systemd-boot.configurationLimit = 10;
     loader.efi.canTouchEfiVariables = true;
     initrd.availableKernelModules = ["xhci_pci" "ahci" "nvme" "usb_storage" "sd_mod" "sdhci_pci"];
-    kernelModules = ["kvm-intel" "iTCO_wdt"]; # iTCO: hardware watchdog (maintenance.nix)
+    kernelModules = ["kvm-intel"];
   };
 
   hardware = {
     cpu.intel.updateMicrocode = true;
     enableRedistributableFirmware = true;
-    # Intel iGPU: only needed for hardware transcoding on a media box, but
-    # harmless here and lets the same file be reused.
-    graphics = {
-      enable = true;
-      extraPackages = [];
-    };
   };
 
   disko.devices.disk.main = {
@@ -49,18 +45,77 @@
         root = {
           size = "100%";
           content = {
-            type = "filesystem";
-            format = "ext4";
-            mountpoint = "/";
-            mountOptions = ["noatime"];
+            type = "btrfs";
+            extraArgs = ["-f"];
+            # top level mounted for btrbk; VM images without copy-on-write
+            postCreateHook = ''
+              MNT=$(mktemp -d)
+              mount "$device" "$MNT" -o subvol=/
+              mkdir -p "$MNT/@vms"
+              chattr +C "$MNT/@vms"
+              umount "$MNT"
+            '';
+            subvolumes = {
+              "/@" = {
+                mountpoint = "/";
+                mountOptions = ["compress=zstd" "noatime"];
+              };
+              "/@nix" = {
+                mountpoint = "/nix";
+                mountOptions = ["compress=zstd" "noatime"];
+              };
+              "/@var-lib" = {
+                mountpoint = "/var/lib";
+                mountOptions = ["compress=zstd" "noatime"];
+              };
+              "/@var-log" = {
+                mountpoint = "/var/log";
+                mountOptions = ["compress=zstd" "noatime"];
+              };
+              "/@vms" = {
+                mountpoint = "/var/lib/vms";
+                mountOptions = ["noatime"];
+              };
+              "/@snapshots" = {
+                mountpoint = "/.snapshots";
+                mountOptions = ["noatime"];
+              };
+            };
           };
         };
       };
     };
   };
 
-  # Sonoff Zigbee 3.0 dongle (CP2102N): stable /dev/zigbee symlink in
-  # addition to /dev/serial/by-id.
+  # the whole filesystem, for btrbk
+  fileSystems."/mnt/btr_pool" = {
+    device = "/dev/disk/by-partlabel/disk-main-root";
+    fsType = "btrfs";
+    options = ["subvol=/" "noatime"];
+  };
+
+  # hourly snapshots of state, kept seven days
+  security.sudo.enable = true;
+  services.btrbk.instances.state = {
+    onCalendar = "hourly";
+    settings = {
+      timestamp_format = "long";
+      snapshot_preserve_min = "7d";
+      snapshot_preserve = "no";
+      volume."/mnt/btr_pool" = {
+        snapshot_dir = "@snapshots";
+        subvolume."@var-lib" = {};
+      };
+    };
+  };
+  services.btrfs.autoScrub = {
+    enable = true;
+    interval = "monthly";
+    fileSystems = ["/"];
+  };
+
+  # Sonoff Zigbee 3.0 dongle (CP2102N): stable /dev/zigbee symlink; the VM
+  # takes it by vendor/product id regardless.
   services.udev.extraRules = ''
     SUBSYSTEM=="tty", ATTRS{idVendor}=="10c4", ATTRS{idProduct}=="ea60", SYMLINK+="zigbee", GROUP="dialout", MODE="0660"
   '';

@@ -2,10 +2,11 @@
 #   flake.nix                      -> nixosConfigurations + flake checks
 #   modules/nixos/sensible.nix     -> ssh known_hosts on every host
 #   modules/applications/ssh       -> ~/.ssh/config on the Macs
-#   modules/homelab/dns.nix        -> <name>.<domain> DNS rewrites
+#   modules/homelab/dns.nix        -> <name>.<domain> names + VRRP peers
 #   modules/homelab/monitoring.nix -> Prometheus scrape targets
 #
 # Adding a machine = one entry here + hosts/<name>/{default,hardware}.nix.
+# `address` is the host's Infra-VLAN address.
 {
   homelab = {
     system = "x86_64-linux";
@@ -16,12 +17,13 @@
     sshHostKey = null;
   };
 
-  # Next box. Uncomment once it exists; copy hosts/homelab/hardware.nix.
+  # Second box: second DNS instance, restic target, later media. Uncomment
+  # once it exists; copy hosts/homelab/hardware.nix and adjust the disk id.
   # media = {
   #   system = "x86_64-linux";
   #   user = "hackerman";
   #   address = "192.168.1.3";
-  #   roles = ["media" "dns"];   # second DNS server for redundancy
+  #   roles = ["dns" "media"];
   #   sshHostKey = null;
   # };
 }

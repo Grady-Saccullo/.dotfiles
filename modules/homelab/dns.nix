@@ -1,168 +1,156 @@
-# LAN DNS: AdGuard Home (ad/tracker blocking, per-client rules, query log,
-# DNS rewrites, web UI) in front of a local recursive Unbound resolver, so
-# no upstream provider sees the household's queries.
-#
-# Replaces the pihole-unbound container. AdGuard Home's config is seeded
-# from Nix but `mutableSettings = true` merges rather than overwrites, so
-# allow/deny rules added from the query log in the UI survive rebuilds.
+# LAN DNS: Blocky (ad/tracker blocking, custom names, encrypted upstreams)
+# on every DNS-role host, behind one keepalived virtual IP that UniFi hands
+# out as the resolver. Stateless, validated at build time, restarts on
+# failure. No recursive resolver: two encrypted upstreams from different
+# providers in parallel are the lower-maintenance choice.
 {
   utils,
   config,
   lib,
   pkgs,
   hosts,
+  hostName,
   ...
 }:
 utils.mkHomelabModule {
   path = "dns";
   inherit config;
   extraOptions = {
-    blockLists = lib.mkOption {
-      type = lib.types.attrsOf lib.types.str;
-      description = "Blocklist name -> URL (AdGuard/hosts format).";
-      # The hagezi lists supersede most of the ~50 small single-purpose
-      # lists the Pi-hole was pulling; the rest are still maintained.
-      default = {
-        "HaGeZi Multi PRO" = "https://raw.githubusercontent.com/hagezi/dns-blocklists/main/adblock/pro.txt";
-        "HaGeZi Threat Intelligence" = "https://raw.githubusercontent.com/hagezi/dns-blocklists/main/adblock/tif.txt";
-        "HaGeZi Gambling" = "https://raw.githubusercontent.com/hagezi/dns-blocklists/main/adblock/gambling-onlydomains.txt";
-        "StevenBlack" = "https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts";
-        "OISD small" = "https://small.oisd.nl";
-        "Firebog EasyPrivacy" = "https://v.firebog.net/hosts/Easyprivacy.txt";
-        "Firebog AdGuard DNS" = "https://v.firebog.net/hosts/AdguardDNS.txt";
-        "Firebog Admiral" = "https://v.firebog.net/hosts/Admiral.txt";
-        "URLhaus" = "https://urlhaus.abuse.ch/downloads/hostfile";
-        "Perflyst Amazon FireTV" = "https://raw.githubusercontent.com/Perflyst/PiHoleBlocklist/master/AmazonFireTV.txt";
-        "NextDNS native Samsung" = "https://raw.githubusercontent.com/nextdns/native-tracking-domains/main/domains/samsung";
-      };
+    vip = lib.mkOption {
+      type = lib.types.str;
+      description = "Virtual IP shared by all DNS hosts; the only resolver UniFi advertises.";
     };
-    userRules = lib.mkOption {
+    priority = lib.mkOption {
+      type = lib.types.int;
+      default = 100;
+      description = "VRRP priority; the highest live host holds the VIP.";
+    };
+    upstreams = lib.mkOption {
+      type = lib.types.listOf lib.types.str;
+      default = [
+        "tcp-tls:dns.quad9.net:853"
+        "tcp-tls:one.one.one.one:853"
+      ];
+    };
+    blockLists = lib.mkOption {
+      type = lib.types.listOf lib.types.str;
+      # HaGeZi in Blocky's "wildcard asterisk" format. Pro supersedes the
+      # ~50 small lists the Pi-hole used; the bypass list closes DoH/VPN
+      # routes around the resolver (TVs).
+      default = [
+        "https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/wildcard/pro.txt"
+        "https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/wildcard/doh-vpn-proxy-bypass.txt"
+      ];
+    };
+    allow = lib.mkOption {
       type = lib.types.listOf lib.types.str;
       default = [];
-      description = "AdGuard filter rules, e.g. \"||ads.example^\" or \"@@||allowed.example^\".";
+      description = "Domains never blocked (exact + subdomains).";
+    };
+    deny = lib.mkOption {
+      type = lib.types.listOf lib.types.str;
+      default = [];
+      description = "Extra blocked domains (exact + subdomains).";
     };
     hosts = lib.mkOption {
       type = lib.types.attrsOf lib.types.str;
       default = {};
-      description = "DNS rewrites: fqdn -> IP. Other modules (proxy) contribute here.";
-    };
-    webPort = lib.mkOption {
-      type = lib.types.port;
-      default = 3000;
+      description = "Custom names: fqdn -> IP. Other modules contribute here.";
     };
   };
 } (cfg: let
-  unboundPort = 5335;
-  stateDir = "/var/lib/AdGuardHome";
-  configFile = "${stateDir}/AdGuardHome.yaml";
-  adminSecret = config.sops.secrets."adguard/admin_password_hash".path;
+  inherit (config.homelab) lan domain;
+  allowFile = pkgs.writeText "blocky-allow.txt" (lib.concatStringsSep "\n" cfg.allow);
+  denyFile = pkgs.writeText "blocky-deny.txt" (lib.concatStringsSep "\n" cfg.deny);
+  # Other hosts carrying the dns role are VRRP unicast peers.
+  peers =
+    lib.mapAttrsToList (_: h: h.address)
+    (lib.filterAttrs (n: h: n != hostName && lib.elem "dns" h.roles) hosts);
+  dnsCheck = pkgs.writeShellScript "keepalived-check-dns" ''
+    exec ${pkgs.dnsutils}/bin/dig +short +time=1 +tries=1 @127.0.0.1 ${hostName}.${domain} | ${pkgs.gnugrep}/bin/grep -q .
+  '';
 in {
-  services.resolved.enable = false;
-
-  ###########################################################################
-  # Unbound: recursive, validating, loopback only.
-  ###########################################################################
-  services.unbound = {
+  services.blocky = {
     enable = true;
-    resolveLocalQueries = false;
-    settings.server = {
-      # do-ip6 is off below, so no ::1 listener (unbound refuses to bind it)
-      interface = lib.mkForce ["127.0.0.1"];
-      port = unboundPort;
-      access-control = lib.mkForce ["127.0.0.0/8 allow"];
-
-      do-ip6 = false;
-      prefer-ip6 = false;
-      num-threads = 1;
-      edns-buffer-size = 1232;
-      so-rcvbuf = "1m";
-
-      harden-glue = true;
-      harden-dnssec-stripped = true;
-      use-caps-for-id = false;
-      qname-minimisation = true;
-      aggressive-nsec = true;
-
-      prefetch = true;
-      cache-min-ttl = 0;
-      cache-max-ttl = 86400;
-
-      private-address = [
-        "192.168.0.0/16"
-        "169.254.0.0/16"
-        "172.16.0.0/12"
-        "10.0.0.0/8"
-        "fd00::/8"
-        "fe80::/10"
-      ];
-    };
-  };
-
-  ###########################################################################
-  # AdGuard Home
-  ###########################################################################
-  sops.secrets."adguard/admin_password_hash" = {};
-
-  services.adguardhome = {
-    enable = true;
-    host = "127.0.0.1"; # web UI is reached through the caddy proxy
-    port = cfg.webPort;
-    mutableSettings = true;
     settings = {
-      dns = {
-        bind_hosts = ["0.0.0.0"];
-        port = 53;
-        upstream_dns = ["127.0.0.1:${toString unboundPort}"];
-        bootstrap_dns = ["9.9.9.9" "1.1.1.1"];
-        # unbound already validates DNSSEC
-        enable_dnssec = false;
-        ratelimit = 0;
-        cache_size = 4194304;
-        cache_optimistic = true;
+      ports = {
+        dns = 53;
+        http = "127.0.0.1:4000"; # metrics + api, behind the proxy
       };
-      filtering = {
-        protection_enabled = true;
-        filtering_enabled = true;
-        rewrites =
-          lib.mapAttrsToList (domain: answer: {inherit domain answer;})
-          cfg.hosts;
+      upstreams = {
+        groups.default = cfg.upstreams;
+        strategy = "parallel_best";
+        timeout = "2s";
+        init.strategy = "fast";
       };
-      filters =
-        lib.imap1 (i: entry: {
-          id = 1000 + i;
-          enabled = true;
-          inherit (entry) name;
-          url = entry.value;
-        })
-        (lib.attrsToList cfg.blockLists);
-      user_rules = cfg.userRules;
-      querylog = {
-        enabled = true;
-        interval = "168h";
+      bootstrapDns = [
+        {upstream = "tcp+udp:9.9.9.9";}
+        {upstream = "tcp+udp:1.1.1.1";}
+      ];
+      blocking = {
+        denylists.default = cfg.blockLists ++ [(toString denyFile)];
+        allowlists.default = [(toString allowFile)];
+        clientGroupsBlock.default = ["default"];
+        blockType = "zeroIp";
+        loading = {
+          strategy = "fast"; # answer queries before lists finish loading
+          refreshPeriod = "24h";
+          downloads.timeout = "60s";
+        };
       };
-      statistics = {
-        enabled = true;
-        interval = "168h";
+      customDNS = {
+        customTTL = "1h";
+        filterUnmappedTypes = true;
+        mapping = cfg.hosts;
       };
+      caching = {
+        minTime = "5m";
+        maxTime = "30m";
+        prefetching = true;
+      };
+      prometheus.enable = true;
+      log.level = "warn";
     };
   };
 
-  # The admin password hash comes from sops at runtime and is spliced into
-  # the live config after the module has written it, so the hash never
-  # lands in the nix store or in this public repo. Runs as root ("+").
-  systemd.services.adguardhome.serviceConfig.ExecStartPre = lib.mkAfter [
-    "+${pkgs.writeShellScript "adguardhome-set-admin" ''
-      set -euo pipefail
-      hash=$(cat ${adminSecret})
-      ${lib.getExe pkgs.yq-go} -i '.users = [{"name": "admin", "password": "'"$hash"'"}]' ${configFile}
-    ''}"
-  ];
+  ###########################################################################
+  # keepalived: one VIP across every DNS host, unicast VRRP, DNS health check
+  ###########################################################################
+  users.users.keepalived_script = {
+    isSystemUser = true;
+    group = "keepalived_script";
+  };
+  users.groups.keepalived_script = {};
 
-  homelab.proxy.services.dns = lib.mkDefault "http://127.0.0.1:${toString cfg.webPort}";
+  services.keepalived = {
+    enable = true;
+    openFirewall = true; # protocol 112 from the peers
+    enableScriptSecurity = true;
+    vrrpScripts.dns = {
+      script = toString dnsCheck;
+      interval = 2;
+      fall = 2;
+      rise = 2;
+      user = "keepalived_script";
+    };
+    vrrpInstances.dns = {
+      interface = lan.interface;
+      state =
+        if cfg.priority >= 150
+        then "MASTER"
+        else "BACKUP";
+      virtualRouterId = 53;
+      inherit (cfg) priority;
+      virtualIps = [{addr = "${cfg.vip}/24";}];
+      trackScripts = ["dns"];
+      unicastSrcIp = lan.address;
+      unicastPeers = peers;
+    };
+  };
 
   # <host>.<domain> for every machine in hosts/default.nix
   homelab.dns.hosts =
-    lib.mapAttrs' (name: h: lib.nameValuePair "${name}.${config.homelab.domain}" h.address)
+    lib.mapAttrs' (name: h: lib.nameValuePair "${name}.${domain}" h.address)
     hosts;
 
   networking.firewall = {
