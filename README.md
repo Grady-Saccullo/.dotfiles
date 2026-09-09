@@ -61,6 +61,8 @@ Run with `nix run .#<command>`.
 - `test`: test the current configuration without switching
 - `format`: format the repo with [alejandra](https://github.com/kamadorueda/alejandra)
 - `update`: interactively select flake inputs to update via fzf
+- `deploy`: build a NixOS configuration on the target host and activate it over ssh
+- `install`: first-time install of a NixOS configuration with nixos-anywhere (destructive)
 
 ### `/configurations`
 Contains the root machine configs which get pulled into the main flake.nix. All of these
@@ -69,6 +71,20 @@ configurations are built upon the modules pulled into the root flake.nix.
 Current configurations:
 - `personal-darwin` — personal macOS machine
 - `voze-darwin` — work macOS machine
+NixOS hosts are not listed here: they are generated from `hosts/default.nix`
+(see [docs/homelab.md](docs/homelab.md)).
+
+### `/hosts`
+NixOS machines as data. `hosts/default.nix` holds one entry per box (address,
+roles, ssh host key); `hosts/<name>/` holds that box's hardware and host-only
+settings. The flake, ssh config on every machine, DNS rewrites and monitoring
+targets are all derived from this file.
+
+### `/modules/homelab` and `/modules/roles`
+Native NixOS service modules (`homelab.<service>.enable`) and the roles that
+bundle them (`dns`, `home-automation`, `monitoring`, `media`). Home Assistant
+itself is a Home Assistant OS VM declared in `hass-vm.nix`; its config lives
+in `hosts/<name>/hass/` and is pushed on every deploy.
 
 ### `/modules/applications`
 Contains all of the shared "applications" which can be turned on through `.enable`. The reasoning

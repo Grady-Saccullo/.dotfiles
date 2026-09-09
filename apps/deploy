@@ -1,0 +1,33 @@
+#!/bin/bash -e
+# Deploy a nixosConfiguration to a running host over ssh. The closure is
+# built on the target itself (micro PCs have far more headroom than a VM
+# on the laptop); the flake source is copied over.
+#
+#   nix run .#deploy <config-name> [ssh-target] [-- <action>]
+#
+# Examples:
+#   nix run .#deploy homelab                        # ssh target defaults to the config name
+#   nix run .#deploy homelab hackerman@192.168.1.2
+#   nix run .#deploy homelab homelab -- boot        # activate on next boot
+
+if [[ $# == 0 ]]; then
+	echo "usage: deploy <config name> [ssh target] [-- <action>]"
+	exit 1
+fi
+
+config_name="$1"
+shift
+target="$config_name"
+if [[ $# -gt 0 && "$1" != "--" ]]; then
+	target="$1"
+	shift
+fi
+[[ "${1:-}" == "--" ]] && shift
+action="${1:-switch}"
+
+nixos-rebuild "$action" \
+	--flake ".#$config_name" \
+	--build-host "$target" \
+	--target-host "$target" \
+	--sudo \
+	--show-trace

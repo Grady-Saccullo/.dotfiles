@@ -1,0 +1,24 @@
+#!/bin/bash -e
+# First-time install of a nixosConfiguration onto a machine booted from any
+# NixOS installer ISO (or any Linux with root ssh + kexec support).
+# Partitions the disk per its disko layout and installs. DESTRUCTIVE.
+#
+#   nix run .#install <config-name> root@<installer-ip>
+#
+# The closure is built on the target ("--build-on remote"), so this works
+# from an Apple Silicon Mac for x86_64 hosts without a cross builder.
+
+if [[ $# -lt 2 ]]; then
+	echo "usage: install <config name> root@<ip>"
+	exit 1
+fi
+
+config_name="$1"
+target="$2"
+shift 2
+
+nixos-anywhere \
+	--flake ".#$config_name" \
+	--build-on remote \
+	--target-host "$target" \
+	"$@"

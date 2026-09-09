@@ -32,6 +32,7 @@
     ./slack
     ./soundsource
     ./spotify
+    ./ssh
     ./starship
     ./steam
     ./tailscale

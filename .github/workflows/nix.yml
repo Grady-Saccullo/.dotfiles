@@ -1,0 +1,42 @@
+name: nix
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  nixos:
+    name: build NixOS hosts
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: DeterminateSystems/nix-installer-action@v16
+      - uses: cachix/cachix-action@v16
+        with:
+          name: grady-saccullo
+          authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
+      # Evaluates every output, then builds each x86_64-linux host closure
+      # (flake checks) and pushes it to cachix so deploys are downloads.
+      - run: nix flake check --no-build --show-trace
+      - run: nix build --print-build-logs .#checks.x86_64-linux.nixos-homelab
+
+  home-assistant:
+    name: validate Home Assistant config
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: frenck/action-home-assistant@v1
+        with:
+          path: hosts/homelab/hass
+          secrets: fakesecrets.yaml
+          version: stable
+
+  darwin:
+    name: evaluate darwin hosts
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: DeterminateSystems/nix-installer-action@v16
+      - run: nix eval --raw .#darwinConfigurations.personal.system.drvPath
+      - run: nix eval --raw .#darwinConfigurations.voze.system.drvPath

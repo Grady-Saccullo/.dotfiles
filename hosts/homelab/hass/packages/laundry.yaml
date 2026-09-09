@@ -1,0 +1,56 @@
+# Washer state from the Third Reality power-monitoring plug.
+template:
+  - sensor:
+      - name: washer_state
+        unique_id: washer_state
+        state: >-
+          {% set w = states('sensor.washer_plug_power') | float(0) %}
+          {% if w > 10 %}running
+          {% elif is_state('sensor.washer_state', 'running') or is_state('sensor.washer_state', 'finished') %}finished
+          {% else %}idle{% endif %}
+
+automation:
+  - id: laundry_finished
+    alias: Laundry finished
+    triggers:
+      - trigger: state
+        entity_id: sensor.washer_state
+        to: finished
+        for: "00:03:00"
+    actions:
+      - action: notify.household
+        data:
+          message: Washer done.
+      - repeat:
+          while:
+            - condition: state
+              entity_id: sensor.washer_state
+              state: finished
+            - condition: template
+              value_template: "{{ repeat.index <= 4 }}"
+          sequence:
+            - delay: "00:30:00"
+            - condition: state
+              entity_id: binary_sensor.washer_lid
+              state: "off"
+            - action: notify.household
+              data:
+                message: Washer still waiting to be emptied.
+  - id: laundry_emptied
+    alias: Laundry emptied
+    triggers:
+      - trigger: state
+        entity_id: binary_sensor.washer_lid
+        to: "on"
+    conditions:
+      - condition: state
+        entity_id: sensor.washer_state
+        state: finished
+    actions:
+      - action: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.washer_needs_emptying
+
+input_boolean:
+  washer_needs_emptying:
+    name: Washer needs emptying

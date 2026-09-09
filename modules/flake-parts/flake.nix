@@ -37,6 +37,20 @@ in {
         '';
       };
 
+      nixosModules = mkOption {
+        type = types.lazyAttrsOf types.deferredModule;
+        default = {};
+        apply = mapAttrs (k: v: {
+          _file = "${toString moduleLocation}#nixosModules.${k}";
+          imports = [v];
+        });
+        description = ''
+          NixOS modules.
+
+          You may use this for reusable pieces of configuration, service modules, etc.
+        '';
+      };
+
       constants = mkOption {
         description = ''
           Shared constants

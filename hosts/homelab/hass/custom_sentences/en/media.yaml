@@ -1,0 +1,27 @@
+language: en
+intents:
+  PlayFavorite:
+    data:
+      - sentences:
+          - "play {favorite} (in|on) [the] {area}"
+          - "play [the] {favorite} playlist (in|on) [the] {area}"
+  LaundryStatus:
+    data:
+      - sentences:
+          - "laundry status"
+          - "(is|has) the (washer|laundry) (done|finished)"
+lists:
+  favorite:
+    values:
+      # Sonos favourite ids: Media > Sonos > Favorites, or the media browser URL
+      - in: "kitchen"
+        out: "FV:2/1"
+      - in: "jazz"
+        out: "FV:2/2"
+      - in: "dinner"
+        out: "FV:2/3"
+  area:
+    values:
+      - kitchen
+      - living room
+      - bedroom

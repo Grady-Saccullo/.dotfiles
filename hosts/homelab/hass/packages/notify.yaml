@@ -1,0 +1,11 @@
+# Notification groups the packages target. Companion app services are
+# named notify.mobile_app_<device>; adjust after the phones are paired.
+notify:
+  - platform: group
+    name: everyone
+    services:
+      - service: mobile_app_grady_iphone
+  - platform: group
+    name: household
+    services:
+      - service: mobile_app_grady_iphone

@@ -34,26 +34,59 @@
     darwin.inputs.nixpkgs.follows = "nixpkgs-unstable";
     darwin.url = "github:LnL7/nix-darwin";
 
+    # NixOS / homelab
+    sops-nix.url = "github:Mic92/sops-nix";
+    sops-nix.inputs.nixpkgs.follows = "nixpkgs";
+    disko.url = "github:nix-community/disko";
+    disko.inputs.nixpkgs.follows = "nixpkgs";
+    # Declarative libvirt domains for the Home Assistant OS VM. Track the
+    # flake, not a tagged release: VLAN tags, USB startupPolicy and backing
+    # stores all landed after v0.6.0.
+    nixvirt.url = "github:AshleyYakeley/NixVirt";
+    nixvirt.inputs.nixpkgs.follows = "nixpkgs";
+
+    # Optional: a *private* repo holding non-secret-but-private homelab data
+    # (device inventories, MAC addresses, network topology). Secrets proper
+    # live encrypted in ./secrets via sops-nix and are safe in this public
+    # repo; this input is only for things you'd rather not publish in plain
+    # text. See docs/homelab.md "Secrets and private data".
+    #
+    # homelab-private.url = "git+ssh://git@github.com/grady-saccullo/homelab-private";
+    # homelab-private.flake = false;
+
     # Applications
     llm-agents.url = "github:numtide/llm-agents.nix";
     wezterm.url = "github:wezterm/wezterm?dir=nix";
   };
 
   outputs = inputs @ {self, ...}: let
+    inherit (inputs.nixpkgs) lib;
+    overlays = [(import ./overlays {inherit inputs;})];
+
+    # NixOS hosts as data (address, roles, ...). See hosts/default.nix.
+    hosts = import ./hosts;
+
+    # Darwin machines: unstable as the base package set (see overlays/).
     pkgsFor = system:
       import inputs.nixpkgs-unstable {
         localSystem = system;
-        overlays = [(import ./overlays {inherit inputs;})];
+        inherit overlays;
         config = {
           allowUnfree = true;
           allowUnsupportedSystem = true;
         };
       };
 
-    nixpkgsModule = system: {
-      nixpkgs.hostPlatform = system;
-      nixpkgs.pkgs = pkgsFor system;
-    };
+    # NixOS servers: the *stable* release as the base package set, so the
+    # service modules (home-assistant, adguardhome, ...) and their packages
+    # move in lockstep with the release branch. `pkgs.unstable.*` is still
+    # available through the overlay for individual newer packages.
+    stablePkgsFor = system:
+      import inputs.nixpkgs {
+        localSystem = system;
+        inherit overlays;
+        config.allowUnfree = true;
+      };
 
     mkDarwinHost = {
       system,
@@ -66,7 +99,7 @@
       inputs.darwin.lib.darwinSystem {
         inherit system;
         specialArgs = {
-          inherit inputs me machineType;
+          inherit inputs me machineType hosts;
           utils = import ./modules/flake-parts/utils.nix {
             inherit me machineType;
             inherit (inputs.nixpkgs-unstable) lib;
@@ -75,7 +108,37 @@
         modules = [
           configPath
           ./modules/flake-parts/common.nix
-          (nixpkgsModule system)
+          {
+            nixpkgs.hostPlatform = system;
+            nixpkgs.pkgs = pkgsFor system;
+          }
+        ];
+      };
+
+    mkNixosHost = hostName: host: let
+      machineType = "nixos";
+      me = {inherit (host) user;};
+    in
+      lib.nixosSystem {
+        inherit (host) system;
+        specialArgs = {
+          inherit inputs me machineType hostName hosts;
+          utils = import ./modules/flake-parts/utils.nix {
+            inherit me machineType lib;
+          };
+        };
+        modules = [
+          (./hosts + "/${hostName}")
+          ./modules/flake-parts/common.nix
+          ./modules/roles
+          {
+            networking.hostName = hostName;
+            nixpkgs.hostPlatform = host.system;
+            nixpkgs.pkgs = stablePkgsFor host.system;
+            homelab.lan.address = lib.mkDefault host.address;
+            homelab.roles = lib.genAttrs host.roles (_: {enable = true;});
+            homelab.secrets.file = lib.mkDefault (./secrets + "/${hostName}.yaml");
+          }
         ];
       };
   in
@@ -86,10 +149,19 @@
         ./modules/flake-parts/apps.nix
       ];
 
-      systems = ["aarch64-darwin" "aarch64-linux"];
+      systems = ["aarch64-darwin" "aarch64-linux" "x86_64-linux"];
 
       perSystem = {system, ...}: {
         _module.args.pkgs = pkgsFor system;
+
+        # `nix flake check` builds every NixOS host for this platform (CI).
+        checks =
+          lib.mapAttrs' (
+            name: _:
+              lib.nameValuePair "nixos-${name}"
+              self.nixosConfigurations.${name}.config.system.build.toplevel
+          )
+          (lib.filterAttrs (_: h: h.system == system) hosts);
       };
 
       flake = {
@@ -102,10 +174,17 @@
 
         homeManagerModules = {
           darwinModule = ./modules/home-manager/darwin.nix;
+          nixosModule = ./modules/home-manager/nixos.nix;
         };
 
         darwinModules = {
           sensible = ./modules/darwin/sensible.nix;
+        };
+
+        nixosModules = {
+          sensible = ./modules/nixos/sensible.nix;
+          homelab = ./modules/homelab;
+          roles = ./modules/roles;
         };
 
         darwinConfigurations = {
@@ -121,6 +200,13 @@
             configPath = ./configurations/voze-darwin.nix;
           };
         };
+
+        # One configuration per entry in hosts/default.nix.
+        # First install (wipes the disk, see docs/homelab.md):
+        #   nix run .#install <host> root@<ip>
+        # Subsequent deploys:
+        #   nix run .#deploy <host>
+        nixosConfigurations = lib.mapAttrs mkNixosHost hosts;
       };
     };
 }

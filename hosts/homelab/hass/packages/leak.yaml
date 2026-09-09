@@ -1,0 +1,31 @@
+# Any leak sensor: critical push to everyone, repeat until dry and acknowledged.
+automation:
+  - id: leak_detected
+    alias: Leak detected
+    triggers:
+      - trigger: state
+        entity_id:
+          - binary_sensor.kitchen_sink_leak
+          - binary_sensor.bathroom_sink_leak
+          - binary_sensor.washer_leak
+        to: "on"
+    actions:
+      - action: notify.everyone
+        data:
+          title: Water leak
+          message: "{{ trigger.to_state.name }}"
+          data:
+            push:
+              interruption-level: critical
+            ttl: 0
+            priority: high
+      - repeat:
+          until:
+            - condition: template
+              value_template: "{{ is_state(trigger.entity_id, 'off') }}"
+          sequence:
+            - delay: "00:05:00"
+            - action: notify.everyone
+              data:
+                title: Water leak
+                message: "Still wet: {{ trigger.to_state.name }}"

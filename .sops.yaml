@@ -1,0 +1,17 @@
+# sops-nix key policy. Secrets are encrypted to (a) your personal age key,
+# so you can edit them from the Mac, and (b) each host's age key derived
+# from its ssh host key, so the host can decrypt at activation.
+#
+# Get a host's key after first boot:
+#   ssh homelab 'cat /etc/ssh/ssh_host_ed25519_key.pub' | ssh-to-age
+# Make a personal key once:
+#   age-keygen -o ~/.config/sops/age/keys.txt
+keys:
+  - &admin  age1REPLACEME_personal_age_public_key
+  - &homelab age1REPLACEME_homelab_host_age_public_key
+creation_rules:
+  - path_regex: secrets/homelab\.yaml$
+    key_groups:
+      - age:
+          - *admin
+          - *homelab
