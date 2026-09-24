@@ -18,9 +18,9 @@ utils.mkAppModule {
         ];
       };
       nixos = utils.mkHomeManagerUser {
-        home.packages = [pkgs.unstable.halloy];
+        home.packages = [pkgs.halloy];
       };
       linux = utils.mkHomeManagerUser {
-        home.packages = [pkgs.unstable.halloy];
+        home.packages = [pkgs.halloy];
       };
     })

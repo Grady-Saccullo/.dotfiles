@@ -9,5 +9,5 @@ utils.mkAppModule {
   inherit config;
 } (cfg:
     utils.mkHomeManagerUser {
-      home.packages = [pkgs.unstable.hoppscotch];
+      home.packages = [pkgs.hoppscotch];
     })

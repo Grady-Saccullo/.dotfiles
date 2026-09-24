@@ -11,7 +11,13 @@ utils.mkAppModule {
   extraOptions = {
     package = lib.mkOption {
       type = lib.types.package;
-      default = pkgs.unstable.jetbrains.datagrip;
+      default = pkgs.jetbrains.datagrip;
+    };
+    bundleId = lib.mkOption {
+      type = lib.types.str;
+      default = "com.jetbrains.datagrip";
+      readOnly = true;
+      description = "macOS bundle identifier, for window-manager rules and the like";
     };
   };
 } (cfg:

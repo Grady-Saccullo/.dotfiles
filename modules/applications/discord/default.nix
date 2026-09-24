@@ -14,7 +14,7 @@ in
     extraOptions = {
       package = lib.mkOption {
         type = lib.types.package;
-        default = pkgs.unstable.discord;
+        default = pkgs.discord;
       };
       path = lib.mkOption {
         type = lib.types.str;
@@ -22,6 +22,12 @@ in
           if isDarwin
           then "/Applications/Discord.app"
           else "${config.applications.discord.package}/Applications/Discord.app";
+      };
+      bundleId = lib.mkOption {
+        type = lib.types.str;
+        default = "com.hnc.Discord";
+        readOnly = true;
+        description = "macOS bundle identifier, for window-manager rules and the like";
       };
     };
   } (cfg:

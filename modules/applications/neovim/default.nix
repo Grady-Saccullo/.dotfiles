@@ -17,7 +17,7 @@ in {
   };
 
   config = let
-    vimPlugins = pkgs.unstable.vimPlugins;
+    vimPlugins = pkgs.vimPlugins;
 
     treesitter-plugins = vimPlugins.nvim-treesitter.withPlugins (p:
       with p; [
@@ -41,13 +41,13 @@ in {
     lib.mkIf cfg.enable (utils.mkHomeManagerUser {
       programs.neovim = {
         enable = true;
-        package = pkgs.unstable.neovim-unwrapped;
+        package = pkgs.neovim-unwrapped;
 
         defaultEditor = true;
         withNodeJs = true;
         vimAlias = true;
 
-        extraPackages = with pkgs.unstable; [
+        extraPackages = with pkgs; [
           alejandra
           bash-language-server
           lua-language-server

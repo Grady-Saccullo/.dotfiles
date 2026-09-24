@@ -11,15 +11,15 @@ utils.mkAppModule {
     utils.mkPlatformConfig {
       darwin = utils.mkHomeManagerUser {
         home.packages = [
-          pkgs.unstable.colima
-          pkgs.unstable.docker
-          pkgs.unstable.docker-buildx
+          pkgs.colima
+          pkgs.docker
+          pkgs.docker-buildx
         ];
       };
       nixos = {
         virtualisation.docker.enable = true;
       };
       linux = utils.mkHomeManagerUser {
-        home.packages = [pkgs.unstable.docker];
+        home.packages = [pkgs.docker];
       };
     })

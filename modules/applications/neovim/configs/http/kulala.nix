@@ -17,6 +17,6 @@ utils.mkNeovimModule {
   ];
 
   extraPackages = [
-    pkgs.unstable.curl
+    pkgs.curl
   ];
 })

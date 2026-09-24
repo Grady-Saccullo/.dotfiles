@@ -62,7 +62,7 @@ in
 
         fzf = {
           enable = true;
-          package = pkgs.unstable.fzf;
+          package = pkgs.fzf;
           enableZshIntegration = config.applications.zsh.enable;
           defaultCommand = "fd -t f -H . ${searchPaths}";
           fileWidget = {

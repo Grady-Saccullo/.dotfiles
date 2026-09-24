@@ -7,9 +7,19 @@
 utils.mkNeovimModule {
   inherit config pkgs;
   path = "zig";
+  extraConfig = _: {
+    ai.lspServers.zig = {
+      command = "${pkgs.zls}/bin/zls";
+      extensionToLanguage = {
+        ".zig" = "zig";
+        ".zon" = "zig";
+      };
+      description = "zig language server for AI tools";
+    };
+  };
 } ({vimPlugins, ...}: {
   extraPackages = [
-    pkgs.unstable.zls
+    pkgs.zls
   ];
 
   plugins = [

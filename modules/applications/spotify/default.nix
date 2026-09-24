@@ -14,7 +14,7 @@ in
     extraOptions = {
       package = lib.mkOption {
         type = lib.types.package;
-        default = pkgs.unstable.spotify;
+        default = pkgs.spotify;
       };
       path = lib.mkOption {
         type = lib.types.str;
@@ -22,6 +22,12 @@ in
           if isDarwin
           then "/Applications/Spotify.app"
           else "${config.applications.spotify.package}/Applications/Spotify.app";
+      };
+      bundleId = lib.mkOption {
+        type = lib.types.str;
+        default = "com.spotify.client";
+        readOnly = true;
+        description = "macOS bundle identifier, for window-manager rules and the like";
       };
     };
   } (cfg:

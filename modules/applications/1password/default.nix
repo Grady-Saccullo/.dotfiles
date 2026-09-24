@@ -23,25 +23,26 @@ utils.mkAppModule {
           ];
           programs._1password = {
             enable = true;
-            package = pkgs.unstable._1password-cli;
+            package = pkgs._1password-cli;
           };
         };
         linux = utils.mkHomeManagerUser {
           home.packages = [
-            pkgs.unstable._1password-gui
-            pkgs.unstable._1password-cli
+            pkgs._1password-gui
+            pkgs._1password-cli
           ];
         };
         nixos = utils.mkHomeManagerUser {
           home.packages = [
-            pkgs.unstable._1password-gui
-            pkgs.unstable._1password-cli
+            pkgs._1password-gui
+            pkgs._1password-cli
           ];
         };
       })
       (lib.mkIf cfg.browserExtension.enable {
-        common.browserExtensions.chromium = [
-          {id = "aeblfdkhhhdcdjpifhhbdiojplfjncoa";}
-        ];
+        browser.extensions.chromium.onepassword = {
+          id = "aeblfdkhhhdcdjpifhhbdiojplfjncoa";
+          description = "1Password";
+        };
       })
     ])

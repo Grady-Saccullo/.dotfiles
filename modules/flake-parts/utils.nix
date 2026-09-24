@@ -8,6 +8,56 @@
     home-manager.users.${me.user} = mod;
   };
 
+  # Helpers for `attrsOf submodule` buses such as `ai.*` (see
+  # modules/ai/README.md):
+  #   enabled  — keep only entries with `enable = true`
+  #   content  — pick whichever of `source` / `text` an entry set
+  enabled = attrs: lib.filterAttrs (_: v: v.enable) attrs;
+  content = entry:
+    if entry.source != null
+    then entry.source
+    else entry.text;
+
+  # Helpers for consumers of the `secrets.*` bus (see modules/secrets/README.md).
+  secrets = {
+    # Wraps `command args...` in a script that resolves each `VAR = ref` in
+    # `secretEnv` through `readCommand` when the script RUNS, exports the
+    # results, then execs the real program with any extra arguments appended.
+    # `ref` is a string (one trailing argument) or a list of strings (passed
+    # verbatim). Only the references reach the Nix store, never the values.
+    #
+    #   utils.secrets.mkEnvWrapper {
+    #     inherit pkgs;
+    #     name = "ai-mcp-my-server";              # -> secret-env-ai-mcp-my-server
+    #     readCommand = config.secrets.readCommand;
+    #     secretEnv.DATABASE_URL = "op://Vault/item/field";
+    #     command = "/path/to/my-server";
+    #     args = ["serve"];
+    #   }
+    mkEnvWrapper = {
+      pkgs,
+      name,
+      readCommand,
+      secretEnv,
+      command,
+      args ? [],
+    }:
+      pkgs.writeShellScript "secret-env-${name}" ''
+        set -eu
+        export PATH="$PATH:/usr/local/bin:/opt/homebrew/bin:/run/current-system/sw/bin"
+        ${lib.concatStrings (lib.mapAttrsToList (var: ref: ''
+            if ${var}=$(${lib.escapeShellArgs (readCommand ++ lib.toList ref)}); then
+              export ${var}
+            else
+              echo "${name}: failed to read secret for ${var}" >&2
+              exit 1
+            fi
+          '')
+          secretEnv)}
+        exec ${lib.escapeShellArgs ([command] ++ args)} "$@"
+      '';
+  };
+
   mkPlatformConfig = {
     base ? {},
     nixos ? {},
@@ -117,6 +167,11 @@
     config = lib.mkIf enable (configFn cfg);
   };
 
+  # Like mkAppModule, but the config function only returns `programs.neovim`
+  # for the home-manager user. `extraConfig` (cfg -> darwin-level attrset)
+  # lets a language module set options outside programs.neovim as well, e.g.
+  # contribute `ai.lspServers.<lang>` to the AI bus; it is merged alongside
+  # the home-manager block and defaults to nothing.
   mkNeovimModule = {
     path,
     config,
@@ -124,15 +179,19 @@
     extraOptions ? {},
     default ? false,
     imports ? [],
+    extraConfig ? (_: {}),
   }: neovimConfigFn:
     mkAppModule {
       inherit config extraOptions default imports;
       path = ["neovim"] ++ (pathList path);
     } (cfg:
-      mkHomeManagerUser {
-        programs.neovim = neovimConfigFn {
-          inherit cfg;
-          vimPlugins = pkgs.unstable.vimPlugins;
-        };
-      });
+      lib.mkMerge [
+        (mkHomeManagerUser {
+          programs.neovim = neovimConfigFn {
+            inherit cfg;
+            vimPlugins = pkgs.vimPlugins;
+          };
+        })
+        (extraConfig cfg)
+      ]);
 }

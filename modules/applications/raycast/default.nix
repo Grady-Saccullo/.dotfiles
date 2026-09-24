@@ -26,8 +26,9 @@ utils.mkAppModule {
         linux = "raycast is only supported on darwin";
       })
       (lib.mkIf cfg.browserExtension.enable {
-        common.browserExtensions.chromium = [
-          {id = "fgacdjnoljjfikkadhogeofgjoglooma";}
-        ];
+        browser.extensions.chromium.raycast = {
+          id = "fgacdjnoljjfikkadhogeofgjoglooma";
+          description = "Raycast";
+        };
       })
     ])

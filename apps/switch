@@ -3,33 +3,63 @@
 echo "$@"
 
 if [[ $# == 0 ]]; then
-	echo "missing config name, usage switch <config name> <optional other args>"
+	echo "missing config name, usage switch <config name> [--local] <optional other args>"
 	exit 1
 fi
 
 config_name="$1"
 shift
 
+if [[ "${1:-}" == "--local" ]]; then
+	shift
+	DOTFILES_LOCAL="${DOTFILES_LOCAL:-$HOME/.dotfiles}"
+fi
+
+# Framework override for downstream flakes (the private dotfiles consume this
+# repo as input `dotfiles`): `--local` / DOTFILES_LOCAL=<path> builds against
+# that checkout instead of the locked GitHub rev so framework changes can be
+# tested before they are pushed. The checkout is resolved to a store path
+# ONCE as the user (git+file: → tracked files only, so .env never enters the
+# store) and both the user-side build and the root-side darwin-rebuild are
+# pointed at that store path — root must never run git in a user-owned repo.
+# --override-input implies --no-write-lock-file, so flake.lock is untouched.
+override=()
+if [[ -n "${DOTFILES_LOCAL:-}" ]]; then
+	if jq -e '.nodes[.root].inputs.dotfiles' flake.lock >/dev/null 2>&1; then
+		local_src=$(nix flake metadata --json "git+file://$DOTFILES_LOCAL" | jq -r .path)
+		echo "using local framework: $DOTFILES_LOCAL -> $local_src"
+		override=(--override-input dotfiles "path:$local_src")
+	else
+		echo "--local ignored: this flake has no 'dotfiles' input" >&2
+	fi
+fi
+
+# build <installable> [extra nix flags...]
 function build() {
+	local attr="$1"
+	shift
 	nix build \
 		--extra-experimental-features 'nix-command flakes' \
 		--show-trace \
-		".#$1"
+		"$@" \
+		".#$attr"
 }
 
 case $(uname -o) in
 Darwin)
-	build "darwinConfigurations.$config_name.system"
+	build "darwinConfigurations.$config_name.system" "${override[@]}"
 
 	sudo ./result/sw/bin/darwin-rebuild switch \
 		--show-trace \
+		"${override[@]}" \
 		--flake ".#$config_name" "$@"
 	;;
 Linux)
 	if [ -f /etc/NIXOS ]; then
-		build "nixosConfigurations.$config_name.system"
+		build "nixosConfigurations.$config_name.system" "${override[@]}"
 		sudo nixos-rebuild switch \
 			--show-trace \
+			"${override[@]}" \
 			--flake ".#$config_name" "$@"
 	else
 		echo "Need to implement/port over linux"

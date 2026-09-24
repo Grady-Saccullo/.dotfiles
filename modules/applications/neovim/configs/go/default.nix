@@ -8,6 +8,19 @@ utils.mkNeovimModule {
   inherit config pkgs;
   imports = [./templ.nix];
   path = "go";
+  extraConfig = _: {
+    ai.lspServers.go = {
+      command = "${pkgs.gopls}/bin/gopls";
+      args = ["serve"];
+      extensionToLanguage = {
+        ".go" = "go";
+        ".mod" = "go.mod";
+        ".sum" = "go.sum";
+        ".work" = "go.work";
+      };
+      description = "go language server for AI tools";
+    };
+  };
 } ({vimPlugins, ...}: {
   plugins = [
     (vimPlugins.nvim-treesitter.withPlugins (p: [
@@ -20,7 +33,7 @@ utils.mkNeovimModule {
   ];
 
   extraPackages = [
-    pkgs.unstable.gopls
+    pkgs.gopls
   ];
 
   initLua = ''

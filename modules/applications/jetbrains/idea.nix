@@ -11,7 +11,13 @@ utils.mkAppModule {
   extraOptions = {
     package = lib.mkOption {
       type = lib.types.package;
-      default = pkgs.unstable.jetbrains.idea;
+      default = pkgs.jetbrains.idea;
+    };
+    bundleId = lib.mkOption {
+      type = lib.types.str;
+      default = "com.jetbrains.intellij";
+      readOnly = true;
+      description = "macOS bundle identifier, for window-manager rules and the like";
     };
   };
 } (cfg:

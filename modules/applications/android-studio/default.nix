@@ -10,7 +10,7 @@ utils.mkAppModule {
 } (_:
     utils.mkPlatformConfig {
       base = utils.mkHomeManagerUser {
-        home.packages = [pkgs.unstable.android-tools pkgs.jdk17];
+        home.packages = [pkgs.android-tools pkgs.jdk17];
       };
       darwin = {
         homebrew.casks = [
@@ -21,9 +21,9 @@ utils.mkAppModule {
         ];
       };
       linux = utils.mkHomeManagerUser {
-        home.packages = [pkgs.unstable.android-studio];
+        home.packages = [pkgs.android-studio];
       };
       nixos = utils.mkHomeManagerUser {
-        home.packages = [pkgs.unstable.android-studio];
+        home.packages = [pkgs.android-studio];
       };
     })

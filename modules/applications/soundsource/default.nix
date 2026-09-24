@@ -10,7 +10,7 @@ utils.mkAppModule {
 } (cfg:
     utils.mkPlatformConfig {
       darwin = utils.mkHomeManagerUser {
-        home.packages = [pkgs.unstable.soundsource];
+        home.packages = [pkgs.soundsource];
       };
       nixos = "soundsource is only supported on darwin";
       linux = "soundsource is only supported on darwin";

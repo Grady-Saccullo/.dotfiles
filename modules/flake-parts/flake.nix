@@ -37,6 +37,14 @@ in {
         '';
       };
 
+      lib = mkOption {
+        type = types.lazyAttrsOf types.raw;
+        default = {};
+        description = ''
+          Library functions exported for downstream flakes (e.g. mkDarwinHost).
+        '';
+      };
+
       constants = mkOption {
         description = ''
           Shared constants

@@ -5,20 +5,18 @@
   pkgs,
   ...
 }: let
-  # Claude Code skills owned by this module. Each entry:
-  #   - gets an `applications.jj.ai.skills.<name>.enable` option (default true)
-  #   - is forwarded to `programs.claude-code.skills.<name>` when enabled,
-  #     which home-manager symlinks into ~/.claude/skills/<name>/.
-  # Skill content lives at ./skills/<name>/SKILL.md. Adding a new skill is a
-  # single new entry here plus the SKILL.md file; options and contributions
-  # are derived automatically.
-  ownedSkills = {
-    jj-gh-pr = {
-      source = ./skills/jj-gh-pr;
-      description = "opens GitHub PRs from jj bookmarks";
-    };
-  };
-
+  # ── AI contributions ────────────────────────────────────────────────────
+  # This module contributes its Claude Code skill and hook to the
+  # tool-agnostic `ai.*` bus (see modules/ai/README.md) instead of writing
+  # to home-manager's `programs.claude-code.*` directly. The claude-code
+  # application module is the sole consumer of the bus and materializes
+  # these into ~/.claude/. Hosts opt out per entry:
+  #
+  #   ai.skills.jj-gh-pr.enable = false;
+  #   ai.hooks.jj-pre-edit-warning.enable = false;
+  #
+  # Skill content lives at ./skills/<name>/SKILL.md. Adding another skill
+  # is one `ai.skills.<name>` entry plus the SKILL.md file.
   # Claude Code PreToolUse hook: warn the user when `@` sits at a bookmark
   # that's also tracked at origin. Prevents accidentally auto-amending a
   # published commit (jj snapshots the working copy into `@` on every
@@ -48,27 +46,15 @@ in
     path = "jj";
     inherit config;
     default = true;
-    extraOptions = {
-      ai.skills =
-        lib.mapAttrs (name: meta: {
-          enable =
-            lib.mkEnableOption "the ${name} Claude Code skill (${meta.description})"
-            // {default = true;};
-        })
-        ownedSkills;
-      ai.hooks.pre-edit-warning.enable =
-        lib.mkEnableOption "PreToolUse hook that warns when editing while @ is at a pushed jj bookmark"
-        // {default = true;};
-    };
   } (cfg:
-    utils.mkHomeManagerUser {
+    (utils.mkHomeManagerUser {
       programs.jujutsu = {
         enable = true;
-        package = pkgs.unstable.jujutsu;
+        package = pkgs.jujutsu;
         settings = {
           user = {
-            name = config.applications.git.username;
-            email = config.applications.git.email;
+            name = config.identity.name;
+            email = config.identity.email;
           };
           ui = {
             default-command = "log";
@@ -82,32 +68,19 @@ in
           };
         };
       };
+    })
+    // {
+      shell.aliases.j = "jj";
 
-      programs.zsh = lib.mkIf config.applications.zsh.enable {
-        shellAliases = {
-          j = "jj";
-        };
+      ai.skills.jj-gh-pr = {
+        source = ./skills/jj-gh-pr;
+        description = "opens GitHub PRs from jj bookmarks";
       };
 
-      programs.claude-code.skills =
-        lib.mapAttrs (_: meta: meta.source)
-        (lib.filterAttrs (name: _: cfg.ai.skills.${name}.enable) ownedSkills);
-
-      programs.claude-code.hooks =
-        lib.mkIf cfg.ai.hooks.pre-edit-warning.enable {
-          pre-edit-jj-warn = preEditHookScript;
-        };
-
-      programs.claude-code.settings.hooks.PreToolUse =
-        lib.optionals cfg.ai.hooks.pre-edit-warning.enable [
-          {
-            matcher = "Edit|Write|MultiEdit";
-            hooks = [
-              {
-                type = "command";
-                command = ''bash "$HOME/.claude/hooks/pre-edit-jj-warn"'';
-              }
-            ];
-          }
-        ];
+      ai.hooks.jj-pre-edit-warning = {
+        event = "PreToolUse";
+        matcher = "Edit|Write|MultiEdit";
+        script = preEditHookScript;
+        description = "warns when editing while @ is at a pushed jj bookmark";
+      };
     })

@@ -1,3 +1,6 @@
+# htmx-lsp is intentionally NOT contributed to ai.lspServers: it would claim
+# `.html`, and Claude Code only starts the first server registered per
+# extension, so it would shadow (or be shadowed by) the html server.
 {
   config,
   lib,
@@ -10,7 +13,7 @@ utils.mkNeovimModule {
   path = ["html" "htmx"];
 } (_: {
   extraPackages = [
-    pkgs.unstable.htmx-lsp
+    pkgs.htmx-lsp
   ];
 
   initLua = let

@@ -10,7 +10,7 @@ utils.mkAppModule {
 } (cfg:
     utils.mkPlatformConfig {
       darwin = utils.mkHomeManagerUser {
-        home.packages = [pkgs.unstable.utm];
+        home.packages = [pkgs.utm];
       };
       nixos = "utm is only supported on darwin";
       linux = "utm is only supported on darwin";

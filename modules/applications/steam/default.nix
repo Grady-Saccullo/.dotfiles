@@ -14,7 +14,7 @@ in
     extraOptions = {
       package = lib.mkOption {
         type = lib.types.package;
-        default = pkgs.unstable.steam;
+        default = pkgs.steam;
       };
       path = lib.mkOption {
         type = lib.types.str;
@@ -22,6 +22,12 @@ in
           if isDarwin
           then "/Applications/Steam.app"
           else "${config.applications.steam.package}/Applications/Steam.app";
+      };
+      bundleId = lib.mkOption {
+        type = lib.types.str;
+        default = "com.valvesoftware.steam";
+        readOnly = true;
+        description = "macOS bundle identifier, for window-manager rules and the like";
       };
     };
   } (cfg:

@@ -7,13 +7,22 @@
 utils.mkNeovimModule {
   inherit config pkgs;
   path = "protobuf";
+  extraConfig = _: {
+    ai.lspServers.protobuf = {
+      command = "${pkgs.protols}/bin/protols";
+      extensionToLanguage = {
+        ".proto" = "proto";
+      };
+      description = "protobuf language server for AI tools";
+    };
+  };
 } ({vimPlugins, ...}: {
   plugins = [
     (vimPlugins.nvim-treesitter.withPlugins (p: [p.proto]))
   ];
 
   extraPackages = [
-    pkgs.unstable.protols
+    pkgs.protols
   ];
 
   initLua = ''

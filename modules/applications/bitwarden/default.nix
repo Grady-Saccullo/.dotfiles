@@ -20,15 +20,16 @@ utils.mkAppModule {
           };
         };
         nixos = utils.mkHomeManagerUser {
-          home.packages = [pkgs.unstable.bitwarden-desktop];
+          home.packages = [pkgs.bitwarden-desktop];
         };
         linux = utils.mkHomeManagerUser {
-          home.packages = [pkgs.unstable.bitwarden-desktop];
+          home.packages = [pkgs.bitwarden-desktop];
         };
       })
       (lib.mkIf cfg.browserExtension.enable {
-        common.browserExtensions.chromium = [
-          {id = "nngceckbapebfimnlniiiahkandclblb";}
-        ];
+        browser.extensions.chromium.bitwarden = {
+          id = "nngceckbapebfimnlniiiahkandclblb";
+          description = "Bitwarden";
+        };
       })
     ])

@@ -1,88 +1,163 @@
 # claude-code module
 
-Installs Claude Code and acts as the sink for every module that contributes
-skills, hooks, commands, or agents. Itself owns only tool-agnostic skills.
+Installs Claude Code and is the **sole consumer** of the tool-agnostic `ai.*`
+bus declared in [`modules/ai/`](../../ai/README.md). Nothing outside this
+module writes to home-manager's `programs.claude-code.*`.
 
 ## Architecture in one paragraph
 
-Home-manager's `programs.claude-code` is the single place that materializes
-files under `~/.claude/`. This module enables it and seeds its own
-tool-agnostic skills. App modules (e.g. `jj`) contribute their own skills and
-hooks by writing directly to `programs.claude-code.*` — no registry in this
-module. Separation of concerns: each app owns its Claude Code contributions
-end-to-end; this module only owns tool-agnostic ones.
+App modules (`jj`, …), host configs (`hosts/<host>/ai.nix`)
+and the private input all *contribute* skills, agents, commands, rules, hooks,
+plugins and context to `ai.*`. This module *reads* the bus and fans it out to
+home-manager, which materializes files under `~/.claude/`. MCP servers take a
+parallel path: `modules/ai/mcp.nix` populates the shared `programs.mcp.servers`
+registry and this module opts in with `enableMcpIntegration`. The graph is
+one-directional — bus → this consumer → home-manager — so there is no
+cross-module readback and no cycle risk.
 
-## Namespaces
-
-| User-facing option                                  | Owned by              | Provisions to                                |
-| --------------------------------------------------- | --------------------- | -------------------------------------------- |
-| `applications.claude-code.enable`                   | this module           | home-manager's `programs.claude-code.enable` |
-| `applications.claude-code.skills.<name>.enable`     | this module           | `~/.claude/skills/<name>/`                   |
-| `applications.<app>.ai.skills.<name>.enable`        | the `<app>` module    | `~/.claude/skills/<name>/`                   |
-| `applications.<app>.ai.hooks.<name>.enable`         | the `<app>` module    | `~/.claude/hooks/<name>` + `settings.json`   |
-
-By convention, skill directory names and option keys include the owning
-app's prefix (e.g. `jj-gh-pr`) so the filesystem and config line up.
-
-## Adding a new skill
-
-### 1. Tool-agnostic (owned by claude-code)
-
-Place the skill at `modules/applications/claude-code/skills/<name>/SKILL.md`
-and add one entry to `ownedSkills` in this module:
-
-```nix
-ownedSkills = {
-  my-skill = {
-    source = ./skills/my-skill;
-    description = "what it does";
-  };
-};
+```
+ai.skills / agents / commands / rules ─┐
+ai.hooks ───────────────────────────────┤
+ai.permissions ─────────────────────────┤
+ai.plugins ─────────────────────────────┼─▶ applications.claude-code ─▶ programs.claude-code.*
+ai.context ─────────────────────────────┤            │                  + managed-settings.json
+ai.lspServers ──────────────────────────┘            │
+                                                     │
+ai.mcpServers ─▶ modules/ai/mcp.nix ─▶ programs.mcp.servers ─(enableMcpIntegration)─┘
 ```
 
-The option `applications.claude-code.skills.my-skill.enable` (default true)
-is generated automatically. Rebuild to materialize.
+## Options this module reads (the bus)
 
-### 2. App-specific (owned by another module)
+| Bus option                         | Provisions to                                             |
+| ---------------------------------- | --------------------------------------------------------- |
+| `ai.skills.<name>`                 | `~/.claude/skills/<name>/`                                |
+| `ai.agents.<name>`                 | `~/.claude/agents/<name>.md`                              |
+| `ai.commands.<name>`               | `~/.claude/commands/<name>.md`                            |
+| `ai.rules.<name>`                  | `~/.claude/rules/<name>.md`                               |
+| `ai.hooks.<name>`                  | `~/.claude/hooks/<name>` **and** a `hooks.<event>` entry in managed-settings.json |
+| `ai.permissions.{allow,ask,deny}` | `permissions.allow/ask/deny` in managed-settings.json, unioned with `managedSettings.permissions.*` |
+| `ai.plugins.<name>`                | personal plugin at `~/.claude/skills/<name>/`             |
+| `ai.context`                       | `~/.claude/CLAUDE.md` — only when non-empty               |
+| `ai.lspServers.<name>`             | `.lsp.json` in the synthesized personal plugin (`~/.claude/skills/claude-code-home-manager/`) |
+| `programs.mcp.servers` (via `modules/ai/mcp.nix`) | personal plugin `~/.claude/skills/claude-code-home-manager/.mcp.json` |
 
-Place the skill under that module's own `skills/` dir, e.g.
-`modules/applications/jj/skills/jj-something/SKILL.md`, and add an entry to
-that module's `ownedSkills`. See `modules/applications/jj/default.nix` for a
-worked example. The user-facing toggle is
-`applications.jj.ai.skills.jj-something.enable`.
+Every bus entry has an `enable` flag (default `true`). Disabling one anywhere
+(`ai.skills.jj-gh-pr.enable = false;` in a host config) removes it from every
+consumer.
 
-## Adding a hook
+## Options this module owns
 
-Hooks run at specific Claude Code lifecycle points (PreToolUse, PostToolUse,
-etc.). There's no shared abstraction yet — the `jj` module wires one hook
-directly (see `preEditHookScript` + `programs.claude-code.settings.hooks`
-block). If a second module adds a hook, factor out a pattern matching
-`ownedSkills`.
+| Option                                        | Default                                                       | Purpose |
+| --------------------------------------------- | ------------------------------------------------------------- | ------- |
+| `applications.claude-code.enable`             | `false`                                                       | turn the module on |
+| `applications.claude-code.package`            | `pkgs.llm-agents.claude-code`                                 | package to install |
+| `applications.claude-code.managedSettings`    | `{ skipAutoPermissionPrompt = true; permissions.defaultMode = "auto"; }` | enforced policy → managed-settings.json |
+| `applications.claude-code.seedSettings`       | `{ model = "opus[1m]"; }`                                     | one-time defaults → `~/.claude/settings.json` |
 
-To add a jj-style hook today:
+The defaults are set with **leaf-level** `mkDefault`, so a host can add keys
+(`managedSettings.permissions.allow = [ … ];`) or override a single leaf
+(`managedSettings.permissions.defaultMode = "plan";`) without losing the rest.
+A whole-attrset `mkDefault` would be dropped entirely the moment any key is
+defined elsewhere.
 
-1. Write the script string in the app module's `let` block.
-2. Register a toggle under `extraOptions.ai.hooks.<name>.enable`.
-3. Contribute to `programs.claude-code.hooks.<file-name>` (creates the
-   script file) AND to `programs.claude-code.settings.hooks.<EventName>`
-   (wires it to the trigger) — both gated on the toggle.
+## Why two settings files
 
-## Profile-specific overrides
+home-manager renders `programs.claude-code.settings` to a read-only store
+symlink, but Claude Code rewrites `~/.claude/settings.json` at runtime
+(`/model`, effort, theme, …) and fails with EACCES against it (upstream
+claude-code#55485 "not planned"; `mkOutOfStoreSymlink` is broken by
+claude-code#15786). So:
 
-Any of the above toggles can be set per-profile in `voze-darwin.nix` or
-`personal-darwin.nix`:
+- **`managed-settings.json`** — highest precedence, never written by the app.
+  Nix owns it: `/Library/Application Support/ClaudeCode/` on darwin (root
+  activation script), `/etc/claude-code/` on NixOS (`environment.etc`), and on
+  generic linux the same policy is merged into the user file on every switch
+  (every `hooks.<event>` array is unioned, other keys overwritten). All of
+  `managedSettings` plus the hook wiring below lands here.
+- **`~/.claude/settings.json`** — a real writable file owned by Claude Code.
+  It is *seeded* from `seedSettings` only when absent, a stale store symlink,
+  or not a JSON object. Runtime state is otherwise never touched. `model`
+  lives here on purpose: in the managed file it would pin the startup model
+  every launch; as a seed the `/model` choice persists.
 
-```nix
-applications.jj.ai.skills.jj-gh-pr.enable = false;    # disable on this host
-applications.jj.ai.hooks.pre-edit-warning.enable = false;
-programs.claude-code.settings.model = "haiku-4-5";    # diverge from default
-```
+`programs.claude-code.settings` is left empty so home-manager never renders
+its own settings.json. The `home.file…enable = mkForce false` guard remains as
+belt-and-braces.
 
-## Settings migration (one-time)
+## How hooks become settings entries
 
-This module sets `programs.claude-code.settings` to mirror the previously
-hand-maintained `~/.claude/settings.json`. Home-manager writes the generated
-file on `darwin-rebuild switch`; it will rename any pre-existing file to
-`.backup` (see `home-manager.backupFileExtension` in
-`modules/home-manager/darwin.nix`). After a successful first rebuild, verify
-and remove the `.backup`.
+For every enabled `ai.hooks.<name>`:
+
+1. The `script` is written to `~/.claude/hooks/<name>` (executable).
+2. An entry is appended to `managedSettings.hooks.<event>`:
+
+   ```json
+   { "matcher": "<matcher, if set>",
+     "hooks": [ { "type": "command",
+                  "command": "bash \"$HOME/.claude/hooks/<name>\"",
+                  "timeout": <timeout, if set> } ] }
+   ```
+
+Entries are sorted by hook name for a stable managed file. Raw `hooks` a host
+puts directly in `managedSettings` are unioned with the bus-derived ones per
+event. `$HOME/.claude` is assumed; repointing `configDir` is not supported.
+
+## How permission rules become settings entries
+
+Each `ai.permissions.<kind>` list (`allow`, `ask`, `deny`) is appended to the
+host's `managedSettings.permissions.<kind>` and deduplicated; other keys under
+`permissions` (`defaultMode`, …) pass through untouched. App modules
+contribute the read-only subcommands of what they install (`git` → `git
+status/log/diff/show/branch`, `github-cli` → `gh pr/issue/run view|list|…`).
+
+## MCP servers
+
+Declare servers in `ai.mcpServers.<name>` (see `modules/ai/README.md` for the
+secret-reference syntax). `modules/ai/mcp.nix` renders them into
+`programs.mcp.servers`; this module's `enableMcpIntegration = true` pulls that
+registry in as a synthesized personal plugin. Consequences worth knowing:
+
+- Tools are namespaced `mcp__plugin_hm_<server>__<tool>` — write permission
+  rules against that prefix, not `mcp__<server>__*`.
+- Plugin-provided servers are **auto-trusted**; the per-project approval
+  prompt and `enabledMcpjsonServers` / `disabledMcpjsonServers` /
+  `enableAllProjectMcpServers` do not apply to them. Disabled servers are
+  therefore filtered out at the bus rather than passed through.
+- User-scope servers still live in the mutable `~/.claude.json`; there is no
+  declarative file for that scope, which is why the plugin route is used.
+  `managed-mcp.json` was rejected because it is exclusive and would block
+  project `.mcp.json` servers.
+
+## LSP servers
+
+Enabled `ai.lspServers.<name>` entries are handed to home-manager's
+`programs.claude-code.lspServers` minus the bus-only `enable` / `description`
+keys, and land in the same synthesized personal plugin as the MCP registry, as
+`.lsp.json`. The neovim language modules populate them (one server per enabled
+language, absolute store-path `command`); see `modules/ai/README.md`.
+
+## Plugins and context
+
+- `ai.plugins.<name>` installs a *local or fetched* plugin directory. Plugins
+  from the official marketplace are **not** installed by listing them in
+  `enabledPlugins` — that key only toggles already-installed plugins, so
+  marketplace installation stays runtime state (`claude plugin install …`).
+  You may still enforce `enabledPlugins` through `managedSettings`.
+- `~/.claude/CLAUDE.md` becomes a nix-managed (read-only) file only when
+  `ai.context` is non-empty. Leave it empty to keep editing it by hand.
+
+## Migration notes
+
+- `applications.claude-code.skills.<n>.enable` and the per-app
+  `applications.<app>.ai.skills.<n>.enable` / `applications.<app>.ai.hooks.<n>.enable`
+  paths are gone. Use `ai.<kind>.<name>.enable` (e.g.
+  `ai.skills.jj-gh-pr.enable = false;`).
+- The jj hook file was renamed from `pre-edit-jj-warn` to
+  `jj-pre-edit-warning`; home-manager swaps the symlink on switch.
+- Once `my-server` and `signoz` are declared through `ai.mcpServers`, remove the
+  hand-added user-scope copies so they are not loaded twice:
+
+  ```sh
+  claude mcp remove -s user my-server
+  claude mcp remove -s user signoz
+  ```

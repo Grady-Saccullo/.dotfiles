@@ -9,5 +9,5 @@ utils.mkAppModule {
   inherit config;
 } (cfg:
     utils.mkHomeManagerUser {
-      home.packages = [pkgs.unstable.devenv];
+      home.packages = [pkgs.devenv];
     })

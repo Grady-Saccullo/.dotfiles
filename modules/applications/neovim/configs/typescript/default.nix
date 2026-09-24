@@ -16,6 +16,30 @@ utils.mkNeovimModule {
       description = "TypeScript LSP server to use (tsls, vtsls)";
     };
   };
+  # Mirrors the `lsp` choice above; tsx/jsx extensions only when tsx is on.
+  extraConfig = cfg: {
+    ai.lspServers.typescript = {
+      command =
+        if cfg.lsp == "vtsls"
+        then "${pkgs.vtsls}/bin/vtsls"
+        else "${pkgs.typescript-language-server}/bin/typescript-language-server";
+      args = ["--stdio"];
+      extensionToLanguage =
+        {
+          ".ts" = "typescript";
+          ".mts" = "typescript";
+          ".cts" = "typescript";
+          ".js" = "javascript";
+          ".mjs" = "javascript";
+          ".cjs" = "javascript";
+        }
+        // lib.optionalAttrs cfg.tsx.enable {
+          ".tsx" = "typescriptreact";
+          ".jsx" = "javascriptreact";
+        };
+      description = "typescript language server for AI tools";
+    };
+  };
 } ({
   vimPlugins,
   cfg,
@@ -30,10 +54,10 @@ utils.mkNeovimModule {
 
   extraPackages =
     lib.optionals (cfg.lsp == "tsls") [
-      pkgs.unstable.typescript-language-server
+      pkgs.typescript-language-server
     ]
     ++ lib.optionals (cfg.lsp == "vtsls") [
-      pkgs.unstable.vtsls
+      pkgs.vtsls
     ];
 
   initLua =

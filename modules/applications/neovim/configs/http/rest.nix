@@ -17,7 +17,7 @@ utils.mkNeovimModule {
   ];
 
   extraPackages = [
-    pkgs.unstable.curl
+    pkgs.curl
   ];
 
   extraLuaPackages = ps:

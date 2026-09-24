@@ -1,11 +1,20 @@
 {
   utils,
   config,
+  lib,
   ...
 }:
 utils.mkAppModule {
   path = "xcode";
   inherit config;
+  extraOptions = {
+    bundleId = lib.mkOption {
+      type = lib.types.str;
+      default = "com.apple.dt.Xcode";
+      readOnly = true;
+      description = "macOS bundle identifier, for window-manager rules and the like";
+    };
+  };
 } (cfg:
     utils.mkPlatformConfig {
       darwin = {

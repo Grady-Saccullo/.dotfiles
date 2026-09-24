@@ -12,12 +12,18 @@ utils.mkAppModule {
   extraOptions = {
     package = lib.mkOption {
       type = lib.types.package;
-      default = pkgs.unstable.brave;
+      default = pkgs.brave;
     };
     path = lib.mkOption {
       type = lib.types.str;
       default = "/Users/${me.user}/Applications/Home Manager Apps/Brave Browser.app";
       description = "Path to the Brave Browser application";
+    };
+    bundleId = lib.mkOption {
+      type = lib.types.str;
+      default = "com.brave.Browser";
+      readOnly = true;
+      description = "macOS bundle identifier, for window-manager rules and the like";
     };
   };
 } (cfg:
@@ -32,6 +38,7 @@ utils.mkAppModule {
             # YouTube Dislike
             {id = "gebbhagfogifgggkldgodflihgfeippi";}
           ]
-          ++ config.common.browserExtensions.chromium;
+          ++ lib.mapAttrsToList (_: e: {inherit (e) id;})
+          (utils.enabled config.browser.extensions.chromium);
       };
     })

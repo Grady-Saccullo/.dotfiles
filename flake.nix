@@ -16,7 +16,11 @@
 
   inputs = {
     nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";
+    # Release channels. Every input named `nixpkgs-<major>_<minor>` is exposed
+    # as `pkgs.channels.v<major>_<minor>` by overlays/channels.nix, for
+    # pinning a single package to a release; base `pkgs` stays
+    # nixpkgs-unstable (darwin compatibility).
+    nixpkgs-26_05.url = "github:NixOS/nixpkgs/nixos-26.05";
     home-manager.inputs.nixpkgs.follows = "nixpkgs-unstable";
     home-manager.url = "github:nix-community/home-manager/master";
 
@@ -39,44 +43,57 @@
     wezterm.url = "github:wezterm/wezterm?dir=nix";
   };
 
-  outputs = inputs @ {self, ...}: let
-    pkgsFor = system:
+  outputs = inputs: let
+    inherit (inputs.nixpkgs-unstable) lib;
+
+    pkgsFor = system: extraOverlays:
       import inputs.nixpkgs-unstable {
         localSystem = system;
-        overlays = [(import ./overlays {inherit inputs;})];
+        overlays = [(import ./overlays {inherit inputs;})] ++ extraOverlays;
         config = {
           allowUnfree = true;
           allowUnsupportedSystem = true;
         };
       };
 
-    nixpkgsModule = system: {
+    nixpkgsModule = system: extraOverlays: {
       nixpkgs.hostPlatform = system;
-      nixpkgs.pkgs = pkgsFor system;
+      nixpkgs.pkgs = pkgsFor system extraOverlays;
     };
 
+    # Builds a nix-darwin system on top of this repo's framework. Exported as
+    # `lib.mkDarwinHost` so the private dotfiles flake, which consumes this
+    # repo as input `dotfiles`, can define its hosts with the same module set,
+    # special args and overlays and layer private modules/overlays on top.
     mkDarwinHost = {
       system,
       user,
-      configPath,
+      modules ? [],
+      # Extra nixpkgs overlays, applied after this repo's own (private packages).
+      overlays ? [],
+      # Merged into specialArgs after the defaults (e.g. { privateInputs = inputs; }).
+      extraSpecialArgs ? {},
+      # Import darwinModules.default (sensible + home-manager + applications).
+      framework ? true,
     }: let
       machineType = "darwin";
       me = {inherit user;};
     in
       inputs.darwin.lib.darwinSystem {
         inherit system;
-        specialArgs = {
-          inherit inputs me machineType;
-          utils = import ./modules/flake-parts/utils.nix {
-            inherit me machineType;
-            inherit (inputs.nixpkgs-unstable) lib;
-          };
-        };
-        modules = [
-          configPath
-          ./modules/flake-parts/common.nix
-          (nixpkgsModule system)
-        ];
+        specialArgs =
+          {
+            inherit inputs me machineType;
+            utils = import ./modules/flake-parts/utils.nix {
+              inherit me machineType;
+              inherit (inputs.nixpkgs-unstable) lib;
+            };
+          }
+          // extraSpecialArgs;
+        modules =
+          lib.optional framework inputs.self.darwinModules.default
+          ++ [(nixpkgsModule system overlays)]
+          ++ modules;
       };
   in
     inputs.flake-parts.lib.mkFlake {inherit inputs;} {
@@ -89,7 +106,7 @@
       systems = ["aarch64-darwin" "aarch64-linux"];
 
       perSystem = {system, ...}: {
-        _module.args.pkgs = pkgsFor system;
+        _module.args.pkgs = pkgsFor system [];
       };
 
       flake = {
@@ -106,19 +123,33 @@
 
         darwinModules = {
           sensible = ./modules/darwin/sensible.nix;
+          # The whole framework in one module; mkDarwinHost imports it unless
+          # called with `framework = false`.
+          default = {
+            imports = [
+              ./modules/darwin/sensible.nix
+              ./modules/home-manager/darwin.nix
+              ./modules/applications
+            ];
+          };
+        };
+
+        # Library for downstream flakes. The private dotfiles repo imports this
+        # flake as `dotfiles` and defines every real host through
+        # `inputs.dotfiles.lib.mkDarwinHost`; this repo itself ships no real
+        # host.
+        lib = {
+          inherit mkDarwinHost;
         };
 
         darwinConfigurations = {
-          personal = mkDarwinHost {
+          # Fixture, not a machine: a synthetic host that exercises the whole
+          # module set so `nix run .#test example` type-checks it and so
+          # readers can see how a host is written.
+          example = mkDarwinHost {
             system = "aarch64-darwin";
-            user = "hackerman";
-            configPath = ./configurations/personal-darwin.nix;
-          };
-
-          voze = mkDarwinHost {
-            system = "aarch64-darwin";
-            user = "grady-saccullo";
-            configPath = ./configurations/voze-darwin.nix;
+            user = "example";
+            modules = [./hosts/example];
           };
         };
       };

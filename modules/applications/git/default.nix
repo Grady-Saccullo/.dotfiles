@@ -1,7 +1,6 @@
 {
   utils,
   config,
-  lib,
   pkgs,
   ...
 }: let
@@ -11,27 +10,17 @@ in
     path = "git";
     inherit config;
     default = true;
-    extraOptions = {
-      username = lib.mkOption {
-        type = lib.types.str;
-        default = "Grady Saccullo";
-      };
-      email = lib.mkOption {
-        type = lib.types.str;
-        default = "gradys.dev@gmail.com";
-      };
-    };
   } (cfg:
-    utils.mkHomeManagerUser {
-      home.packages = [pkgs.unstable.git-filter-repo];
+    (utils.mkHomeManagerUser {
+      home.packages = [pkgs.git-filter-repo];
       programs = {
         git = {
           enable = true;
-          package = pkgs.unstable.git;
+          package = pkgs.git;
           settings = {
             user = {
-              email = cfg.email;
-              name = cfg.username;
+              email = config.identity.email;
+              name = config.identity.name;
             };
           };
           lfs.enable = true;
@@ -41,9 +30,22 @@ in
           enableGitIntegration = true;
           options.pager = "less -R --mouse";
         };
-        zsh = lib.mkIf config.applications.zsh.enable {
-          shellAliases = gitAliases.aliases;
-          initContent = gitAliases.initContent;
-        };
       };
+    })
+    // {
+      # Aliases and the branch-detection functions go to the shell-agnostic
+      # `shell.*` bus (see modules/shell/README.md); whichever shell module is
+      # enabled (zsh today) installs them, so nothing here gates on zsh.
+      shell.aliases = gitAliases.aliases;
+      shell.init.git = gitAliases.initContent;
+
+      # Read-only git subcommands AI tools may run without a prompt (the
+      # `ai.*` bus, see modules/ai/README.md).
+      ai.permissions.allow = [
+        "Bash(git status:*)"
+        "Bash(git log:*)"
+        "Bash(git diff:*)"
+        "Bash(git show:*)"
+        "Bash(git branch:*)"
+      ];
     })

@@ -1,13 +1,9 @@
 {inputs, ...}: let
-  stableOverlay = import ./stable.nix {inherit inputs;};
-  unstableOverlay = import ./unstable.nix {inherit inputs;};
-  yamlLanguageServerOverlay = import ./yaml-language-server.nix;
+  channelsOverlay = import ./channels.nix {inherit inputs;};
   weztermOverlay = import ./wezterm.nix {inherit inputs;};
   llmAgentsOverlay = inputs.llm-agents.overlays.shared-nixpkgs;
 in
   final: prev:
-    (stableOverlay final prev)
-    // (unstableOverlay final prev)
-    // (yamlLanguageServerOverlay final prev)
+    (channelsOverlay final prev)
     // (weztermOverlay final prev)
     // (llmAgentsOverlay final prev)

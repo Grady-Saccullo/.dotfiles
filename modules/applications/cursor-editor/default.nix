@@ -11,7 +11,7 @@ utils.mkAppModule {
   extraOptions = {
     package = lib.mkOption {
       type = lib.types.package;
-      default = pkgs.unstable.code-cursor;
+      default = pkgs.code-cursor;
     };
   };
 } (cfg:

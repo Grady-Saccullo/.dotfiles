@@ -15,12 +15,13 @@ local tabline = wezterm.plugin.require("https://github.com/michaelbrusegard/tabl
 local wezterm = require("wezterm")
 local config = wezterm.config_builder and wezterm.config_builder() or {}
 
--- Wezsesh (toggled via nix: applications.wezterm.wezsesh.enable -> WEZSESH_ENABLED)
+-- Wezsesh (via nix: applications.wezterm.wezsesh.enable -> WEZSESH_ENABLED,
+-- applications.wezterm.wezsesh.root -> WEZSESH_ROOT)
 local wezsesh = nil
 local wezsesh_binary = nil
 if WEZSESH_ENABLED then
-	local wezsesh_root = "/Users/hackerman/code/grady-saccullo/wezsesh/plugin"
-	wezsesh_binary = "/Users/hackerman/code/grady-saccullo/wezsesh/wezsesh"
+	local wezsesh_root = WEZSESH_ROOT .. "/plugin"
+	wezsesh_binary = WEZSESH_ROOT .. "/wezsesh"
 
 	package.path = wezsesh_root
 		.. "/?.lua;"

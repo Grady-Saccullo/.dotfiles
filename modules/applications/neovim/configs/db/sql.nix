@@ -7,13 +7,22 @@
 utils.mkNeovimModule {
   inherit config pkgs;
   path = ["db" "sql"];
+  extraConfig = _: {
+    ai.lspServers.sql = {
+      command = "${pkgs.sqls}/bin/sqls";
+      extensionToLanguage = {
+        ".sql" = "sql";
+      };
+      description = "sql language server for AI tools";
+    };
+  };
 } ({
   vimPlugins,
   cfg,
 }: let
-  sqls-nvim = pkgs.unstable.vimUtils.buildVimPlugin {
+  sqls-nvim = pkgs.vimUtils.buildVimPlugin {
     name = "sqls.nvim";
-    src = pkgs.unstable.fetchFromGitHub {
+    src = pkgs.fetchFromGitHub {
       owner = "nanotee";
       repo = "sqls.nvim";
       rev = "d1bc5421ef3e8edc5101e37edbb7de6639207a09";
@@ -27,7 +36,7 @@ in {
   ];
 
   extraPackages = [
-    pkgs.unstable.sqls
+    pkgs.sqls
   ];
 
   initLua = ''

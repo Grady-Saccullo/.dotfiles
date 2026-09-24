@@ -12,7 +12,7 @@ utils.mkAppModule {
     settings = lib.mkOption {
       type = lib.types.attrs;
       default = {};
-      description = "Attrset forwarded to nix-darwin's services.aerospace.settings. Per-host configs live under configurations/<host>-configs/aerospace.nix.";
+      description = "Attrset forwarded to nix-darwin's services.aerospace.settings; set by the host module (see hosts/<host>/aerospace.nix).";
     };
   };
 } (cfg:
@@ -20,7 +20,7 @@ utils.mkAppModule {
       darwin = {
         services.aerospace = {
           enable = true;
-          package = pkgs.unstable.aerospace;
+          package = pkgs.aerospace;
           inherit (cfg) settings;
         };
       };
