@@ -87,8 +87,9 @@ and re-exports the scripts, so `nix run .#switch <host>` works from there:
 }
 ```
 
-A host module is a normal nix-darwin module that turns apps on and sets options.
-[`hosts/example/default.nix`](hosts/example/default.nix) is a complete one.
+A host module is a normal nix-darwin module that turns apps on and sets options. For a complete
+flake with every framework input and a realistic machine to start from, see
+[`hosts/example`](hosts/README.md).
 
 `mkDarwinHost` arguments:
 
@@ -212,7 +213,7 @@ it back to `0600`.
 | --- | --- |
 | `flake.nix` | Inputs, `lib.mkDarwinHost` and the `example` test host. |
 | `apps/` | The `switch`, `test`, `update` and `format` scripts, run with `nix run .#<name>`. |
-| `hosts/example/` | The test host. It turns on a representative set of apps so `nix run .#test example` checks them, and shows how a host is written. |
+| `hosts/example/` | A complete example: `flake.nix` uses the framework the way your own flake would, and `default.nix` is the machine. This repo also builds `default.nix` as its test (`nix run .#test example`). See [hosts/README.md](hosts/README.md). |
 | `modules/applications/` | One directory per app. See [App modules](#app-modules). |
 | `modules/{ai,browser,identity,secrets,shell}/` | The [shared settings](#shared-settings). |
 | `modules/darwin/sensible.nix` | macOS defaults and the Homebrew setup. |
