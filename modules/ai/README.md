@@ -238,4 +238,4 @@ that share extensions with a primary one (htmx-lsp on `.html`, biome on
   ```
 
   Nothing in this repo needs to know which entries came from where. See the
-  root README "Using the framework".
+  root README "Setting up your own machines".

@@ -2,80 +2,74 @@
   <img src="background.png" alt="dotfiles" />
 </p>
 
-## Getting Started
-- Have a valid nix installation (nix/nixos)
-- Create a nix shell with necessary tooling for initial setup: `nix-shell -p gnumake git`.
-- Clone repo
-- [Set up Cachix](#cachix) (required for private cache access)
-- This repo builds only the synthetic `example` host, a fixture that type-checks the module set
-  (`nix run .#test example`); it is not a machine. Real hosts are defined in a flake that consumes
-  this one, see [Using the framework](#using-the-framework).
-- From that flake, run `nix run .#switch <host>`
+# dotfiles
 
-## Cachix
+Nix configuration for my Macs, packaged as a reusable framework. It uses
+[nix-darwin](https://github.com/LnL7/nix-darwin) and
+[home-manager](https://github.com/nix-community/home-manager) to install apps and CLI tools, write
+their config files and set macOS system preferences, so a machine can be rebuilt from scratch with
+one command.
 
-A private [Cachix](https://cachix.org) binary cache (`grady-saccullo.cachix.org`) is used to
-avoid redundant builds across machines. When you run `nix run .#switch`, Nix checks this cache
-(along with the public `nix-community` and `numtide` caches) for pre-built derivations before
-building from source. After a successful switch, the build output is pushed back to the cache
-so other machines can pull it.
+This repo is the shared, public part. It does not define any real machine. Real machines live in a
+separate flake that imports this one, turns on the apps it wants and adds anything that should not
+be public. The only machine defined here is `example`, a test host used to check that everything
+still builds.
 
-This cache is configured in `flake.nix`'s `nixConfig`, scoped to this flake — **not** in the
-machine-wide `nix.settings` (`modules/shared/nix.nix`, which keeps only the public caches). As
-a global substituter it leaked into every unrelated `devenv` project, whose cache probe hits
-this private cache unauthenticated and emits `HTTP error 401` warnings. Flake-scoping confines
-it to operations on this flake.
+## What it provides
 
-Because the cache is private, Nix needs credentials to fetch from it. Nix supports
-this through a [netrc](https://everything.curl.dev/usingcurl/netrc) file — the same format
-`curl` uses for HTTP authentication. Nix reads this file and attaches the credentials
-when making requests to the cache.
+- **App modules** (`modules/applications/`). One module per app or tool: terminal, editor, shell,
+  git, browsers, password managers, AI coding tools and more. A host turns one on with a single
+  line such as `applications.wezterm.enable = true;`. The module installs the app (from nixpkgs, a
+  Homebrew cask or the Mac App Store) and sets up its config.
+- **macOS defaults** (`modules/darwin/sensible.nix`). Nix settings (flakes, weekly garbage
+  collection), Homebrew managed through nix-homebrew with pinned taps, Touch ID for `sudo`, zsh as
+  the login shell, and preferences for the Dock, Finder, trackpad and keyboard.
+- **Shared settings between apps** (`modules/{ai,browser,identity,secrets,shell}/`). Values that
+  several apps need are set once and picked up by the app that uses them: your name and email
+  (git, jj), shell aliases (zsh), browser extensions (Brave), AI tool setup (Claude Code) and how
+  secrets are fetched at runtime. See [Shared settings](#shared-settings).
+- **`lib.mkDarwinHost`**, the function your own flake calls to build a Mac from all of the above.
+- **Scripts** to build, test and update a machine: `nix run .#switch`, `test`, `update` and
+  `format`.
 
-### Setup
+It targets macOS on Apple Silicon. The modules have Linux and NixOS branches, but there is no host
+builder for those yet.
 
-Create the netrc file with your Cachix auth token (found on the
-[Cachix dashboard](https://app.cachix.org)):
+## Quick start
+
+To work on the framework itself:
 
 ```bash
-sudo sh -c 'umask 022; cat > /etc/nix/netrc << EOF
-machine grady-saccullo.cachix.org password <CACHIX_AUTH_TOKEN>
-EOF'
-sudo chmod 0644 /etc/nix/netrc
+git clone https://github.com/Grady-Saccullo/.dotfiles ~/.dotfiles
+cd ~/.dotfiles
+nix run .#test example     # build the test host and run a darwin-rebuild check
+nix run .#format           # format the Nix files with alejandra
 ```
 
-This tells Nix: when connecting to `grady-saccullo.cachix.org`, authenticate with the given
-token. The file lives at `/etc/nix/netrc` so it works on both macOS and Linux without any
-path differences.
+To set up a real machine, create your own flake that uses this one (next section), then run
+`nix run .#switch <host>` from that flake. You need Nix with flakes enabled. To use the binary
+cache, [set up Cachix](#binary-cache-cachix) first.
 
-The mode is `0644` (not `0600`) on purpose: during `nix run .#switch`, Nix queries this cache
-both as root (the `nix-darwin` daemon) and as your user (flake evaluation / substituter
-probing). If the file is only root-readable, the user-side queries can't authenticate and the
-private cache returns `HTTP 401` warnings. A read-only token for a personal cache at `0644` on
-a single-user machine is a negligible exposure — do not "harden" this back to `0600`.
+## Setting up your own machines
 
-## Using the framework
-
-This repo is a framework: the application module set, the option buses, `lib.mkDarwinHost` and
-the `apps/*` scripts. Its only `darwinConfiguration` is the synthetic `example` fixture
-(`hosts/example/default.nix`). Real hosts are defined in a flake that takes this one as input
-`dotfiles`, builds each host with `lib.mkDarwinHost` and re-exports the apps, so
-`nix run .#switch <host>` runs from there. Anything that must not be public (internal skills, MCP
-servers, vault *references*) belongs in that flake; secret *values* belong in no repo and are read
-at runtime through the [`secrets.*` bus](#modulessecrets).
+Your flake takes this repo as the input `dotfiles`, defines each machine with `lib.mkDarwinHost`
+and re-exports the scripts, so `nix run .#switch <host>` works from there:
 
 ```nix
 {
   inputs = {
     dotfiles.url = "github:Grady-Saccullo/.dotfiles";
-    # One `follows` per input in the framework's flake.nix, each mirrored below with the same URL
-    # and nested follows: … darwin, nix-homebrew, homebrew-core, homebrew-cask, flake-parts.
+
+    # Pin the framework's inputs in your own lock: one `follows` line for every input in the
+    # framework's flake.nix (also darwin, nix-homebrew, homebrew-core, homebrew-cask and
+    # flake-parts), each declared below with the same URL.
     dotfiles.inputs.nixpkgs-unstable.follows = "nixpkgs-unstable";
     dotfiles.inputs.home-manager.follows = "home-manager";
     nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     home-manager.url = "github:nix-community/home-manager/master";
     home-manager.inputs.nixpkgs.follows = "nixpkgs-unstable";
 
-    # App sources are the consumer's own inputs.
+    # Extra package sources are your own inputs, not the framework's.
     llm-agents.url = "github:numtide/llm-agents.nix";
     nixpkgs-26_05.url = "github:NixOS/nixpkgs/nixos-26.05";
   };
@@ -93,199 +87,161 @@ at runtime through the [`secrets.*` bus](#modulessecrets).
 }
 ```
 
-| `mkDarwinHost` argument | |
+A host module is a normal nix-darwin module that turns apps on and sets options.
+[`hosts/example/default.nix`](hosts/example/default.nix) is a complete one.
+
+`mkDarwinHost` arguments:
+
+| Argument | What it does |
 | --- | --- |
-| `system`, `user` | platform, and the primary user (`me.user` in modules) |
-| `modules` | host modules, evaluated alongside the framework's |
-| `overlays` | applied after this repo's overlays; how a consumer adds packages to `pkgs` |
-| `channels` | release nixpkgs sources, exposed as `pkgs.channels.<name>` (see [`/overlays`](#overlays)) |
-| `extraSpecialArgs` | merged over the default module arguments (`inputs`, `me`, `machineType`, `utils`) |
-| `framework` | `false` skips `darwinModules.default` (sensible + home-manager + applications) |
+| `system`, `user` | Platform and the main user account (`me.user` inside modules). |
+| `modules` | Your host modules, loaded together with the framework's. |
+| `overlays` | Extra nixpkgs overlays, applied after the framework's. Use this to add packages to `pkgs`. |
+| `channels` | Other nixpkgs releases, available as `pkgs.channels.<name>`. See [Choosing an app's version](#choosing-an-apps-version). |
+| `extraSpecialArgs` | Extra module arguments. They override the defaults (`inputs`, `me`, `machineType`, `utils`). |
+| `framework` | Set to `false` to skip the framework's modules and use only your own. |
 
-`inputs` in module arguments is this repo's inputs, not the consumer's; a consumer whose modules
-need its own passes them through `extraSpecialArgs` under another name.
+`inputs` inside modules is the framework's inputs, not yours. If your modules need your flake's
+inputs, pass them through `extraSpecialArgs` under a different name.
 
-### Versions
+Keep anything that should not be public (internal tools, MCP servers, password manager references)
+in your own flake. Secret values do not go in any repo; see [Secrets](#secrets).
 
-With the `follows` above, the consumer's lock pins nixpkgs, home-manager, nix-darwin and the rest:
-bumping them is `nix run .#update` there, with no change here, and this repo's `flake.lock` only
-pins the `example` fixture. An input declared here that the consumer does not follow stays on this
-lock and only moves when `dotfiles` is bumped.
+### Updating versions
 
-Which build an app gets is the host's choice. Every module that installs a Nix package exposes
-`applications.<app>.package`, defaulting to the nixpkgs-unstable attribute, so a host can point it
-at a release channel or at a package its flake overlays in:
+With the `follows` lines above, your flake's `flake.lock` decides which nixpkgs, home-manager and
+nix-darwin you get. To update, run `nix run .#update` in your flake and pick what to bump. Nothing
+changes in this repo. This repo's own `flake.lock` is only used by the `example` test host.
+
+If the framework adds an input that your flake does not follow, everything still works, but that
+input stays at the version in the framework's lock and only moves when you bump `dotfiles`.
+
+### Choosing an app's version
+
+By default every app comes from nixpkgs-unstable. Each module that installs a Nix package has a
+`package` option, so a host can use a different build without changing the module:
 
 ```nix
 {pkgs, ...}: {
+  # From an older, stable nixpkgs release passed in as `channels.v26_05`.
   applications.github-cli.package = pkgs.channels.v26_05.gh;
+  # From a third-party package set added through `overlays`.
   applications.claude-code.package = pkgs.llm-agents.claude-code;
 }
 ```
 
-That keeps this repo's inputs to what its code is built on: nightlies, release pins and third-party
-package sets are the consumer's inputs and never need a change here.
+That is why the framework has no inputs for nightly builds or version pins: they are your flake's
+choice and never need a change here.
+
+When pinning, prefer a versioned package in nixpkgs-unstable (for example `go_1_23`) and only use a
+release channel when none exists. Channels are only loaded when something uses them, and they do
+not include your overlays. Keep language toolchains in each project's devenv or flake rather than
+in the system.
 
 ### Changing the framework
 
 ```bash
-cd ~/.dotfiles && git add -A && git commit -m "..."    # 1. change the framework here
-cd <consumer> && nix run .#switch <host> -- --local    # 2. test against ~/.dotfiles
+cd ~/.dotfiles && git add -A && git commit -m "..."    # 1. change the framework
+cd <your flake> && nix run .#switch <host> -- --local  # 2. test it against ~/.dotfiles
 cd ~/.dotfiles && git push                             # 3. publish
-cd <consumer> && nix run .#update                      # 4. pick `dotfiles`
-nix run .#switch <host>                                # 5. switch normally
+cd <your flake> && nix run .#update                    # 4. pick `dotfiles`
+nix run .#switch <host>                                # 5. switch as usual
 ```
 
-`--local` (or `DOTFILES_LOCAL=<path>`) makes `apps/switch` and `apps/test` resolve the local
-checkout to a store path once, as your user, and point both the user-side build and the root-side
-`darwin-rebuild` at it with `--override-input dotfiles`; `flake.lock` is left untouched. Only
-tracked files are seen (`git+file:`), and root never runs git in a user-owned repo.
+`--local` (or `DOTFILES_LOCAL=<path>`) builds against your local checkout instead of the pushed
+version, without touching `flake.lock`. Only files tracked by git are used, and the checkout is
+copied into the Nix store first, so the part of the switch that runs as root never runs git inside
+your home directory.
 
-## Project Structure
+## Shared settings
 
-### `/apps`
-Contains scripts available within a nix develop shell.
+Some settings are needed by more than one app. Instead of apps writing into each other's config,
+each of these option sets can be filled in by any module that has something to add, and is read by
+the one module that turns it into real config files. Hosts can turn off a single entry
+(`ai.skills.jj-gh-pr.enable = false;`) or replace one with `lib.mkForce`.
 
-Run with `nix run .#<command>`.
+| Options | Filled in by | Read by | Holds |
+| --- | --- | --- | --- |
+| `ai.*` | app modules, files in `modules/ai/`, hosts | claude-code (MCP servers via `modules/ai/mcp.nix`) | skills, agents, commands, rules, hooks, plugins, `CLAUDE.md` context, MCP and LSP servers |
+| `browser.*` | 1password, bitwarden, raycast | brave | browser extensions to install |
+| `identity.*` | hosts | git, jj | your name and email (the defaults are the author's, so set these) |
+| `secrets.*` | hosts | apps that need a token at startup | which password manager CLI to use (`op`, `rbw` or `bw`) |
+| `shell.*` | git, jj | zsh | shell aliases and startup snippets |
 
-- `switch`: build and switch configuration, outputs package changes, and pushes to cachix
-- `test`: test the current configuration without switching
-- `format`: format the repo with [alejandra](https://github.com/kamadorueda/alejandra)
-- `update`: interactively select flake inputs to update via fzf
+Each one has a README with the full option list: [ai](modules/ai/README.md),
+[browser](modules/browser/README.md), [identity](modules/identity/README.md),
+[secrets](modules/secrets/README.md) and [shell](modules/shell/README.md).
 
-### `/hosts`
-One directory per host, `hosts/<name>/default.nix`. This repo ships only `hosts/example`, a
-synthetic host that is not a real machine: it enables a representative set of modules so
-`nix run .#test example` type-checks the whole module set, and it shows how a host is written.
+### Secrets
 
-### `/modules/applications`
-Contains all of the shared "applications" which can be turned on through `.enable`. The reasoning
-for this style was so that I could easily share a given "application" between multiple machine
-types (`darwin`, `nixos`, or `linux` which is just any other distro not nixos). I wasn't a fan of
-how many configs spread applications to be shared across multiple files and felt this made
-upkeep more painful so this was my solution. Even though this is called application it contains
-anything from gui apps to cli tooling.
+This repo is public, everything in the Nix store is readable by every user on the machine, and
+`nix run .#switch` uploads the built system to a binary cache. So secret values never go into Nix.
+Config holds a reference instead (for example `{ secret = "op://Vault/item/field"; }`), and a small
+wrapper script reads the real value from your password manager when the program starts. Modules
+build that wrapper with `utils.secrets.mkEnvWrapper`.
 
-Application modules never write to another application's home-manager options; anything one app
-wants to hand to another goes through the option buses described next, and GUI apps expose
-read-only `applications.<app>.path` and `applications.<app>.bundleId` for other modules and host
-configs to reference.
+## Binary cache (Cachix)
 
-Every module that installs a Nix package declares `applications.<app>.package` with
-`lib.mkPackageOption` and installs that, never a hard-coded `pkgs.<attr>`, so a host can swap the
-build without touching the module (see [Versions](#versions)). Modules that only install a
-Homebrew cask or Mac App Store app have none.
+`grady-saccullo.cachix.org` is a private [Cachix](https://cachix.org) cache for built packages, so
+a machine does not rebuild what another one already built. `nix run .#switch` downloads from it
+(along with the public `nix-community` and `numtide` caches) and uploads the new build afterwards.
 
-Neovim has its own sub-module system under `configs/` for per-language/plugin support.
+The cache is set in the flake's `nixConfig`, not in the machine-wide Nix settings. As a
+machine-wide setting it was also used by unrelated projects, which then printed `HTTP error 401`
+warnings because they had no credentials. A flake that uses this framework needs the same
+`nixConfig` block, because Nix only reads it from the flake you run.
 
-**Option buses.** The five `/modules/{ai,browser,identity,secrets,shell}` directories below are
-not applications but cross-cutting nix-darwin option sets, each a small module (`options.nix`,
-`default.nix`, `README.md`) that declares tool-agnostic options and nothing else. The rule is
-write-many/read-one: any number of modules may *set* a bus's options, but exactly one kind of
-consumer *reads* it and only that consumer writes to home-manager for that concern (claude-code
-for `ai.*`, brave for `browser.*`, the VCS tools for `identity.*`, secret-wrapping launchers for
-`secrets.*`, zsh for `shell.*`). The graph stays acyclic and a second consumer can be added
-without touching any contributor. All five are imported once from
-`modules/applications/default.nix`, so they exist whenever application modules do. Named bus
-entries default to `enable = true` and hosts opt out per entry (`ai.skills.jj-gh-pr.enable =
-false;`); plain-string entries are overridden with `lib.mkForce`.
+Nix logs in to the cache with a netrc file. Create it with your Cachix auth token (from the
+[Cachix dashboard](https://app.cachix.org)):
 
-### `/modules/ai`
-The tool-agnostic `ai.*` option bus for AI tooling:
-`ai.{skills,agents,commands,rules,hooks,plugins,context,mcpServers,lspServers}` — skills, agents,
-commands, rules, hooks, plugins, user-level `CLAUDE.md` context, MCP servers, and LSP servers.
-
-Writers (they only set `ai.*` options):
-- application modules that own an AI contribution: `jj` registers its `jj-gh-pr` skill and
-  `jj-pre-edit-warning` hook; each neovim language module registers an `ai.lspServers` entry
-  through `mkNeovimModule`'s `extraConfig`, reusing the language server neovim already installs
-- shared content under `modules/ai/{skills,agents,commands,rules}/`, auto-registered by
-  `content.nix`
-- host modules (the `example` fixture here, or a consuming flake's hosts) — per-host overrides
-  and content that must not be public (internal MCP servers and skills, vault references); see
-  [Using the framework](#using-the-framework)
-
-Consumers (the only modules that write to home-manager's AI options):
-- the `claude-code` application module — materializes the bus into `~/.claude/` and
-  `managed-settings.json`
-- other tools (codex, opencode, …) later, reading the same bus
-
-Secret env values on MCP servers are written as `{ secret = "op://…"; }` references and resolved
-at runtime through the [`secrets`](#modulessecrets) bus when the server is spawned; no value ever
-enters Nix. Full option reference and how-tos in [`modules/ai/README.md`](modules/ai/README.md).
-
-### `/modules/browser`
-The `browser.*` extension bus. An application that ships a browser extension declares it once as
-`browser.extensions.chromium.<name> = { enable, id, description }` (writers today: `1password`,
-`bitwarden`, `raycast`); the `brave` module reads the bus and installs every enabled entry, and a
-future Chromium-based browser would consume it unchanged. It replaces the `common.browserExtensions`
-set that lived in the now-deleted `modules/flake-parts/common.nix`. Safari has no equivalent yet
-(its extensions are App Store apps). Details in [`modules/browser/README.md`](modules/browser/README.md).
-
-### `/modules/identity`
-The `identity.*` bus: `identity.name` and `identity.email`, declared once per host and read by
-every tool that attributes work to the user — `git` and `jj` today, `gh` and AI context later.
-The defaults are the author's name and personal address; a host overrides `identity.email` in one
-line and every consumer follows. Details in
-[`modules/identity/README.md`](modules/identity/README.md).
-
-### `/modules/secrets`
-The `secrets.*` bus: `secrets.backend` (`op`, `rbw`, or `bw`) and the derived `secrets.readCommand`,
-which any module that needs a token at launch reads instead of hard-coding a CLI. The rule it
-enforces: this repo is public, the Nix store is world-readable and `apps/switch` pushes the whole
-closure to Cachix, so secret *values* are only ever read at runtime and Nix holds references
-(`op://…`) alone. Consumers wrap their program with `utils.secrets.mkEnvWrapper`, which resolves
-the references and `exec`s the real binary. Details in [`modules/secrets/README.md`](modules/secrets/README.md).
-
-### `/modules/shell`
-The `shell.*` bus: `shell.aliases.<name>` and `shell.init.<name>` (functions, completions,
-environment), set by app modules (`git`, `jj`) and read by whichever shell modules are enabled —
-`zsh` today, where bus aliases win over zsh's own on a name clash and init snippets are appended
-in attribute-name order; a future `fish` module would consume the same two options. There is no
-per-entry `enable`; hosts drop a snippet with `lib.mkForce ""`. Details in
-[`modules/shell/README.md`](modules/shell/README.md).
-
-### `/modules/darwin`
-Contains shared darwin configurations to be pulled into host modules through the `darwinModules`
-set in the root flake.nix. Currently only contains `sensible`.
-
-### `/modules/shared`
-Contains shared configurations across all platforms. Currently holds shared nix settings.
-
-### `/modules/flake-parts`
-Contains shared options/imports for the root flake.nix to be used with flake-parts (`flake.nix`,
-`apps.nix`, `devshells.nix`). `flake.nix` declares the extra flake outputs — `homeManagerModules`,
-`darwinModules`, `constants`, `applications` and `lib` (functions for consuming flakes); the
-root `flake.nix` fills `lib.mkDarwinHost` (see [Using the framework](#using-the-framework)). `utils.nix`
-is not really flake-parts specific and probably needs to be refactored out; it holds the module helpers: `mkAppModule`, `mkNeovimModule` (whose
-`extraConfig` parameter lets language modules contribute darwin-level options such as
-`ai.lspServers`), the bus helpers `enabled` / `content`, and `secrets.mkEnvWrapper`.
-
-### `/modules/home-manager`
-Contains shared per platform home-manager configurations to be pulled into host modules
-through the `homeManagerModules` set in the root flake.nix. Currently only contains `darwin`.
-
-### `/overlays`
-Overlays applied to the base package set. `pkgs` is nixpkgs-unstable (darwin needs the moving
-channel) and modules reference packages as plain `pkgs.<attr>`. A consuming flake adds its own
-through `mkDarwinHost`'s `overlays`, which apply after these.
-
-`pkgs.channels.<name>` (`overlays/channels.nix`) is one full nixpkgs per entry in `mkDarwinHost`'s
-`channels`, for pinning a single package to a release while everything else follows unstable:
-
-```nix
-channels.v26_05 = inputs.nixpkgs-26_05;   # -> pkgs.channels.v26_05.gh
+```bash
+sudo sh -c 'umask 022; cat > /etc/nix/netrc << EOF
+machine grady-saccullo.cachix.org password <CACHIX_AUTH_TOKEN>
+EOF'
+sudo chmod 0644 /etc/nix/netrc
 ```
 
-Rule of thumb: prefer a versioned attribute in base `pkgs` (`go_1_23`), fall back to a channel
-pin only when none exists, and keep language toolchains in project devenv files rather than in
-the system. Channel sets are lazy (imported only when referenced) and carry no overlays, so a
-package that only an overlay provides does not exist under `pkgs.channels.*`.
+The file has to be readable by your user as well as root (mode `0644`, not `0600`). A switch talks
+to the cache both as root and as your user, and with `0600` the user side gets `HTTP 401` errors.
+For a read-only token on a single-user machine that is an acceptable trade-off, so do not tighten
+it back to `0600`.
 
----
-##### Notes
+## Repository layout
 
-A lot of initial inspiration for my config came
-from [dustinlyons/nixos-config](https://github.com/dustinlyons/nixos-config/tree/main)
-and [mitchellh/nixos-config](https://github.com/mitchellh/nixos-config/tree/main).
-Highly recommend looking into these repos if you are just getting into nix.
+| Path | Contents |
+| --- | --- |
+| `flake.nix` | Inputs, `lib.mkDarwinHost` and the `example` test host. |
+| `apps/` | The `switch`, `test`, `update` and `format` scripts, run with `nix run .#<name>`. |
+| `hosts/example/` | The test host. It turns on a representative set of apps so `nix run .#test example` checks them, and shows how a host is written. |
+| `modules/applications/` | One directory per app. See [App modules](#app-modules). |
+| `modules/{ai,browser,identity,secrets,shell}/` | The [shared settings](#shared-settings). |
+| `modules/darwin/sensible.nix` | macOS defaults and the Homebrew setup. |
+| `modules/home-manager/darwin.nix` | home-manager setup for macOS. |
+| `modules/shared/nix.nix` | Nix settings every machine gets. |
+| `modules/flake-parts/` | Extra flake outputs, the dev shell, the script wiring, and `utils.nix` (helpers the modules use). |
+| `overlays/` | Changes to the package set, currently `pkgs.channels`. |
+| `templates/` | Project templates (a Zig flake). |
+
+### App modules
+
+Each app lives in `modules/applications/<name>/default.nix` and is built with `utils.mkAppModule`,
+which adds the `applications.<name>.enable` option and only applies the module's config when it
+is on. `utils.mkPlatformConfig` lets one module hold separate macOS, Linux and NixOS config.
+
+Conventions:
+
+- Install the module's `package` option (declared with `lib.mkPackageOption`), never a hard-coded
+  `pkgs.<name>`, so hosts can swap the build. Apps installed only as a Homebrew cask or from the
+  Mac App Store have no `package` option.
+- Never write to another app's config. Share values through the
+  [shared settings](#shared-settings) instead.
+- GUI apps expose read-only `applications.<name>.path` and `applications.<name>.bundleId`, so other
+  modules and hosts can refer to them, for example in window manager rules.
+- Neovim has its own sub-modules under `neovim/configs/`, one per language or plugin.
+
+## Credits
+
+A lot of the initial inspiration came from
+[dustinlyons/nixos-config](https://github.com/dustinlyons/nixos-config/tree/main) and
+[mitchellh/nixos-config](https://github.com/mitchellh/nixos-config/tree/main). Both are worth a
+look if you are just getting into Nix.

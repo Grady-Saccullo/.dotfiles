@@ -1,7 +1,7 @@
 # Synthetic host: not a real machine. It exists so `nix run .#test example`
 # type-checks the whole module set and so readers can see how a host is
 # written. Real hosts live in flakes that consume this one; see README
-# "Using the framework".
+# "Setting up your own machines".
 #
 # The framework (sensible, home-manager, applications and the option buses)
 # is supplied by `lib.mkDarwinHost` in flake.nix; a host module holds only
@@ -65,7 +65,7 @@
     brave.enable = true;
     claude-code.enable = true;
     # Swapping an app's build; the source reaches `pkgs` through mkDarwinHost's `channels` or
-    # `overlays` (README "Using the framework"). Commented out to keep the fixture on unstable.
+    # `overlays` (README "Choosing an app's version"). Commented out to keep the fixture on unstable.
     # cursor-editor.package = pkgs.channels.v26_05.code-cursor;
     # claude-code.package = pkgs.llm-agents.claude-code;
     discord.enable = true;

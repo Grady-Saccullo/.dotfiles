@@ -14,7 +14,7 @@ if [[ "${1:-}" == "--local" ]]; then
 fi
 
 # `--local`: swap the `dotfiles` input for that checkout, resolved to a store path once as the user
-# so root never runs git in a user-owned repo (README "Using the framework").
+# so root never runs git in a user-owned repo (README "Changing the framework").
 override=()
 if [[ -n "${DOTFILES_LOCAL:-}" ]]; then
 	if jq -e '.nodes[.root].inputs.dotfiles' flake.lock >/dev/null 2>&1; then
