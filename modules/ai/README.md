@@ -11,7 +11,7 @@ it onto home-manager's per-tool options.
 ```
 app modules (jj, neovim, …)            ─┐
 modules/ai/content.nix (shared dirs)    ├─ SET ──▶ ai.*
-the host module (private repo)         ─┘            │
+host modules                           ─┘            │
                                                      │ READ
                                                      ├──▶ modules/ai/mcp.nix        ──▶ HM programs.mcp.*
                                                      ├──▶ applications.claude-code  ──▶ HM programs.claude-code.*
@@ -148,8 +148,8 @@ no tool-specific wiring.
 
 ## Host overrides
 
-The host module (private repo) is a regular module and sets the same
-options as any other contributor:
+A host module is a regular module and sets the same options as any other
+contributor:
 
 ```nix
 {...}: {
@@ -222,16 +222,14 @@ that share extensions with a primary one (htmx-lsp on `.html`, biome on
   closure to Cachix.** A secret value that becomes a Nix string leaves the
   machine. Only references (`op://…`, file paths) may appear in Nix; values
   are resolved at runtime by the wrapper above.
-* **Sensitive declarations live in the private dotfiles repo**
-  (github.com/Grady-Saccullo/.dotfiles-private, cloned at
-  `~/.dotfiles-private`), which consumes this flake as input `dotfiles` and
-  builds every real host with `inputs.dotfiles.lib.mkDarwinHost`. Its host
-  modules are evaluated inside the same module system as the public ones and
-  simply set the same `ai.*` (and `secrets.*`, `identity.*`, …) options:
+* **Sensitive declarations live in the flake that consumes this one** and
+  builds its hosts with `inputs.dotfiles.lib.mkDarwinHost`. Its host modules
+  are evaluated inside the same module system as the public ones and simply
+  set the same `ai.*` (and `secrets.*`, `identity.*`, …) options:
 
   ```nix
-  # ~/.dotfiles-private/hosts/<host>/default.nix
-  ai.mcpServers.signoz.url = "https://mcp.us.signoz.cloud/mcp";
+  # <consumer>/hosts/<host>/default.nix
+  ai.mcpServers.internal.url = "https://mcp.example.internal/mcp";
   ai.mcpServers.my-server = {
     command = "/Users/${me.user}/code/my-server/my-server";
     args = ["serve"];
@@ -239,5 +237,5 @@ that share extensions with a primary one (htmx-lsp on `.html`, biome on
   };
   ```
 
-  Nothing in this repo needs to know which entries came from the private
-  side. See the root README "Private dotfiles" for the update workflow.
+  Nothing in this repo needs to know which entries came from where. See the
+  root README "Using the framework".

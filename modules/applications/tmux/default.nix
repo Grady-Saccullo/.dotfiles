@@ -9,10 +9,14 @@ utils.mkAppModule {
   path = "tmux";
   inherit config;
   default = true;
+  extraOptions = {
+    package = lib.mkPackageOption pkgs "tmux" {};
+  };
 } (cfg:
     utils.mkHomeManagerUser {
       programs.tmux = {
         enable = true;
+        package = cfg.package;
         extraConfig = builtins.readFile ./.tmux.conf;
         aggressiveResize = true;
         sensibleOnTop = false;

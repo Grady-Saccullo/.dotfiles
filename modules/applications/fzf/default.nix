@@ -30,6 +30,7 @@ in
     inherit config;
     default = true;
     extraOptions = {
+      package = lib.mkPackageOption pkgs "fzf" {};
       searchPaths = lib.mkOption {
         type = lib.types.listOf lib.types.str;
         default = ["$HOME"];
@@ -62,7 +63,7 @@ in
 
         fzf = {
           enable = true;
-          package = pkgs.fzf;
+          package = cfg.package;
           enableZshIntegration = config.applications.zsh.enable;
           defaultCommand = "fd -t f -H . ${searchPaths}";
           fileWidget = {

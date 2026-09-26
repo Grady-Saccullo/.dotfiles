@@ -9,10 +9,7 @@ utils.mkAppModule {
   inherit config;
   path = ["jetbrains" "idea"];
   extraOptions = {
-    package = lib.mkOption {
-      type = lib.types.package;
-      default = pkgs.jetbrains.idea;
-    };
+    package = lib.mkPackageOption pkgs ["jetbrains" "idea"] {};
     bundleId = lib.mkOption {
       type = lib.types.str;
       default = "com.jetbrains.intellij";

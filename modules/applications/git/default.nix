@@ -1,6 +1,7 @@
 {
   utils,
   config,
+  lib,
   pkgs,
   ...
 }: let
@@ -10,13 +11,16 @@ in
     path = "git";
     inherit config;
     default = true;
+    extraOptions = {
+      package = lib.mkPackageOption pkgs "git" {};
+    };
   } (cfg:
     (utils.mkHomeManagerUser {
       home.packages = [pkgs.git-filter-repo];
       programs = {
         git = {
           enable = true;
-          package = pkgs.git;
+          package = cfg.package;
           settings = {
             user = {
               email = config.identity.email;

@@ -12,10 +12,7 @@ in
     path = "spotify";
     inherit config;
     extraOptions = {
-      package = lib.mkOption {
-        type = lib.types.package;
-        default = pkgs.spotify;
-      };
+      package = lib.mkPackageOption pkgs "spotify" {};
       path = lib.mkOption {
         type = lib.types.str;
         default =

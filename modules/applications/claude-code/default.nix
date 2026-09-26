@@ -23,9 +23,9 @@
   #                  shared `programs.mcp.servers` registry; this module just
   #                  opts in with `enableMcpIntegration`.
   #
-  # App modules (jj, …), host configs and the private input all contribute
-  # to `ai.*`; none of them touch `programs.claude-code.*` directly. That
-  # keeps the dependency graph one-directional: bus → this consumer → HM.
+  # App modules (jj, …) and host configs all contribute to `ai.*`; none of
+  # them touch `programs.claude-code.*` directly. That keeps the dependency
+  # graph one-directional: bus → this consumer → HM.
   #
   # ── Why this module splits settings across two files ────────────────────
   # home-manager renders `programs.claude-code.settings` to a /nix/store path
@@ -101,11 +101,7 @@ in
     path = "claude-code";
     inherit config;
     extraOptions = {
-      package = lib.mkOption {
-        type = lib.types.package;
-        default = pkgs.llm-agents.claude-code;
-        description = "The Claude Code package to install.";
-      };
+      package = lib.mkPackageOption pkgs "claude-code" {};
 
       managedSettings = lib.mkOption {
         inherit (jsonFormat) type;

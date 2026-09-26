@@ -2,16 +2,21 @@
   utils,
   config,
   lib,
+  pkgs,
   ...
 }:
 utils.mkAppModule {
   inherit config;
   path = "zsh";
   default = true;
+  extraOptions = {
+    package = lib.mkPackageOption pkgs "zsh" {};
+  };
 } (cfg:
     utils.mkHomeManagerUser {
       programs.zsh = {
         enable = true;
+        package = cfg.package;
         # zsh's own aliases stay local; the `shell.aliases` bus (git, jj, …;
         # see modules/shell/README.md) is merged on top, so a bus entry wins
         # over a same-named local alias.

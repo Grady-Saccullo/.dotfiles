@@ -27,8 +27,7 @@ hosts/<host>/default.nix ── SET ──▶ identity.name / identity.email
 | `identity.email` | `str` | `"gradys.dev@gmail.com"` | git, jj |
 
 The defaults are the values the git module's former per-app `username` /
-`email` options carried (no host ever set those), so behaviour is unchanged:
-today both hosts use the personal address.
+`email` options carried (no host ever set those).
 
 ## Host override
 
@@ -39,8 +38,7 @@ today both hosts use the personal address.
 }
 ```
 
-The work host can set its address this way and every consumer follows; the
-personal host keeps the defaults.
+A host sets its address this way and every consumer follows.
 
 ## Consuming from a tool module
 

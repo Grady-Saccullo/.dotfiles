@@ -1,12 +1,16 @@
 {
   utils,
   config,
+  lib,
   pkgs,
   ...
 }:
 utils.mkAppModule {
   path = "halloy";
   inherit config;
+  extraOptions = {
+    package = lib.mkPackageOption pkgs "halloy" {};
+  };
 } (cfg:
     utils.mkPlatformConfig {
       darwin = {
@@ -18,9 +22,9 @@ utils.mkAppModule {
         ];
       };
       nixos = utils.mkHomeManagerUser {
-        home.packages = [pkgs.halloy];
+        home.packages = [cfg.package];
       };
       linux = utils.mkHomeManagerUser {
-        home.packages = [pkgs.halloy];
+        home.packages = [cfg.package];
       };
     })

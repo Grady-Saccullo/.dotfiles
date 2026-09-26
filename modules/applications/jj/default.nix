@@ -46,11 +46,14 @@ in
     path = "jj";
     inherit config;
     default = true;
+    extraOptions = {
+      package = lib.mkPackageOption pkgs "jujutsu" {};
+    };
   } (cfg:
     (utils.mkHomeManagerUser {
       programs.jujutsu = {
         enable = true;
-        package = pkgs.jujutsu;
+        package = cfg.package;
         settings = {
           user = {
             name = config.identity.name;

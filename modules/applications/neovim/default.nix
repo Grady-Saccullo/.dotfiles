@@ -13,6 +13,7 @@ in {
   options = {
     applications.neovim = {
       enable = mkEnableOption "Neovim";
+      package = lib.mkPackageOption pkgs "neovim-unwrapped" {};
     };
   };
 
@@ -41,7 +42,7 @@ in {
     lib.mkIf cfg.enable (utils.mkHomeManagerUser {
       programs.neovim = {
         enable = true;
-        package = pkgs.neovim-unwrapped;
+        package = cfg.package;
 
         defaultEditor = true;
         withNodeJs = true;

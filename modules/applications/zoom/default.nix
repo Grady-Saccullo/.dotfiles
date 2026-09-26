@@ -9,6 +9,7 @@ utils.mkAppModule {
   inherit config;
   path = "zoom";
   extraOptions = {
+    package = lib.mkPackageOption pkgs "zoom-us" {};
     bundleId = lib.mkOption {
       type = lib.types.str;
       default = "us.zoom.xos";
@@ -18,5 +19,5 @@ utils.mkAppModule {
   };
 } (cfg:
     utils.mkHomeManagerUser {
-      home.packages = [pkgs.zoom-us];
+      home.packages = [cfg.package];
     })

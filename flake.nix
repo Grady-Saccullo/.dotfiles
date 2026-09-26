@@ -14,13 +14,10 @@
     ];
   };
 
+  # Only what the framework's code is built on. App builds (nightlies, release pins) are the host's
+  # call: an input in its own flake, fed in via mkDarwinHost's `overlays`/`channels` (README).
   inputs = {
     nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
-    # Release channels. Every input named `nixpkgs-<major>_<minor>` is exposed
-    # as `pkgs.channels.v<major>_<minor>` by overlays/channels.nix, for
-    # pinning a single package to a release; base `pkgs` stays
-    # nixpkgs-unstable (darwin compatibility).
-    nixpkgs-26_05.url = "github:NixOS/nixpkgs/nixos-26.05";
     home-manager.inputs.nixpkgs.follows = "nixpkgs-unstable";
     home-manager.url = "github:nix-community/home-manager/master";
 
@@ -29,49 +26,40 @@
 
     # Darwin specific packages
     nix-homebrew.url = "github:zhaofengli-wip/nix-homebrew";
-    homebrew-bundle.flake = false;
-    homebrew-bundle.url = "github:homebrew/homebrew-bundle";
     homebrew-cask.flake = false;
     homebrew-cask.url = "github:homebrew/homebrew-cask";
     homebrew-core.flake = false;
     homebrew-core.url = "github:homebrew/homebrew-core";
     darwin.inputs.nixpkgs.follows = "nixpkgs-unstable";
     darwin.url = "github:LnL7/nix-darwin";
-
-    # Applications
-    llm-agents.url = "github:numtide/llm-agents.nix";
-    wezterm.url = "github:wezterm/wezterm?dir=nix";
   };
 
   outputs = inputs: let
     inherit (inputs.nixpkgs-unstable) lib;
 
-    pkgsFor = system: extraOverlays:
+    pkgsFor = {
+      system,
+      channels ? {},
+      overlays ? [],
+    }:
       import inputs.nixpkgs-unstable {
         localSystem = system;
-        overlays = [(import ./overlays {inherit inputs;})] ++ extraOverlays;
+        overlays = [(import ./overlays {inherit channels;})] ++ overlays;
         config = {
           allowUnfree = true;
           allowUnsupportedSystem = true;
         };
       };
 
-    nixpkgsModule = system: extraOverlays: {
-      nixpkgs.hostPlatform = system;
-      nixpkgs.pkgs = pkgsFor system extraOverlays;
-    };
-
-    # Builds a nix-darwin system on top of this repo's framework. Exported as
-    # `lib.mkDarwinHost` so the private dotfiles flake, which consumes this
-    # repo as input `dotfiles`, can define its hosts with the same module set,
-    # special args and overlays and layer private modules/overlays on top.
     mkDarwinHost = {
       system,
       user,
       modules ? [],
-      # Extra nixpkgs overlays, applied after this repo's own (private packages).
+      # Applied after this repo's overlays.
       overlays ? [],
-      # Merged into specialArgs after the defaults (e.g. { privateInputs = inputs; }).
+      # Release nixpkgs sources exposed as `pkgs.channels.<name>`, e.g. { v26_05 = inputs.nixpkgs-26_05; }.
+      channels ? {},
+      # Merged into specialArgs after the defaults, so it can override them.
       extraSpecialArgs ? {},
       # Import darwinModules.default (sensible + home-manager + applications).
       framework ? true,
@@ -92,7 +80,12 @@
           // extraSpecialArgs;
         modules =
           lib.optional framework inputs.self.darwinModules.default
-          ++ [(nixpkgsModule system overlays)]
+          ++ [
+            {
+              nixpkgs.hostPlatform = system;
+              nixpkgs.pkgs = pkgsFor {inherit system channels overlays;};
+            }
+          ]
           ++ modules;
       };
   in
@@ -106,7 +99,7 @@
       systems = ["aarch64-darwin" "aarch64-linux"];
 
       perSystem = {system, ...}: {
-        _module.args.pkgs = pkgsFor system [];
+        _module.args.pkgs = pkgsFor {inherit system;};
       };
 
       flake = {
@@ -134,10 +127,6 @@
           };
         };
 
-        # Library for downstream flakes. The private dotfiles repo imports this
-        # flake as `dotfiles` and defines every real host through
-        # `inputs.dotfiles.lib.mkDarwinHost`; this repo itself ships no real
-        # host.
         lib = {
           inherit mkDarwinHost;
         };

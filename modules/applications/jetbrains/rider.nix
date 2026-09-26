@@ -9,10 +9,7 @@ utils.mkAppModule {
   inherit config;
   path = ["jetbrains" "rider"];
   extraOptions = {
-    package = lib.mkOption {
-      type = lib.types.package;
-      default = pkgs.jetbrains.rider;
-    };
+    package = lib.mkPackageOption pkgs ["jetbrains" "rider"] {};
     bundleId = lib.mkOption {
       type = lib.types.str;
       default = "com.jetbrains.rider";

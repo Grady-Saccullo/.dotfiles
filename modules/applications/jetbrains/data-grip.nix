@@ -9,10 +9,7 @@ utils.mkAppModule {
   inherit config;
   path = ["jetbrains" "datagrip"];
   extraOptions = {
-    package = lib.mkOption {
-      type = lib.types.package;
-      default = pkgs.jetbrains.datagrip;
-    };
+    package = lib.mkPackageOption pkgs ["jetbrains" "datagrip"] {};
     bundleId = lib.mkOption {
       type = lib.types.str;
       default = "com.jetbrains.datagrip";

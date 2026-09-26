@@ -10,10 +10,7 @@ utils.mkAppModule {
   path = "brave";
   inherit config;
   extraOptions = {
-    package = lib.mkOption {
-      type = lib.types.package;
-      default = pkgs.brave;
-    };
+    package = lib.mkPackageOption pkgs "brave" {};
     path = lib.mkOption {
       type = lib.types.str;
       default = "/Users/${me.user}/Applications/Home Manager Apps/Brave Browser.app";

@@ -9,6 +9,7 @@ utils.mkAppModule {
   path = "aerospace";
   inherit config;
   extraOptions = {
+    package = lib.mkPackageOption pkgs "aerospace" {};
     settings = lib.mkOption {
       type = lib.types.attrs;
       default = {};
@@ -20,7 +21,7 @@ utils.mkAppModule {
       darwin = {
         services.aerospace = {
           enable = true;
-          package = pkgs.aerospace;
+          package = cfg.package;
           inherit (cfg) settings;
         };
       };

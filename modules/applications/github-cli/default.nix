@@ -1,15 +1,21 @@
 {
   utils,
   config,
+  lib,
+  pkgs,
   ...
 }:
 utils.mkAppModule {
   path = "github-cli";
   inherit config;
+  extraOptions = {
+    package = lib.mkPackageOption pkgs "gh" {};
+  };
 } (cfg:
     (utils.mkHomeManagerUser {
       programs.gh = {
         enable = true;
+        package = cfg.package;
         settings = {
           git_protocol = "ssh";
         };

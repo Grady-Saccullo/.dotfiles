@@ -9,6 +9,7 @@ utils.mkAppModule {
   inherit config;
   path = "bitwarden";
   extraOptions = {
+    package = lib.mkPackageOption pkgs "bitwarden-desktop" {};
     browserExtension.enable = lib.mkEnableOption "Bitwarden Browser Extension";
   };
 } (cfg:
@@ -20,10 +21,10 @@ utils.mkAppModule {
           };
         };
         nixos = utils.mkHomeManagerUser {
-          home.packages = [pkgs.bitwarden-desktop];
+          home.packages = [cfg.package];
         };
         linux = utils.mkHomeManagerUser {
-          home.packages = [pkgs.bitwarden-desktop];
+          home.packages = [cfg.package];
         };
       })
       (lib.mkIf cfg.browserExtension.enable {

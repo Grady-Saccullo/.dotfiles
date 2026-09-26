@@ -15,14 +15,8 @@ if [[ "${1:-}" == "--local" ]]; then
 	DOTFILES_LOCAL="${DOTFILES_LOCAL:-$HOME/.dotfiles}"
 fi
 
-# Framework override for downstream flakes (the private dotfiles consume this
-# repo as input `dotfiles`): `--local` / DOTFILES_LOCAL=<path> builds against
-# that checkout instead of the locked GitHub rev so framework changes can be
-# tested before they are pushed. The checkout is resolved to a store path
-# ONCE as the user (git+file: → tracked files only, so .env never enters the
-# store) and both the user-side build and the root-side darwin-rebuild are
-# pointed at that store path — root must never run git in a user-owned repo.
-# --override-input implies --no-write-lock-file, so flake.lock is untouched.
+# `--local`: swap the `dotfiles` input for that checkout, resolved to a store path once as the user
+# so root never runs git in a user-owned repo (README "Using the framework").
 override=()
 if [[ -n "${DOTFILES_LOCAL:-}" ]]; then
 	if jq -e '.nodes[.root].inputs.dotfiles' flake.lock >/dev/null 2>&1; then

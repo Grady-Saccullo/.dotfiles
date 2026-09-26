@@ -1,13 +1,17 @@
 {
   utils,
   config,
+  lib,
   pkgs,
   ...
 }:
 utils.mkAppModule {
   path = "android-studio";
   inherit config;
-} (_:
+  extraOptions = {
+    package = lib.mkPackageOption pkgs "android-studio" {};
+  };
+} (cfg:
     utils.mkPlatformConfig {
       base = utils.mkHomeManagerUser {
         home.packages = [pkgs.android-tools pkgs.jdk17];
@@ -21,9 +25,9 @@ utils.mkAppModule {
         ];
       };
       linux = utils.mkHomeManagerUser {
-        home.packages = [pkgs.android-studio];
+        home.packages = [cfg.package];
       };
       nixos = utils.mkHomeManagerUser {
-        home.packages = [pkgs.android-studio];
+        home.packages = [cfg.package];
       };
     })

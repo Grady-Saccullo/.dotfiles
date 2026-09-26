@@ -9,6 +9,8 @@ utils.mkAppModule {
   inherit config;
   path = "_1password";
   extraOptions = {
+    package = lib.mkPackageOption pkgs "_1password-gui" {};
+    cli.package = lib.mkPackageOption pkgs "_1password-cli" {};
     browserExtension.enable = lib.mkEnableOption "1Password Browser Extension";
   };
 } (cfg:
@@ -23,19 +25,19 @@ utils.mkAppModule {
           ];
           programs._1password = {
             enable = true;
-            package = pkgs._1password-cli;
+            package = cfg.cli.package;
           };
         };
         linux = utils.mkHomeManagerUser {
           home.packages = [
-            pkgs._1password-gui
-            pkgs._1password-cli
+            cfg.package
+            cfg.cli.package
           ];
         };
         nixos = utils.mkHomeManagerUser {
           home.packages = [
-            pkgs._1password-gui
-            pkgs._1password-cli
+            cfg.package
+            cfg.cli.package
           ];
         };
       })

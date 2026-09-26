@@ -10,10 +10,7 @@ utils.mkAppModule {
   path = "slack";
   inherit config;
   extraOptions = {
-    package = lib.mkOption {
-      type = lib.types.package;
-      default = pkgs.slack;
-    };
+    package = lib.mkPackageOption pkgs "slack" {};
     path = lib.mkOption {
       type = lib.types.str;
       default = "/Users/${me.user}/Applications/Home Manager Apps/Slack.app";

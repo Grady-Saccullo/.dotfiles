@@ -1,12 +1,16 @@
 {
   utils,
   config,
+  lib,
   pkgs,
   ...
 }:
 utils.mkAppModule {
   inherit config;
   path = "tailscale";
+  extraOptions = {
+    package = lib.mkPackageOption pkgs "tailscale" {};
+  };
 } (cfg:
     utils.mkPlatformConfig {
       darwin = {
@@ -18,9 +22,9 @@ utils.mkAppModule {
         ];
       };
       nixos = utils.mkHomeManagerUser {
-        home.packages = [pkgs.tailscale];
+        home.packages = [cfg.package];
       };
       linux = utils.mkHomeManagerUser {
-        home.packages = [pkgs.tailscale];
+        home.packages = [cfg.package];
       };
     })

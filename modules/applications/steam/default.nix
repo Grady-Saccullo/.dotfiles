@@ -12,10 +12,7 @@ in
     path = "steam";
     inherit config;
     extraOptions = {
-      package = lib.mkOption {
-        type = lib.types.package;
-        default = pkgs.steam;
-      };
+      package = lib.mkPackageOption pkgs "steam" {};
       path = lib.mkOption {
         type = lib.types.str;
         default =

@@ -6,9 +6,8 @@ module writes to home-manager's `programs.claude-code.*`.
 
 ## Architecture in one paragraph
 
-App modules (`jj`, …), host configs (`hosts/<host>/ai.nix`)
-and the private input all *contribute* skills, agents, commands, rules, hooks,
-plugins and context to `ai.*`. This module *reads* the bus and fans it out to
+App modules (`jj`, …) and host configs all *contribute* skills, agents,
+commands, rules, hooks, plugins and context to `ai.*`. This module *reads* the bus and fans it out to
 home-manager, which materializes files under `~/.claude/`. MCP servers take a
 parallel path: `modules/ai/mcp.nix` populates the shared `programs.mcp.servers`
 registry and this module opts in with `enableMcpIntegration`. The graph is
@@ -50,7 +49,7 @@ consumer.
 | Option                                        | Default                                                       | Purpose |
 | --------------------------------------------- | ------------------------------------------------------------- | ------- |
 | `applications.claude-code.enable`             | `false`                                                       | turn the module on |
-| `applications.claude-code.package`            | `pkgs.llm-agents.claude-code`                                 | package to install |
+| `applications.claude-code.package`            | `pkgs.claude-code`                                            | package to install |
 | `applications.claude-code.managedSettings`    | `{ skipAutoPermissionPrompt = true; permissions.defaultMode = "auto"; }` | enforced policy → managed-settings.json |
 | `applications.claude-code.seedSettings`       | `{ model = "opus[1m]"; }`                                     | one-time defaults → `~/.claude/settings.json` |
 

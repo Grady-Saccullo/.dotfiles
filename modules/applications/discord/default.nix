@@ -12,10 +12,7 @@ in
     path = "discord";
     inherit config;
     extraOptions = {
-      package = lib.mkOption {
-        type = lib.types.package;
-        default = pkgs.discord;
-      };
+      package = lib.mkPackageOption pkgs "discord" {};
       path = lib.mkOption {
         type = lib.types.str;
         default =

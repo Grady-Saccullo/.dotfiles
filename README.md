@@ -7,10 +7,10 @@
 - Create a nix shell with necessary tooling for initial setup: `nix-shell -p gnumake git`.
 - Clone repo
 - [Set up Cachix](#cachix) (required for private cache access)
-- Real machines are switched from the private dotfiles repo, which consumes this one — see
-  [Private dotfiles](#private-dotfiles). This repo alone builds only the synthetic `example` host,
-  a fixture that type-checks the module set (`nix run .#test example`); it is not a machine.
-- From the private repo, run `nix run .#switch <host>`
+- This repo builds only the synthetic `example` host, a fixture that type-checks the module set
+  (`nix run .#test example`); it is not a machine. Real hosts are defined in a flake that consumes
+  this one, see [Using the framework](#using-the-framework).
+- From that flake, run `nix run .#switch <host>`
 
 ## Cachix
 
@@ -53,57 +53,93 @@ probing). If the file is only root-readable, the user-side queries can't authent
 private cache returns `HTTP 401` warnings. A read-only token for a personal cache at `0644` on
 a single-user machine is a negligible exposure — do not "harden" this back to `0600`.
 
-## Private dotfiles
+## Using the framework
 
-This repo is the *framework*: the application module set, the option buses, `lib.mkDarwinHost`
-and the `apps/*` scripts. It ships no real host; its only `darwinConfiguration` is the synthetic
-`example` fixture (`hosts/example/default.nix`). Every machine that is actually switched,
-work and personal alike, is defined in a second, private flake,
-[`Grady-Saccullo/.dotfiles-private`](https://github.com/Grady-Saccullo/.dotfiles-private), cloned
-to `~/.dotfiles-private`. The dependency points *that* way: the private repo consumes this one as
-input `dotfiles` and
-
-- defines every real `darwinConfiguration`, each as a host module handed to
-  `inputs.dotfiles.lib.mkDarwinHost` exactly like the `example` fixture here;
-- re-exports the apps, so `nix run .#switch <host>` is run from the private repo;
-- may ship its own application modules (built with the same `utils.mkAppModule`) and nixpkgs
-  overlays for software that cannot be public, passed in through `modules` / `overlays`.
-
-Sensitive-but-not-secret config (work MCP server definitions, internal skills and rules,
-1Password/Bitwarden *references*) lives there. Secret *values* live in neither repo; they are read
+This repo is a framework: the application module set, the option buses, `lib.mkDarwinHost` and
+the `apps/*` scripts. Its only `darwinConfiguration` is the synthetic `example` fixture
+(`hosts/example/default.nix`). Real hosts are defined in a flake that takes this one as input
+`dotfiles`, builds each host with `lib.mkDarwinHost` and re-exports the apps, so
+`nix run .#switch <host>` runs from there. Anything that must not be public (internal skills, MCP
+servers, vault *references*) belongs in that flake; secret *values* belong in no repo and are read
 at runtime through the [`secrets.*` bus](#modulessecrets).
 
 ```nix
-inputs.dotfiles.url = "github:Grady-Saccullo/.dotfiles";
-darwinConfigurations.work = inputs.dotfiles.lib.mkDarwinHost {
-  system = "aarch64-darwin";
-  user = "me";
-  modules = [ ./hosts/work ./modules/applications ];
-  overlays = [ (import ./overlays) ];
-};
+{
+  inputs = {
+    dotfiles.url = "github:Grady-Saccullo/.dotfiles";
+    # One `follows` per input in the framework's flake.nix, each mirrored below with the same URL
+    # and nested follows: … darwin, nix-homebrew, homebrew-core, homebrew-cask, flake-parts.
+    dotfiles.inputs.nixpkgs-unstable.follows = "nixpkgs-unstable";
+    dotfiles.inputs.home-manager.follows = "home-manager";
+    nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+    home-manager.url = "github:nix-community/home-manager/master";
+    home-manager.inputs.nixpkgs.follows = "nixpkgs-unstable";
+
+    # App sources are the consumer's own inputs.
+    llm-agents.url = "github:numtide/llm-agents.nix";
+    nixpkgs-26_05.url = "github:NixOS/nixpkgs/nixos-26.05";
+  };
+
+  outputs = inputs: {
+    apps = inputs.dotfiles.apps;
+    darwinConfigurations.work = inputs.dotfiles.lib.mkDarwinHost {
+      system = "aarch64-darwin";
+      user = "me";
+      modules = [./hosts/work];
+      overlays = [inputs.llm-agents.overlays.shared-nixpkgs];
+      channels.v26_05 = inputs.nixpkgs-26_05;
+    };
+  };
+}
 ```
 
-`mkDarwinHost` imports `darwinModules.default` (sensible + home-manager + applications) unless
-called with `framework = false`, applies the given `overlays` after this repo's own, and merges
-`extraSpecialArgs` into the module `specialArgs` (e.g. `{ privateInputs = inputs; }`) so private
-modules get `config`, `pkgs`, `utils` and `me` exactly like the public ones.
+| `mkDarwinHost` argument | |
+| --- | --- |
+| `system`, `user` | platform, and the primary user (`me.user` in modules) |
+| `modules` | host modules, evaluated alongside the framework's |
+| `overlays` | applied after this repo's overlays; how a consumer adds packages to `pkgs` |
+| `channels` | release nixpkgs sources, exposed as `pkgs.channels.<name>` (see [`/overlays`](#overlays)) |
+| `extraSpecialArgs` | merged over the default module arguments (`inputs`, `me`, `machineType`, `utils`) |
+| `framework` | `false` skips `darwinModules.default` (sensible + home-manager + applications) |
 
-Workflow for a framework change:
+`inputs` in module arguments is this repo's inputs, not the consumer's; a consumer whose modules
+need its own passes them through `extraSpecialArgs` under another name.
+
+### Versions
+
+With the `follows` above, the consumer's lock pins nixpkgs, home-manager, nix-darwin and the rest:
+bumping them is `nix run .#update` there, with no change here, and this repo's `flake.lock` only
+pins the `example` fixture. An input declared here that the consumer does not follow stays on this
+lock and only moves when `dotfiles` is bumped.
+
+Which build an app gets is the host's choice. Every module that installs a Nix package exposes
+`applications.<app>.package`, defaulting to the nixpkgs-unstable attribute, so a host can point it
+at a release channel or at a package its flake overlays in:
+
+```nix
+{pkgs, ...}: {
+  applications.github-cli.package = pkgs.channels.v26_05.gh;
+  applications.claude-code.package = pkgs.llm-agents.claude-code;
+}
+```
+
+That keeps this repo's inputs to what its code is built on: nightlies, release pins and third-party
+package sets are the consumer's inputs and never need a change here.
+
+### Changing the framework
 
 ```bash
-cd ~/.dotfiles && git add -A && git commit -m "..."          # 1. change the framework here
-cd ~/.dotfiles-private && nix run .#switch <host> -- --local # 2. test against ~/.dotfiles
-cd ~/.dotfiles && git push                                   # 3. publish
-cd ~/.dotfiles-private && nix run .#update                   # 4. pick `dotfiles`
-nix run .#switch <host>                                      # 5. switch normally
+cd ~/.dotfiles && git add -A && git commit -m "..."    # 1. change the framework here
+cd <consumer> && nix run .#switch <host> -- --local    # 2. test against ~/.dotfiles
+cd ~/.dotfiles && git push                             # 3. publish
+cd <consumer> && nix run .#update                      # 4. pick `dotfiles`
+nix run .#switch <host>                                # 5. switch normally
 ```
 
 `--local` (or `DOTFILES_LOCAL=<path>`) makes `apps/switch` and `apps/test` resolve the local
 checkout to a store path once, as your user, and point both the user-side build and the root-side
 `darwin-rebuild` at it with `--override-input dotfiles`; `flake.lock` is left untouched. Only
-tracked files are seen (`git+file:`), and root never runs git in a user-owned repo. Since this repo
-is public and the private one is evaluated from its own working tree, root needs no SSH access
-anywhere anymore.
+tracked files are seen (`git+file:`), and root never runs git in a user-owned repo.
 
 ## Project Structure
 
@@ -118,11 +154,9 @@ Run with `nix run .#<command>`.
 - `update`: interactively select flake inputs to update via fzf
 
 ### `/hosts`
-One directory per host, `hosts/<name>/default.nix`, mirroring the private repo's layout. This
-public repo ships only `hosts/example`, a synthetic host that is not a real machine: it enables a
-representative set of modules so `nix run .#test example` type-checks the whole module set, and it
-shows how a host is written. Real hosts (work and personal machines) live in the private repo under the same
-`hosts/<name>/` convention, with per-host `aerospace.nix` / `ai.nix` siblings imported by `default.nix`.
+One directory per host, `hosts/<name>/default.nix`. This repo ships only `hosts/example`, a
+synthetic host that is not a real machine: it enables a representative set of modules so
+`nix run .#test example` type-checks the whole module set, and it shows how a host is written.
 
 ### `/modules/applications`
 Contains all of the shared "applications" which can be turned on through `.enable`. The reasoning
@@ -136,6 +170,11 @@ Application modules never write to another application's home-manager options; a
 wants to hand to another goes through the option buses described next, and GUI apps expose
 read-only `applications.<app>.path` and `applications.<app>.bundleId` for other modules and host
 configs to reference.
+
+Every module that installs a Nix package declares `applications.<app>.package` with
+`lib.mkPackageOption` and installs that, never a hard-coded `pkgs.<attr>`, so a host can swap the
+build without touching the module (see [Versions](#versions)). Modules that only install a
+Homebrew cask or Mac App Store app have none.
 
 Neovim has its own sub-module system under `configs/` for per-language/plugin support.
 
@@ -162,9 +201,9 @@ Writers (they only set `ai.*` options):
   through `mkNeovimModule`'s `extraConfig`, reusing the language server neovim already installs
 - shared content under `modules/ai/{skills,agents,commands,rules}/`, auto-registered by
   `content.nix`
-- host modules (in the private repo, or the `example` fixture here) — per-host overrides and,
-  on the private side, sensitive content (work MCP servers, internal skills, vault references);
-  see [Private dotfiles](#private-dotfiles)
+- host modules (the `example` fixture here, or a consuming flake's hosts) — per-host overrides
+  and content that must not be public (internal MCP servers and skills, vault references); see
+  [Using the framework](#using-the-framework)
 
 Consumers (the only modules that write to home-manager's AI options):
 - the `claude-code` application module — materializes the bus into `~/.claude/` and
@@ -186,8 +225,8 @@ set that lived in the now-deleted `modules/flake-parts/common.nix`. Safari has n
 ### `/modules/identity`
 The `identity.*` bus: `identity.name` and `identity.email`, declared once per host and read by
 every tool that attributes work to the user — `git` and `jj` today, `gh` and AI context later.
-The defaults are the personal name and address, which both hosts currently use; the work host can
-override `identity.email` in one line and every consumer follows. Details in
+The defaults are the author's name and personal address; a host overrides `identity.email` in one
+line and every consumer follows. Details in
 [`modules/identity/README.md`](modules/identity/README.md).
 
 ### `/modules/secrets`
@@ -196,8 +235,7 @@ which any module that needs a token at launch reads instead of hard-coding a CLI
 enforces: this repo is public, the Nix store is world-readable and `apps/switch` pushes the whole
 closure to Cachix, so secret *values* are only ever read at runtime and Nix holds references
 (`op://…`) alone. Consumers wrap their program with `utils.secrets.mkEnvWrapper`, which resolves
-the references and `exec`s the real binary. the work host uses `op` (the 1Password desktop app CLI);
-`personal` is undecided between `rbw` and `bw`. Details in [`modules/secrets/README.md`](modules/secrets/README.md).
+the references and `exec`s the real binary. Details in [`modules/secrets/README.md`](modules/secrets/README.md).
 
 ### `/modules/shell`
 The `shell.*` bus: `shell.aliases.<name>` and `shell.init.<name>` (functions, completions,
@@ -217,8 +255,8 @@ Contains shared configurations across all platforms. Currently holds shared nix 
 ### `/modules/flake-parts`
 Contains shared options/imports for the root flake.nix to be used with flake-parts (`flake.nix`,
 `apps.nix`, `devshells.nix`). `flake.nix` declares the extra flake outputs — `homeManagerModules`,
-`darwinModules`, `constants`, `applications` and `lib` (functions for downstream flakes); the
-root `flake.nix` fills `lib.mkDarwinHost` for the [private repo](#private-dotfiles). `utils.nix`
+`darwinModules`, `constants`, `applications` and `lib` (functions for consuming flakes); the
+root `flake.nix` fills `lib.mkDarwinHost` (see [Using the framework](#using-the-framework)). `utils.nix`
 is not really flake-parts specific and probably needs to be refactored out; it holds the module helpers: `mkAppModule`, `mkNeovimModule` (whose
 `extraConfig` parameter lets language modules contribute darwin-level options such as
 `ai.lspServers`), the bus helpers `enabled` / `content`, and `secrets.mkEnvWrapper`.
@@ -229,22 +267,20 @@ through the `homeManagerModules` set in the root flake.nix. Currently only conta
 
 ### `/overlays`
 Overlays applied to the base package set. `pkgs` is nixpkgs-unstable (darwin needs the moving
-channel) plus the framework overlays: `wezterm-nightly` (the wezterm flake) and the `llm-agents`
-package set from numtide/llm-agents.nix. Modules reference packages as plain `pkgs.<attr>`.
+channel) and modules reference packages as plain `pkgs.<attr>`. A consuming flake adds its own
+through `mkDarwinHost`'s `overlays`, which apply after these.
 
-`pkgs.channels.v<major>_<minor>` (`overlays/channels.nix`) exposes one full nixpkgs per flake input
-named `nixpkgs-<major>_<minor>`, for pinning a single package to a release while everything
-else follows unstable, e.g. `pkgs.channels.v26_05.go`. To add a channel, add the input; it
-shows up under its release name:
+`pkgs.channels.<name>` (`overlays/channels.nix`) is one full nixpkgs per entry in `mkDarwinHost`'s
+`channels`, for pinning a single package to a release while everything else follows unstable:
 
 ```nix
-nixpkgs-25_11.url = "github:NixOS/nixpkgs/nixos-25.11";   # -> pkgs.channels.v25_11
+channels.v26_05 = inputs.nixpkgs-26_05;   # -> pkgs.channels.v26_05.gh
 ```
 
 Rule of thumb: prefer a versioned attribute in base `pkgs` (`go_1_23`), fall back to a channel
 pin only when none exists, and keep language toolchains in project devenv files rather than in
-the system. Channel sets are lazy (imported only when referenced) and do not carry the
-framework overlays, so `pkgs.channels.v26_05.wezterm-nightly` does not exist.
+the system. Channel sets are lazy (imported only when referenced) and carry no overlays, so a
+package that only an overlay provides does not exist under `pkgs.channels.*`.
 
 ---
 ##### Notes
