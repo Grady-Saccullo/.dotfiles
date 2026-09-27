@@ -75,6 +75,10 @@ in {
     aerospace = {
       enable = true;
       settings = {
+        # Version 2 no longer keeps a workspace alive just because a binding names it, so the
+        # workspaces the bindings use are listed explicitly.
+        config-version = 2;
+        persistent-workspaces = ["1" "2" "3" "4"];
         gaps = {
           inner.horizontal = 8;
           inner.vertical = 8;

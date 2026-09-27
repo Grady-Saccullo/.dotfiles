@@ -13,7 +13,7 @@ utils.mkAppModule {
     settings = lib.mkOption {
       type = lib.types.attrs;
       default = {};
-      description = "Attrset forwarded to nix-darwin's services.aerospace.settings; set by the host module (see hosts/<host>/aerospace.nix).";
+      description = "Attrset forwarded to nix-darwin's services.aerospace.settings; set by the host module (see hosts/example/default.nix).";
     };
   };
 } (cfg:
