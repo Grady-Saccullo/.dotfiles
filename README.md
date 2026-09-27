@@ -183,29 +183,38 @@ build that wrapper with `utils.secrets.mkEnvWrapper`.
 
 ## Binary cache (Cachix)
 
-`grady-saccullo.cachix.org` is a private [Cachix](https://cachix.org) cache for built packages, so
-a machine does not rebuild what another one already built. `nix run .#switch` downloads from it
-(along with the public `nix-community` and `numtide` caches) and uploads the new build afterwards.
+A private [Cachix](https://cachix.org) cache stores built packages, so a machine does not rebuild
+what another one already built. `nix run .#switch` downloads from it (along with the public
+`nix-community` and `numtide` caches) and uploads the new build afterwards. It needs two pieces of
+config:
 
-The cache is set in the flake's `nixConfig`, not in the machine-wide Nix settings. As a
-machine-wide setting it was also used by unrelated projects, which then printed `HTTP error 401`
-warnings because they had no credentials. A flake that uses this framework needs the same
-`nixConfig` block, because Nix only reads it from the flake you run.
+- **The cache**, in the `nixConfig` of the flake you run. Nix only reads `nixConfig` from the flake
+  being run, and modules cannot set it. It is deliberately not a machine-wide setting: as one, it
+  was also used by unrelated projects, which printed `HTTP error 401` warnings because they had no
+  credentials.
+- **The tokens**, as references into your password manager. They are read with the host's
+  `secrets.backend`, or with `cachix.backend` when they live somewhere else, for example one
+  personal Bitwarden account shared by a work and a personal machine:
 
-Nix logs in to the cache with a netrc file. Create it with your Cachix auth token (from the
-[Cachix dashboard](https://app.cachix.org)):
+  ```nix
+  cachix = {
+    cache = "my-cache";
+    readToken = "op://Private/Cachix/read-token";   # read-only token
+    pushToken = "op://Private/Cachix/push-token";   # token with write access
+  };
+  ```
 
-```bash
-sudo sh -c 'umask 022; cat > /etc/nix/netrc << EOF
-machine grady-saccullo.cachix.org password <CACHIX_AUTH_TOKEN>
-EOF'
-sudo chmod 0644 /etc/nix/netrc
-```
+Before building, `nix run .#switch` reads the read token and writes it to the
+`machine <cache>.cachix.org` line of `/etc/nix/netrc`, which Nix uses to log in to the cache. Other
+lines in that file are kept, and it only asks for `sudo` when the token changed. After switching,
+it reads the push token and runs `cachix push`. If a read fails, for example because the vault is
+locked, it prints a warning and carries on: the netrc keeps its old token and the push is skipped.
+A host without `pushToken` pushes with `CACHIX_AUTH_TOKEN` from the environment instead. Create
+both tokens on the [Cachix dashboard](https://app.cachix.org).
 
-The file has to be readable by your user as well as root (mode `0644`, not `0600`). A switch talks
-to the cache both as root and as your user, and with `0600` the user side gets `HTTP 401` errors.
-For a read-only token on a single-user machine that is an acceptable trade-off, so do not tighten
-it back to `0600`.
+`/etc/nix/netrc` is readable by every user (mode `0644`, not `0600`): a switch talks to the cache
+both as root and as your user, and with `0600` the user side gets `HTTP 401` errors. That is why
+the token written there should be read-only, with the write token kept only in the vault.
 
 ## Repository layout
 

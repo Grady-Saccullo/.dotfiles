@@ -11,6 +11,10 @@ utils.mkAppModule {
   extraOptions = {
     package = lib.mkPackageOption pkgs "bitwarden-desktop" {};
     browserExtension.enable = lib.mkEnableOption "Bitwarden Browser Extension";
+    cli = {
+      enable = lib.mkEnableOption "the Bitwarden CLI (`bw`), needed for `secrets.backend = \"bw\"`";
+      package = lib.mkPackageOption pkgs "bitwarden-cli" {};
+    };
   };
 } (cfg:
     lib.mkMerge [
@@ -27,6 +31,9 @@ utils.mkAppModule {
           home.packages = [cfg.package];
         };
       })
+      (lib.mkIf cfg.cli.enable (utils.mkHomeManagerUser {
+        home.packages = [cfg.cli.package];
+      }))
       (lib.mkIf cfg.browserExtension.enable {
         browser.extensions.chromium.bitwarden = {
           id = "nngceckbapebfimnlniiiahkandclblb";

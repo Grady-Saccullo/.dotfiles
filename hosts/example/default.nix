@@ -20,6 +20,13 @@ in {
 
   secrets.backend = "op";
 
+  # Private binary cache; `nix run .#switch` reads these tokens from 1Password (README "Binary cache").
+  # cachix = {
+  #   cache = "my-cache";
+  #   readToken = "op://Private/Cachix/read-token";
+  #   pushToken = "op://Private/Cachix/push-token";
+  # };
+
   applications = {
     # zsh, starship, fzf, zoxide, tmux, git, jj and the other CLI basics are on by default.
     fzf.searchPaths = ["$HOME/code/" "$HOME/Documents/"];

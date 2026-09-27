@@ -39,8 +39,65 @@ function build() {
 		".#$attr"
 }
 
+# Cachix tokens are read from the host's vault references (modules/shared/cachix.nix) at switch time.
+# A failed read only warns, so a locked vault never blocks a switch.
+cachix_config=null
+if [[ $(uname -o) == Darwin ]]; then
+	cachix_config=$(nix eval --json "${override[@]}" ".#darwinConfigurations.$config_name.config.cachix.switchCommands" 2>/dev/null) || cachix_config=null
+fi
+cachix_cache=$(jq -r '.cache // empty' <<<"$cachix_config")
+
+# read_secret <json command>: runs it and prints the secret; the value never appears in argv.
+function read_secret() {
+	local cmd=() arg
+	while IFS= read -r arg; do cmd+=("$arg"); done < <(jq -r '.[]' <<<"$1")
+	"${cmd[@]}"
+}
+
+# Rewrites only the cache's line in the netrc, and only when the token changed.
+function cachix_login() {
+	local netrc host token wanted
+	jq -e '.readToken' <<<"$cachix_config" >/dev/null || return 0
+	netrc=$(jq -r '.netrcFile' <<<"$cachix_config")
+	host="$cachix_cache.cachix.org"
+	if ! token=$(read_secret "$(jq -c '.readToken' <<<"$cachix_config")") || [[ -z "$token" ]]; then
+		echo "warning: could not read the Cachix read token; leaving $netrc as it is" >&2
+		return 0
+	fi
+	wanted=$(
+		awk -v h="$host" '!($1 == "machine" && $2 == h)' "$netrc" 2>/dev/null || true
+		printf 'machine %s password %s\n' "$host" "$token"
+	)
+	if ! cmp -s <(printf '%s\n' "$wanted") "$netrc"; then
+		echo "updating $host in $netrc"
+		printf '%s\n' "$wanted" | sudo tee "$netrc" >/dev/null
+		sudo chmod 0644 "$netrc"
+	fi
+}
+
+# CACHIX_AUTH_TOKEN is only a fallback for hosts without cachix.pushToken, so a stale value in the
+# environment can't hide a failing vault read.
+function cachix_push() {
+	local token=${CACHIX_AUTH_TOKEN:-}
+	if jq -e '.pushToken' <<<"$cachix_config" >/dev/null; then
+		if ! token=$(read_secret "$(jq -c '.pushToken' <<<"$cachix_config")") || [[ -z "$token" ]]; then
+			echo "warning: could not read the Cachix push token; skipping the push" >&2
+			return 0
+		fi
+	fi
+	if [[ -z "$token" ]]; then
+		echo "no Cachix push token (set cachix.pushToken); skipping the push" >&2
+		return 0
+	fi
+	echo "pushing to $cachix_cache..."
+	CACHIX_AUTH_TOKEN=$token cachix push "$cachix_cache" ./result
+}
+
 case $(uname -o) in
 Darwin)
+	if [[ -n "$cachix_cache" ]]; then
+		cachix_login
+	fi
 	build "darwinConfigurations.$config_name.system" "${override[@]}"
 
 	sudo ./result/sw/bin/darwin-rebuild switch \
@@ -73,9 +130,8 @@ current=$(readlink /nix/var/nix/profiles/system | grep -o '[0-9]*')
 previous=$((current - 1))
 nix store diff-closures "/nix/var/nix/profiles/system-${previous}-link" "/nix/var/nix/profiles/system-${current}-link" 2>/dev/null || true
 
-if command -v cachix &>/dev/null; then
+if [[ -n "$cachix_cache" ]] && command -v cachix &>/dev/null; then
 	echo ""
 	echo "=== Cachix ==="
-	echo "pushing to binary cache..."
-	cachix push grady-saccullo ./result
+	cachix_push
 fi

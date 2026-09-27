@@ -20,6 +20,13 @@
 
   # Helpers for consumers of the `secrets.*` bus (see modules/secrets/README.md).
   secrets = {
+    # What each `secrets.backend` runs to print one secret, given the reference as the last argument.
+    readCommandFor = {
+      op = ["op" "read" "--no-newline"];
+      rbw = ["rbw" "get"];
+      bw = ["bw" "get" "password" "--nointeraction"];
+    };
+
     # Wraps `command args...` in a script that resolves each `VAR = ref` in
     # `secretEnv` through `readCommand` when the script RUNS, exports the
     # results, then execs the real program with any extra arguments appended.

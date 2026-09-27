@@ -27,9 +27,11 @@ reference as trailing arguments:
 | --- | --- | --- |
 | `op` | `op read --no-newline` | 1Password desktop app (macOS) |
 | `rbw` | `rbw get` | nixpkgs |
-| `bw` | `bw get password` | nixpkgs |
+| `bw` | `bw get password --nointeraction` | nixpkgs (`applications.bitwarden.cli.enable`) |
 
-The CLI is looked up on `PATH` at runtime; this module installs nothing.
+The CLI is looked up on `PATH` at runtime; this module installs nothing. `bw` needs an unlocked
+vault in the environment (`export BW_SESSION=$(bw unlock --raw)`); with `--nointeraction` a locked
+vault fails straight away instead of waiting for a master password nobody can type.
 Set `secrets.readCommand` directly to use a custom backend.
 
 ## Host setup

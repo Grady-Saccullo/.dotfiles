@@ -1,15 +1,11 @@
 {
   config,
   lib,
+  utils,
   ...
 }: let
   inherit (lib) mkOption types;
-
-  readCommandFor = {
-    op = ["op" "read" "--no-newline"];
-    rbw = ["rbw" "get"];
-    bw = ["bw" "get" "password"];
-  };
+  inherit (utils.secrets) readCommandFor;
 in {
   options.secrets = {
     backend = mkOption {
@@ -42,7 +38,7 @@ in {
         {
           op = ["op" "read" "--no-newline"];
           rbw = ["rbw" "get"];
-          bw = ["bw" "get" "password"];
+          bw = ["bw" "get" "password" "--nointeraction"];
         }.''${secrets.backend} or []
       '';
       example = lib.literalExpression ''["pass" "show"]'';

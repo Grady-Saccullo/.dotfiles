@@ -59,6 +59,9 @@ For more than one machine, move each machine's module to `hosts/<name>/default.n
 - Secret values never go in these files. Write a reference such as
   `env.API_TOKEN.secret = "op://Vault/item/field";` and set `secrets.backend`; the value is read
   from your password manager when the program starts.
+- For a private Cachix cache, add it to `nixConfig` in `flake.nix` and set `cachix` in
+  `default.nix` (there is a commented example). `nix run .#switch` then logs in and pushes with
+  tokens from your password manager; see [Binary cache](../README.md#binary-cache-cachix).
 - Keep anything that should not be public in your own flake, not in this repo.
 - The options are documented next to the modules: [ai](../modules/ai/README.md),
   [secrets](../modules/secrets/README.md), [identity](../modules/identity/README.md),
