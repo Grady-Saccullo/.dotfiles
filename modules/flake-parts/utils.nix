@@ -27,33 +27,53 @@
       bw = ["bw" "get" "password" "--nointeraction"];
     };
 
-    # Wraps `command args...` in a script that resolves each `VAR = ref` in
-    # `secretEnv` through `readCommand` when the script RUNS, exports the
-    # results, then execs the real program with any extra arguments appended.
-    # `ref` is a string (one trailing argument) or a list of strings (passed
-    # verbatim). Only the references reach the Nix store, never the values.
-    #
-    #   utils.secrets.mkEnvWrapper {
-    #     inherit pkgs;
-    #     name = "ai-mcp-my-server";              # -> secret-env-ai-mcp-my-server
-    #     readCommand = config.secrets.readCommand;
-    #     secretEnv.DATABASE_URL = "op://Vault/item/field";
-    #     command = "/path/to/my-server";
-    #     args = ["serve"];
-    #   }
+    # A secrets hook (modules/secrets/README.md) that runs `readCommand <ref>` once per reference.
+    mkReadCommandHook = {
+      pkgs,
+      readCommand,
+    }:
+      pkgs.writeShellScriptBin "secrets-read-command-hook" ''
+        PATH=${lib.makeBinPath [pkgs.jq]}:$PATH
+        exec ${pkgs.bash}/bin/bash -e ${../secrets/read-command-hook.sh} ${lib.escapeShellArgs readCommand}
+      '';
+
+    # Wraps `command args...` in a script that asks `hook` for every `VAR = ref` in `secretEnv` in one
+    # call when it RUNS, exports the values and execs the program. Only the references reach the store.
+    # `readCommand` stands in for `hook` through mkReadCommandHook. See modules/secrets/README.md.
     mkEnvWrapper = {
       pkgs,
       name,
-      readCommand,
+      hook ? null,
+      readCommand ? [],
       secretEnv,
       command,
       args ? [],
-    }:
+    }: let
+      hook' =
+        if hook != null
+        then hook
+        else if readCommand != []
+        then secrets.mkReadCommandHook {inherit pkgs readCommand;}
+        else throw "utils.secrets.mkEnvWrapper (${name}): set `hook` or `readCommand`";
+      jq = "${pkgs.jq}/bin/jq";
+      request = builtins.toJSON {
+        version = 1;
+        purpose = "runtime:${name}";
+        refs = secretEnv;
+      };
+    in
       pkgs.writeShellScript "secret-env-${name}" ''
         set -eu
         export PATH="$PATH:/usr/local/bin:/opt/homebrew/bin:/run/current-system/sw/bin"
-        ${lib.concatStrings (lib.mapAttrsToList (var: ref: ''
-            if ${var}=$(${lib.escapeShellArgs (readCommand ++ lib.toList ref)}); then
+        interactive=false
+        if [ -t 0 ] && [ -t 2 ]; then interactive=true; fi
+        request=$(printf '%s' ${lib.escapeShellArg request} | ${jq} -c --argjson i "$interactive" '.interactive = $i')
+        if ! response=$(printf '%s' "$request" | ${lib.getExe hook'}); then
+          echo "${name}: the secrets hook failed" >&2
+          exit 1
+        fi
+        ${lib.concatStrings (lib.mapAttrsToList (var: _: ''
+            if ${var}=$(printf '%s' "$response" | ${jq} -je --arg k ${var} '.[$k] | strings'); then
               export ${var}
             else
               echo "${name}: failed to read secret for ${var}" >&2
@@ -61,6 +81,7 @@
             fi
           '')
           secretEnv)}
+        unset response
         exec ${lib.escapeShellArgs ([command] ++ args)} "$@"
       '';
   };

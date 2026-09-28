@@ -44,7 +44,7 @@
 
   # Env value for an MCP server: a literal string, a file reference read at
   # server start, or a secret reference resolved through
-  # `secrets.readCommand` (modules/secrets) at server start. Exactly one of
+  # `secrets.hook` (modules/secrets) at server start. Exactly one of
   # `file` / `secret` must be set when the attrset form is used (asserted in
   # ./mcp.nix).
   envValueType = types.either types.str (types.submodule {
@@ -63,9 +63,9 @@
         default = null;
         example = "op://Vault/item/field";
         description = ''
-          Reference passed to `secrets.readCommand` (see modules/secrets)
-          when the server starts. A string is a single argument; a list is
-          passed verbatim as arguments. Only the reference is stored in the
+          Reference passed to the host's `secrets.hook` (see modules/secrets)
+          when the server starts. Its format is whatever that hook expects: a
+          string, or a list of strings. Only the reference is stored in the
           Nix store, never the resolved value.
         '';
       };

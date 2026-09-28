@@ -40,7 +40,7 @@ host modules                           ─┘            │
 | `ai.lspServers.<name>` | `{ enable, command, args, extensionToLanguage, description, …freeform }` | HM `programs.claude-code.lspServers.<name>` → plugin `.lsp.json` |
 
 Secret resolution is not AI-specific and lives on its own bus:
-`secrets.backend` / `secrets.readCommand`, documented in
+`secrets.hook` (or its presets), documented in
 [`modules/secrets/README.md`](../secrets/README.md).
 
 Every named entry has `enable` defaulting to `true`. Entries are
@@ -161,7 +161,7 @@ contributor:
 ## MCP servers and secrets
 
 ```nix
-secrets.backend = "op";                  # host-level, see modules/secrets
+secrets.backend = "op";                  # host-level hook preset, see modules/secrets
 
 ai.mcpServers.my-server = {
   command = "/path/to/my-server";
@@ -177,11 +177,10 @@ ai.mcpServers.signoz.url = "https://mcp.us.signoz.cloud/mcp";  # remote, OAuth
 ```
 
 `mcp.nix` turns `{ secret }` refs into a wrapper script
-(`utils.secrets.mkEnvWrapper`) that calls `secrets.readCommand` (default
-per backend: `op read --no-newline`, `rbw get`, `bw get password`; see
+(`utils.secrets.mkEnvWrapper`) that asks the host's `secrets.hook` for all of
+the server's secrets in one call (see
 [`modules/secrets/README.md`](../secrets/README.md)) and then `exec`s the
-real server. A string secret is one trailing argument; a list is passed
-verbatim. Remote servers
+real server. The reference format is whatever that hook expects. Remote servers
 should prefer OAuth; header secrets would need the launching shell's
 environment and are not handled here.
 

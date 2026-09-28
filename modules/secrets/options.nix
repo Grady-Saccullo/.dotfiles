@@ -1,11 +1,13 @@
 {
   config,
   lib,
+  pkgs,
   utils,
   ...
 }: let
   inherit (lib) mkOption types;
-  inherit (utils.secrets) readCommandFor;
+  inherit (utils.secrets) readCommandFor mkReadCommandHook;
+  cfg = config.secrets;
 in {
   options.secrets = {
     backend = mkOption {
@@ -13,27 +15,25 @@ in {
       default = null;
       example = "op";
       description = ''
-        Secret manager CLI used to resolve secret references at runtime.
-        Sets the default of `secrets.readCommand`.
+        Preset for `secrets.readCommand`, for secrets kept in one of these password managers:
 
         - `op`: 1Password CLI (`op read --no-newline op://Vault/item/field`).
           On macOS it ships with the 1Password desktop app.
         - `rbw`: unofficial Bitwarden CLI (`rbw get <item>`), from nixpkgs.
-        - `bw`: official Bitwarden CLI (`bw get password <item>`), from nixpkgs.
+        - `bw`: official Bitwarden CLI (`bw get password <item>`), from nixpkgs. Needs an unlocked
+          vault in the environment (`BW_SESSION`).
 
-        The CLI is looked up on `PATH` when a secret is read, not at build
-        time; this module does not install it. `null` means no backend is
-        configured: consumers that hold a secret reference fail evaluation
-        with an assertion until one is chosen.
+        The CLI is looked up on `PATH` when a secret is read; this module does not install it.
+        `null` means no preset. Anything else, or no password manager at all, goes in `secrets.hook`.
       '';
     };
 
     readCommand = mkOption {
       type = types.listOf types.str;
       default =
-        if config.secrets.backend == null
+        if cfg.backend == null
         then []
-        else readCommandFor.${config.secrets.backend};
+        else readCommandFor.${cfg.backend};
       defaultText = lib.literalExpression ''
         {
           op = ["op" "read" "--no-newline"];
@@ -43,11 +43,28 @@ in {
       '';
       example = lib.literalExpression ''["pass" "show"]'';
       description = ''
-        Command that prints exactly one secret to stdout, given the secret
-        reference as trailing argument(s). Derived from `secrets.backend`;
-        override to use a custom backend or different flags. Consumers run
-        it through `utils.secrets.mkEnvWrapper` when the program starts, so
-        the resolved value never enters the Nix store.
+        Command that prints exactly one secret to stdout, given the secret reference as trailing
+        argument(s). It must not prompt. When set, `secrets.hook` defaults to a hook that runs it
+        once per reference.
+      '';
+    };
+
+    hook = mkOption {
+      type = types.nullOr types.package;
+      default =
+        if cfg.readCommand == []
+        then null
+        else mkReadCommandHook {inherit pkgs; inherit (cfg) readCommand;};
+      defaultText = lib.literalExpression ''
+        if secrets.readCommand == [] then null
+        else utils.secrets.mkReadCommandHook { inherit pkgs; inherit (config.secrets) readCommand; }
+      '';
+      example = lib.literalExpression "pkgs.callPackage ./my-secrets-hook.nix {}";
+      description = ''
+        Program that reads this host's secret values: a package whose `meta.mainProgram` takes a
+        batch of references on stdin and prints their values on stdout, as described in
+        modules/secrets/README.md. Used for `{ secret = ...; }` references at program start and,
+        unless `cachix.hook` says otherwise, for the Cachix tokens at switch time.
       '';
     };
   };

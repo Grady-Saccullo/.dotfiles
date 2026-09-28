@@ -7,8 +7,8 @@
 # through would still load it.
 #
 # Secret handling: `{ secret = ...; }` env refs are resolved when the server
-# process starts, by a wrapper script (utils.secrets.mkEnvWrapper) that calls
-# `secrets.readCommand` from the secrets bus (modules/secrets). Only the
+# process starts, by a wrapper script (utils.secrets.mkEnvWrapper) that asks
+# `secrets.hook` from the secrets bus (modules/secrets). Only the
 # REFERENCE (e.g. an op:// URI) enters the Nix store; the resolved value never
 # does. The store is world-readable and `apps/switch` pushes the closure to
 # Cachix, so this distinction matters.
@@ -20,7 +20,7 @@
   ...
 }: let
   cfg = config.ai;
-  readCommand = config.secrets.readCommand;
+  hook = config.secrets.hook;
 
   enabledServers = utils.enabled cfg.mcpServers;
 
@@ -35,7 +35,7 @@
 
   mkSecretWrapper = name: server:
     utils.secrets.mkEnvWrapper {
-      inherit pkgs readCommand;
+      inherit pkgs hook;
       name = "ai-mcp-${name}";
       secretEnv = secretEnv server.env;
       command = server.command;
@@ -43,7 +43,8 @@
     };
 
   toHomeManagerServer = name: server: let
-    wrap = server.command != null && usesSecrets server;
+    # Without a hook the assertion below reports the problem, instead of mkEnvWrapper failing first.
+    wrap = server.command != null && usesSecrets server && hook != null;
     base = removeAttrs server ["enable" "description" "command" "args" "env"];
   in
     base
@@ -73,11 +74,11 @@ in {
         envAssertions
         ++ [
           {
-            assertion = !(lib.any usesSecrets (lib.attrValues enabledServers)) || readCommand != [];
+            assertion = !(lib.any usesSecrets (lib.attrValues enabledServers)) || hook != null;
             message = ''
-              ai.mcpServers: a server uses a `{ secret = ...; }` env reference but
-              `secrets.readCommand` is empty. Set secrets.backend (or secrets.readCommand)
-              on this host; see modules/secrets/README.md.
+              ai.mcpServers: a server uses a `{ secret = ...; }` env reference but there is
+              no `secrets.hook`. Set secrets.hook (or a preset: secrets.backend) on this host;
+              see modules/secrets/README.md.
             '';
           }
         ];
