@@ -18,13 +18,19 @@ in {
     email = "example@example.com";
   };
 
-  secrets.backend = "op";
+  # Secret values are read by ./secrets-hook.sh from the login Keychain, so no password manager is
+  # needed. With 1Password, `secrets.backend = "op";` replaces this (modules/secrets/README.md).
+  secrets.hook = pkgs.writeShellApplication {
+    name = "keychain-secrets";
+    runtimeInputs = [pkgs.jq];
+    text = builtins.readFile ./secrets-hook.sh;
+  };
 
-  # Private binary cache; `nix run .#switch` reads these tokens from 1Password (README "Binary cache").
+  # Private binary cache; `nix run .#switch` asks the hook for both tokens (README "Binary cache").
   # cachix = {
   #   cache = "my-cache";
-  #   readToken = "op://Private/Cachix/read-token";
-  #   pushToken = "op://Private/Cachix/push-token";
+  #   readToken = "my-cache-read";
+  #   pushToken = "my-cache-push";
   # };
 
   applications = {
@@ -161,11 +167,11 @@ in {
     skills.css-style-position.enable = false;
     mcpServers = {
       docs.url = "https://mcp.example.com/mcp";
-      # Only the 1Password reference is stored; the token is read when the server starts.
+      # Only the Keychain name is stored; the token is read when the server starts.
       issue-tracker = {
         command = "/Users/${me.user}/.local/bin/issue-tracker-mcp";
         args = ["serve"];
-        env.API_TOKEN.secret = "op://Work/issue-tracker/api-token";
+        env.API_TOKEN.secret = "issue-tracker-api-token";
         description = "Issue tracker: search and update tickets";
       };
     };

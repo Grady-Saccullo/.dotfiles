@@ -9,6 +9,7 @@ A host is one machine: a nix-darwin module that says which apps it runs and how 
 | --- | --- |
 | [`example/flake.nix`](example/flake.nix) | A full flake that uses the framework the way your own would. It takes this repo as the input `dotfiles`, pins the framework's inputs in its own lock, adds extra package sources and builds the machine with `lib.mkDarwinHost`. |
 | [`example/default.nix`](example/default.nix) | The machine itself: host name, your name and email, which apps are on, window manager layout, AI tool setup and Dock apps. |
+| [`example/secrets-hook.sh`](example/secrets-hook.sh) | The program that reads its secrets, here from the macOS Keychain. Replace it or delete it (see below). |
 
 `default.nix` is a separate file because this repo's own flake also builds it, as the test that
 every module still builds (`nix run .#test example`). That test build gets no extra package
@@ -22,13 +23,16 @@ You need Nix with flakes enabled.
 mkdir ~/my-macs && cd ~/my-macs
 curl -LO https://raw.githubusercontent.com/Grady-Saccullo/.dotfiles/main/hosts/example/flake.nix
 curl -LO https://raw.githubusercontent.com/Grady-Saccullo/.dotfiles/main/hosts/example/default.nix
+curl -LO https://raw.githubusercontent.com/Grady-Saccullo/.dotfiles/main/hosts/example/secrets-hook.sh
 ```
 
-From a clone of this repo, `cp ~/.dotfiles/hosts/example/{flake.nix,default.nix} .` does the same.
+From a clone of this repo, `cp ~/.dotfiles/hosts/example/{flake.nix,default.nix,secrets-hook.sh} .`
+does the same.
 
 1. In `flake.nix`, set `user` to your macOS user name and rename `example` to your machine's name.
-2. In `default.nix`, set `networking`, `identity` and `secrets.backend`, then turn apps on or off.
-   Replace the made-up MCP servers and rules under `ai`, or delete them.
+2. In `default.nix`, set `networking` and `identity`, then turn apps on or off. Replace the
+   made-up MCP servers and rules under `ai`, or delete them. For secrets, keep the Keychain hook,
+   swap it for a preset such as `secrets.backend = "op";`, or delete it if nothing needs secrets.
 3. Flakes only see files that git tracks: `git init && git add -A`.
 4. Build and switch: `nix run .#switch <name>`. The first run creates `flake.lock`; commit it.
 
@@ -57,11 +61,12 @@ For more than one machine, move each machine's module to `hosts/<name>/default.n
 - GUI apps have `applications.<name>.path` and `applications.<name>.bundleId`, which are set even
   when the app is off. Use them for Dock items and window rules instead of typing paths and ids.
 - Secret values never go in these files. Write a reference such as
-  `env.API_TOKEN.secret = "op://Vault/item/field";` and set `secrets.backend`; the value is read
-  from your password manager when the program starts.
+  `env.API_TOKEN.secret = "issue-tracker-api-token";`; the host's secrets hook reads the value when
+  the program starts. See [secrets](../modules/secrets/README.md) for the presets and for writing
+  your own hook.
 - For a private Cachix cache, add it to `nixConfig` in `flake.nix` and set `cachix` in
   `default.nix` (there is a commented example). `nix run .#switch` then logs in and pushes with
-  tokens from your password manager; see [Binary cache](../README.md#binary-cache-cachix).
+  tokens from the same hook; see [Binary cache](../README.md#binary-cache-cachix).
 - Keep anything that should not be public in your own flake, not in this repo.
 - The options are documented next to the modules: [ai](../modules/ai/README.md),
   [secrets](../modules/secrets/README.md), [identity](../modules/identity/README.md),
