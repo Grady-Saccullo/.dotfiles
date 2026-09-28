@@ -8,9 +8,9 @@ from 1Password, Bitwarden, the macOS Keychain, a hardware token or anything else
 ## The rule
 
 **Secret values never enter the Nix store.** The store is readable by every user on the machine and
-`apps/switch` pushes the whole closure to Cachix, so a value that becomes a Nix string has already
-left the machine. Only *references* (an `op://` URI, an item name) may appear in Nix; the hook turns
-them into values when they are needed.
+a switch step may push the whole closure to a binary cache, so a value that becomes a Nix string has
+already left the machine. Only *references* (an `op://` URI, an item name) may appear in Nix; the
+hook turns them into values when they are needed.
 
 ## Options
 
@@ -19,7 +19,7 @@ them into values when they are needed.
 | `secrets.hook` | package or `null` | a hook built from `readCommand`, or `null` without one |
 | `secrets.readCommand` | list of strings | the `backend` preset, or `[]` |
 | `secrets.backend` | `null`, `"op"`, `"rbw"` or `"bw"` | `null` |
-| `cachix.hook` | package or `null` | `secrets.hook` (see the root README, "Binary cache") |
+| `switch.hook` | package or `null` | `secrets.hook` (see [modules/switch](../switch/README.md)) |
 
 There are three ways to set a host up, from least to most work:
 
@@ -50,8 +50,8 @@ As soon as one is declared, evaluation fails with a message telling you to set o
 ## The hook contract (version 1)
 
 A hook is an executable (the package's `meta.mainProgram`). The framework runs it with no
-arguments, once for each batch of secrets it needs: once per `nix run .#switch` for the Cachix
-tokens, and once each time a wrapped program starts (for example an MCP server).
+arguments, once for each batch of secrets it needs: once per `nix run .#switch` for every step's
+secrets, and once each time a wrapped program starts (for example an MCP server).
 
 **stdin** is one JSON request:
 
@@ -61,8 +61,8 @@ tokens, and once each time a wrapped program starts (for example an MCP server).
   "purpose": "switch",
   "interactive": true,
   "refs": {
-    "read": "my-cache-read",
-    "push": ["--field", "token", "my-cache"]
+    "login.token": "my-cache-read",
+    "upload.token": ["--field", "token", "my-cache"]
   }
 }
 ```
@@ -74,12 +74,13 @@ tokens, and once each time a wrapped program starts (for example an MCP server).
   the terminal at all: a wrapped MCP server talks to its client over stdin and stdout, and a prompt
   would corrupt the client's screen.
 - `refs`: label to reference, exactly as written in the Nix config (a string or a list of strings).
-  The framework never looks inside a reference, so its format is up to the hook.
+  The framework never looks inside a reference, so its format is up to the hook. Labels only name
+  the keys of the answer: the switch uses `<step>.<label>` and strips the prefix again itself.
 
 **stdout** is one JSON object from label to value, and nothing else:
 
 ```json
-{"read": "the read token", "push": "the push token"}
+{"login.token": "the read token", "upload.token": "the push token"}
 ```
 
 A label that is missing means that read failed. The exit status is `0` when stdout holds an answer
@@ -95,8 +96,9 @@ Rules for the hook:
   the switch is interrupted (`trap ... EXIT` in bash). Session keys stay inside the hook and the
   tool that needs them.
 - **Never block.** Anything that goes wrong (not set up, prompt cancelled, wrong password, tool
-  missing) is a message on stderr and a missing label or a non-zero exit. The switch then warns and
-  carries on without the tokens; a wrapped program fails to start with a clear message.
+  missing) is a message on stderr and a missing label or a non-zero exit. The switch then runs its
+  steps without those values (warning when the hook failed); a wrapped program fails to start with
+  a clear message.
 
 In return, the framework only sends references, reads the answer through pipes (never a temporary
 file or a command argument) and never exports a value, except into the program a wrapper starts.
@@ -120,10 +122,10 @@ done < <(printf '%s' "$request" | jq -j '.refs | keys[] | . + "\u0000"') | jq -s
 
 A hook that unlocks a vault does it once before that loop, and locks again in an `EXIT` trap.
 
-`tests/fake-secrets-hook` is the smallest possible hook (a fixed table), and `tests/secrets.sh`
-runs the real `apps/switch` against a hook with every external command stubbed: no password
-manager, no Nix build, no `sudo`. `tests/lib.sh` has the helpers, so a consumer can test its own
-hook the same way (see that file).
+`tests/fake-secrets-hook` is the smallest possible hook (a fixed table). `tests/secrets.sh` tests
+the hooks and wrappers, and `tests/switch.sh` runs the real `apps/switch` against a hook with every
+external command stubbed: no password manager, no Nix build, no `sudo`. `tests/lib.sh` has the
+helpers, so a consumer can test its own hook the same way (see that file).
 
 ## Consuming: `utils.secrets.mkEnvWrapper`
 

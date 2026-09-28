@@ -26,12 +26,26 @@ in {
     text = builtins.readFile ./secrets-hook.sh;
   };
 
-  # Private binary cache; `nix run .#switch` asks the hook for both tokens (README "Binary cache").
-  # cachix = {
-  #   cache = "my-cache";
-  #   readToken = "my-cache-read";
-  #   pushToken = "my-cache-push";
-  # };
+  # Runs after every `nix run .#switch`, with the step input as JSON on stdin
+  # (modules/switch/README.md).
+  switch.steps.notify = {
+    phase = "postSwitch";
+    package = pkgs.writeShellApplication {
+      name = "notify-switched";
+      runtimeInputs = [pkgs.jq];
+      text = ''
+        input=$(cat)
+        if ! printf '%s' "$input" | jq -e '.version == 1' >/dev/null; then
+          echo "notify-switched: unknown step input version" >&2
+          exit 2
+        fi
+        host=$(printf '%s' "$input" | jq -r .host)
+        osascript -e 'on run argv' \
+          -e 'display notification (item 1 of argv) with title "nix run .#switch"' \
+          -e 'end run' "$host is up to date"
+      '';
+    };
+  };
 
   applications = {
     # zsh, starship, fzf, zoxide, tmux, git, jj and the other CLI basics are on by default.

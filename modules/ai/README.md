@@ -1,7 +1,7 @@
-# `ai` — tool-agnostic AI configuration bus
+# `ai`: tool-agnostic AI configuration bus
 
-One bus, many consumers. Everything an AI coding tool can be fed — skills,
-agents, commands, rules, hooks, plugins, user-level context, MCP and LSP servers —
+One bus, many consumers. Everything an AI coding tool can be fed (skills,
+agents, commands, rules, hooks, plugins, user-level context, MCP and LSP servers)
 is declared once under `ai.*` and consumed by each tool module
 (`modules/applications/claude-code` today; codex/opencode later) which maps
 it onto home-manager's per-tool options.
@@ -9,13 +9,13 @@ it onto home-manager's per-tool options.
 ## The dependency rule
 
 ```
-app modules (jj, neovim, …)            ─┐
-modules/ai/content.nix (shared dirs)    ├─ SET ──▶ ai.*
-host modules                           ─┘            │
-                                                     │ READ
-                                                     ├──▶ modules/ai/mcp.nix        ──▶ HM programs.mcp.*
-                                                     ├──▶ applications.claude-code  ──▶ HM programs.claude-code.*
-                                                     └──▶ applications.<tool>       ──▶ HM programs.<tool>.*
+app modules (jj, neovim, ...)          -+
+modules/ai/content.nix (shared dirs)    +- SET --> ai.*
+host modules                           -+            |
+                                                     | READ
+                                                     +--> modules/ai/mcp.nix        --> HM programs.mcp.*
+                                                     +--> applications.claude-code  --> HM programs.claude-code.*
+                                                     +--> applications.<tool>       --> HM programs.<tool>.*
 ```
 
 * Only `modules/ai/` and tool modules write to home-manager's
@@ -36,8 +36,8 @@ host modules                           ─┘            │
 | `ai.permissions` | `{ allow, ask, deny }` (lists of rule strings) | `permissions.allow/ask/deny` in tool settings; lists merge across modules |
 | `ai.plugins.<name>` | `{ enable, source, description }` | personal plugin dir |
 | `ai.context` | `lines` | user-level `CLAUDE.md` (unmanaged when empty) |
-| `ai.mcpServers.<name>` | `{ enable, command, args, env, url, headers, description, …freeform }` | HM `programs.mcp.servers.<name>` |
-| `ai.lspServers.<name>` | `{ enable, command, args, extensionToLanguage, description, …freeform }` | HM `programs.claude-code.lspServers.<name>` → plugin `.lsp.json` |
+| `ai.mcpServers.<name>` | `{ enable, command, args, env, url, headers, description, ...freeform }` | HM `programs.mcp.servers.<name>` |
+| `ai.lspServers.<name>` | `{ enable, command, args, extensionToLanguage, description, ...freeform }` | HM `programs.claude-code.lspServers.<name>` -> plugin `.lsp.json` |
 
 Secret resolution is not AI-specific and lives on its own bus:
 `secrets.hook` (or its presets), documented in
@@ -45,13 +45,13 @@ Secret resolution is not AI-specific and lives on its own bus:
 
 Every named entry has `enable` defaulting to `true`. Entries are
 `attrsOf submodule`, so one module can declare `source` and another (a host
-config) can set only `enable = false` on the same name — the module system
+config) can set only `enable = false` on the same name; the module system
 merges them by attribute name with no glue code.
 
 `ai.permissions` is the one non-named option: three plain lists that the
 module system concatenates, deduplicated by the consumer. App modules publish
 the read-only subcommands of the tool they install (`git status`, `gh pr view`,
-…); hosts add to or override the result through the consuming tool's own
+...); hosts add to or override the result through the consuming tool's own
 settings option.
 
 ## Adding shared content
@@ -109,7 +109,7 @@ ai.hooks.jj-pre-edit-warning = {
 };
 ```
 
-Prefix names with the owning app (`jj-…`) so the filesystem and the option
+Prefix names with the owning app (`jj-...`) so the filesystem and the option
 tree line up.
 
 ### App-contributed MCP servers
@@ -121,7 +121,7 @@ a `lib.mkIf cfg.mcp.enable` block via `lib.mkMerge`
 (`modules/applications/slack/default.nix`):
 
 ```nix
-extraOptions.mcp.enable = lib.mkEnableOption "the Slack MCP server …";
+extraOptions.mcp.enable = lib.mkEnableOption "the Slack MCP server ...";
 
 (lib.mkIf cfg.mcp.enable {
   ai.mcpServers.slack = {
@@ -142,7 +142,7 @@ applications.slack = {
 ai.mcpServers.slack.enable = false;      # still overridable per host
 ```
 
-This is the template for other apps with official servers (`github-cli` →
+This is the template for other apps with official servers (`github-cli` with
 GitHub's remote MCP, and so on): one `mcp.enable` option, one bus entry,
 no tool-specific wiring.
 
@@ -154,7 +154,7 @@ contributor:
 ```nix
 {...}: {
   ai.skills.jj-gh-pr.enable = false;      # opt out on this host
-  ai.rules.personal-style.text = ''…'';   # host-only content
+  ai.rules.personal-style.text = ''...'';   # host-only content
 }
 ```
 
@@ -217,14 +217,14 @@ that share extensions with a primary one (htmx-lsp on `.html`, biome on
 
 * **This repository is public.** Work hostnames, repo paths, vault names
   and skills describing internal systems must not be committed here.
-* **The Nix store is world-readable and `apps/switch` pushes the whole
-  closure to Cachix.** A secret value that becomes a Nix string leaves the
-  machine. Only references (`op://…`, file paths) may appear in Nix; values
+* **The Nix store is world-readable and a switch step may push the whole
+  closure to a binary cache.** A secret value that becomes a Nix string leaves
+  the machine. Only references (`op://...`, file paths) may appear in Nix; values
   are resolved at runtime by the wrapper above.
 * **Sensitive declarations live in the flake that consumes this one** and
   builds its hosts with `inputs.dotfiles.lib.mkDarwinHost`. Its host modules
   are evaluated inside the same module system as the public ones and simply
-  set the same `ai.*` (and `secrets.*`, `identity.*`, …) options:
+  set the same `ai.*` (and `secrets.*`, `identity.*`, ...) options:
 
   ```nix
   # <consumer>/hosts/<host>/default.nix

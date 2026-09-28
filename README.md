@@ -30,7 +30,8 @@ still builds.
   secrets are fetched at runtime. See [Shared settings](#shared-settings).
 - **`lib.mkDarwinHost`**, the function your own flake calls to build a Mac from all of the above.
 - **Scripts** to build, test and update a machine: `nix run .#switch`, `test`, `update` and
-  `format`.
+  `format`. The switch also runs the [steps](#switch-steps) a host declares, before the build or
+  after switching.
 
 It targets macOS on Apple Silicon. The modules have Linux and NixOS branches, but there is no host
 builder for those yet.
@@ -47,8 +48,7 @@ nix run .#format           # format the Nix files with alejandra
 ```
 
 To set up a real machine, create your own flake that uses this one (next section), then run
-`nix run .#switch <host>` from that flake. You need Nix with flakes enabled. To use the binary
-cache, [set up Cachix](#binary-cache-cachix) first.
+`nix run .#switch <host>` from that flake. You need Nix with flakes enabled.
 
 ## Setting up your own machines
 
@@ -152,7 +152,9 @@ nix run .#switch <host>                                # 5. switch as usual
 `--local` (or `DOTFILES_LOCAL=<path>`) builds against your local checkout instead of the pushed
 version, without touching `flake.lock`. Only files tracked by git are used, and the checkout is
 copied into the Nix store first, so the part of the switch that runs as root never runs git inside
-your home directory.
+your home directory. The switch script itself then also comes from that copy, so it always matches
+the modules it builds. The switch in your `flake.lock` does that hand-over, so a lock from before it
+existed still runs its own older switch with `--local` until you update the `dotfiles` input.
 
 ## Shared settings
 
@@ -166,7 +168,7 @@ the one module that turns it into real config files. Hosts can turn off a single
 | `ai.*` | app modules, files in `modules/ai/`, hosts | claude-code (MCP servers via `modules/ai/mcp.nix`) | skills, agents, commands, rules, hooks, plugins, `CLAUDE.md` context, MCP and LSP servers |
 | `browser.*` | 1password, bitwarden, raycast | brave | browser extensions to install |
 | `identity.*` | hosts | git, jj | your name and email (the defaults are the author's, so set these) |
-| `secrets.*` | hosts | apps that need a token at startup, `nix run .#switch` | the hook that reads secret values (any password manager, or none) |
+| `secrets.*` | hosts | apps that need a token at startup, switch steps | the hook that reads secret values (any password manager, or none) |
 | `shell.*` | git, jj | zsh | shell aliases and startup snippets |
 
 Each one has a README with the full option list: [ai](modules/ai/README.md),
@@ -175,8 +177,8 @@ Each one has a README with the full option list: [ai](modules/ai/README.md),
 
 ### Secrets
 
-This repo is public, everything in the Nix store is readable by every user on the machine, and
-`nix run .#switch` uploads the built system to a binary cache. So secret values never go into Nix.
+This repo is public, everything in the Nix store is readable by every user on the machine, and a
+switch step may upload the built system to a binary cache. So secret values never go into Nix.
 Config holds a reference instead (for example `{ secret = "op://Vault/item/field"; }`), and the
 host's **secrets hook** turns references into values when they are needed: a small program you
 choose, which gets the references on stdin and prints the values on stdout. It can use any password
@@ -185,46 +187,30 @@ that prints one secret works, and you can write your own, for example to unlock 
 several reads. [modules/secrets/README.md](modules/secrets/README.md) has the contract and an
 example that reads the macOS Keychain.
 
-## Binary cache (Cachix)
+## Switch steps
 
-A private [Cachix](https://cachix.org) cache stores built packages, so a machine does not rebuild
-what another one already built. `nix run .#switch` downloads from it (along with the public
-`nix-community` and `numtide` caches) and uploads the new build afterwards. It needs two pieces of
-config:
+`nix run .#switch <host>` can run programs the host declares, before the build (`preBuild`) or
+after switching (`postSwitch`): logging in to a private binary cache and uploading the new system
+to it, or a notification when the switch is done, for example. The framework ships no steps; they
+are packages in your own flake:
 
-- **The cache**, in the `nixConfig` of the flake you run. Nix only reads `nixConfig` from the flake
-  being run, and modules cannot set it. It is deliberately not a machine-wide setting: as one, it
-  was also used by unrelated projects, which printed `HTTP error 401` warnings because they had no
-  credentials.
-- **The tokens**, as references the host's secrets hook understands. They are read with
-  `secrets.hook`, or with `cachix.hook` when they live somewhere else than the host's other
-  secrets:
-
-  ```nix
-  cachix = {
-    cache = "my-cache";
-    readToken = "my-cache-read";   # read-only token
-    pushToken = "my-cache-push";   # token with write access
+```nix
+switch.steps.upload = {
+  phase = "postSwitch";
+  package = pkgs.callPackage ./upload-system.nix {};
+  settings.store = "s3://my-cache?region=eu-west-1";
+  # References that the host's secrets hook turns into values at switch time.
+  secrets = {
+    keyId = "my-cache-access-key-id";
+    secretKey = "my-cache-secret-access-key";
   };
-  ```
+};
+```
 
-Before building, `nix run .#switch` asks the hook for both tokens in one call, so a hook that
-unlocks a vault unlocks it once and can lock it again before the build starts. It writes the read
-token to the `machine <cache>.cachix.org` line of `/etc/nix/netrc`, which Nix uses to log in to the
-cache. Other lines in that file are kept, and it only asks for `sudo` when the token changed. After
-switching, it runs `cachix push` with the push token. Tokens are passed through pipes only, never
-as command arguments or exported variables.
-
-Nothing here is required. Without `readToken` the netrc is left as it is, and without `pushToken`
-the push uses `CACHIX_AUTH_TOKEN` from the environment, or is skipped. If reading fails, for example
-because the hook could not unlock anything or you cancelled a prompt, the switch prints a warning
-and carries on: the netrc keeps its old token and the push is skipped. Create both tokens on the
-[Cachix dashboard](https://app.cachix.org).
-
-`/etc/nix/netrc` is readable by every user (mode `0644`, not `0600`): a switch talks to the cache
-both as root and as your user, and with `0600` the user side gets `HTTP 401` errors. That is why
-the token written there should be read-only, with the write token kept only where the hook reads
-it.
+Each step gets its settings, its secrets and the new system's store path as JSON on stdin. The
+switch reads the secrets of every step with one call to the host's secrets hook before the build,
+and a failing step only prints a warning. [modules/switch/README.md](modules/switch/README.md) has
+the options, the input format and a complete example.
 
 ## Repository layout
 
@@ -235,14 +221,14 @@ it.
 | `hosts/example/` | A complete example: `flake.nix` uses the framework the way your own flake would, and `default.nix` is the machine. This repo also builds `default.nix` as its test (`nix run .#test example`). See [hosts/README.md](hosts/README.md). |
 | `modules/applications/` | One directory per app. See [App modules](#app-modules). |
 | `modules/{ai,browser,identity,secrets,shell}/` | The [shared settings](#shared-settings). |
+| `modules/switch/` | The `switch.*` options: the steps `nix run .#switch` runs (see [Switch steps](#switch-steps)). |
 | `modules/darwin/sensible.nix` | macOS defaults and the Homebrew setup. |
 | `modules/home-manager/darwin.nix` | home-manager setup for macOS. |
 | `modules/shared/nix.nix` | Nix settings every machine gets. |
-| `modules/shared/cachix.nix` | The `cachix.*` options `nix run .#switch` reads (see [Binary cache](#binary-cache-cachix)). |
 | `modules/flake-parts/` | Extra flake outputs, the dev shell, the script wiring, and `utils.nix` (helpers the modules use). |
 | `overlays/` | Changes to the package set, currently `pkgs.channels`. |
 | `templates/` | Project templates (a Zig flake). |
-| `tests/` | Tests for the secrets hook plumbing, run with `/bin/bash -e tests/secrets.sh`. |
+| `tests/` | Tests for `nix run .#switch` and the secrets hook plumbing, run with `/bin/bash -e tests/switch.sh` and `/bin/bash -e tests/secrets.sh`. |
 
 ### App modules
 

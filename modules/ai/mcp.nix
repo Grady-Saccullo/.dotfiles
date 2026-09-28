@@ -10,8 +10,8 @@
 # process starts, by a wrapper script (utils.secrets.mkEnvWrapper) that asks
 # `secrets.hook` from the secrets bus (modules/secrets). Only the
 # REFERENCE (e.g. an op:// URI) enters the Nix store; the resolved value never
-# does. The store is world-readable and `apps/switch` pushes the closure to
-# Cachix, so this distinction matters.
+# does. The store is world-readable and a switch step may push the closure to
+# a binary cache, so this distinction matters.
 {
   config,
   lib,

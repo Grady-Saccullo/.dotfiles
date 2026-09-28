@@ -9,7 +9,7 @@ in rec {
   imports = [
     (inputs.nix-homebrew.darwinModules.nix-homebrew)
     ../shared/nix.nix
-    ../shared/cachix.nix
+    ../switch
   ];
 
   users.users.${me.user} = {

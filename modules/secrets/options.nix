@@ -54,7 +54,11 @@ in {
       default =
         if cfg.readCommand == []
         then null
-        else mkReadCommandHook {inherit pkgs; inherit (cfg) readCommand;};
+        else
+          mkReadCommandHook {
+            inherit pkgs;
+            inherit (cfg) readCommand;
+          };
       defaultText = lib.literalExpression ''
         if secrets.readCommand == [] then null
         else utils.secrets.mkReadCommandHook { inherit pkgs; inherit (config.secrets) readCommand; }
@@ -64,7 +68,7 @@ in {
         Program that reads this host's secret values: a package whose `meta.mainProgram` takes a
         batch of references on stdin and prints their values on stdout, as described in
         modules/secrets/README.md. Used for `{ secret = ...; }` references at program start and,
-        unless `cachix.hook` says otherwise, for the Cachix tokens at switch time.
+        unless `switch.hook` says otherwise, for the switch steps' secrets at switch time.
       '';
     };
   };

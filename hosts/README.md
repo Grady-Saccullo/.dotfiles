@@ -8,7 +8,7 @@ A host is one machine: a nix-darwin module that says which apps it runs and how 
 | File | What it is |
 | --- | --- |
 | [`example/flake.nix`](example/flake.nix) | A full flake that uses the framework the way your own would. It takes this repo as the input `dotfiles`, pins the framework's inputs in its own lock, adds extra package sources and builds the machine with `lib.mkDarwinHost`. |
-| [`example/default.nix`](example/default.nix) | The machine itself: host name, your name and email, which apps are on, window manager layout, AI tool setup and Dock apps. |
+| [`example/default.nix`](example/default.nix) | The machine itself: host name, your name and email, which apps are on, window manager layout, AI tool setup, Dock apps and a switch step. |
 | [`example/secrets-hook.sh`](example/secrets-hook.sh) | The program that reads its secrets, here from the macOS Keychain. Replace it or delete it (see below). |
 
 `default.nix` is a separate file because this repo's own flake also builds it, as the test that
@@ -33,6 +33,7 @@ does the same.
 2. In `default.nix`, set `networking` and `identity`, then turn apps on or off. Replace the
    made-up MCP servers and rules under `ai`, or delete them. For secrets, keep the Keychain hook,
    swap it for a preset such as `secrets.backend = "op";`, or delete it if nothing needs secrets.
+   Keep the `notify` switch step or delete it.
 3. Flakes only see files that git tracks: `git init && git add -A`.
 4. Build and switch: `nix run .#switch <name>`. The first run creates `flake.lock`; commit it.
 
@@ -64,11 +65,13 @@ For more than one machine, move each machine's module to `hosts/<name>/default.n
   `env.API_TOKEN.secret = "issue-tracker-api-token";`; the host's secrets hook reads the value when
   the program starts. See [secrets](../modules/secrets/README.md) for the presets and for writing
   your own hook.
-- For a private Cachix cache, add it to `nixConfig` in `flake.nix` and set `cachix` in
-  `default.nix` (there is a commented example). `nix run .#switch` then logs in and pushes with
-  tokens from the same hook; see [Binary cache](../README.md#binary-cache-cachix).
+- `nix run .#switch` can run your own programs before the build or after switching, declared
+  under `switch.steps` in `default.nix`, which has a small one that shows a notification after
+  every switch. A step can also get secrets from the same hook, for example to log in to a private
+  binary cache and upload to it; see [switch steps](../modules/switch/README.md).
 - Keep anything that should not be public in your own flake, not in this repo.
 - The options are documented next to the modules: [ai](../modules/ai/README.md),
-  [secrets](../modules/secrets/README.md), [identity](../modules/identity/README.md),
-  [shell](../modules/shell/README.md), [browser](../modules/browser/README.md) and the app modules
-  under [`modules/applications/`](../modules/applications/).
+  [secrets](../modules/secrets/README.md), [switch](../modules/switch/README.md),
+  [identity](../modules/identity/README.md), [shell](../modules/shell/README.md),
+  [browser](../modules/browser/README.md) and the app modules under
+  [`modules/applications/`](../modules/applications/).
