@@ -12,7 +12,7 @@ utils.mkAppModule {
     package = lib.mkPackageOption pkgs "bitwarden-desktop" {};
     browserExtension.enable = lib.mkEnableOption "Bitwarden Browser Extension";
     cli = {
-      enable = lib.mkEnableOption "the Bitwarden CLI (`bw`), needed for `secrets.backend = \"bw\"`";
+      enable = lib.mkEnableOption "the Bitwarden CLI (`bw`)";
       package = lib.mkPackageOption pkgs "bitwarden-cli" {};
     };
   };

@@ -166,7 +166,7 @@ the one module that turns it into real config files. Hosts can turn off a single
 | `ai.*` | app modules, files in `modules/ai/`, hosts | claude-code (MCP servers via `modules/ai/mcp.nix`) | skills, agents, commands, rules, hooks, plugins, `CLAUDE.md` context, MCP and LSP servers |
 | `browser.*` | 1password, bitwarden, raycast | brave | browser extensions to install |
 | `identity.*` | hosts | git, jj | your name and email (the defaults are the author's, so set these) |
-| `secrets.*` | hosts | apps that need a token at startup | which password manager CLI to use (`op`, `rbw` or `bw`) |
+| `secrets.*` | hosts | apps that need a token at startup, `nix run .#switch` | the hook that reads secret values (any password manager, or none) |
 | `shell.*` | git, jj | zsh | shell aliases and startup snippets |
 
 Each one has a README with the full option list: [ai](modules/ai/README.md),
@@ -177,9 +177,13 @@ Each one has a README with the full option list: [ai](modules/ai/README.md),
 
 This repo is public, everything in the Nix store is readable by every user on the machine, and
 `nix run .#switch` uploads the built system to a binary cache. So secret values never go into Nix.
-Config holds a reference instead (for example `{ secret = "op://Vault/item/field"; }`), and a small
-wrapper script reads the real value from your password manager when the program starts. Modules
-build that wrapper with `utils.secrets.mkEnvWrapper`.
+Config holds a reference instead (for example `{ secret = "op://Vault/item/field"; }`), and the
+host's **secrets hook** turns references into values when they are needed: a small program you
+choose, which gets the references on stdin and prints the values on stdout. It can use any password
+manager or none. There are presets for 1Password (`op`) and Bitwarden (`rbw`, `bw`), any command
+that prints one secret works, and you can write your own, for example to unlock a vault once for
+several reads. [modules/secrets/README.md](modules/secrets/README.md) has the contract and an
+example that reads the macOS Keychain.
 
 ## Binary cache (Cachix)
 
@@ -192,29 +196,35 @@ config:
   being run, and modules cannot set it. It is deliberately not a machine-wide setting: as one, it
   was also used by unrelated projects, which printed `HTTP error 401` warnings because they had no
   credentials.
-- **The tokens**, as references into your password manager. They are read with the host's
-  `secrets.backend`, or with `cachix.backend` when they live somewhere else, for example one
-  personal Bitwarden account shared by a work and a personal machine:
+- **The tokens**, as references the host's secrets hook understands. They are read with
+  `secrets.hook`, or with `cachix.hook` when they live somewhere else than the host's other
+  secrets:
 
   ```nix
   cachix = {
     cache = "my-cache";
-    readToken = "op://Private/Cachix/read-token";   # read-only token
-    pushToken = "op://Private/Cachix/push-token";   # token with write access
+    readToken = "my-cache-read";   # read-only token
+    pushToken = "my-cache-push";   # token with write access
   };
   ```
 
-Before building, `nix run .#switch` reads the read token and writes it to the
-`machine <cache>.cachix.org` line of `/etc/nix/netrc`, which Nix uses to log in to the cache. Other
-lines in that file are kept, and it only asks for `sudo` when the token changed. After switching,
-it reads the push token and runs `cachix push`. If a read fails, for example because the vault is
-locked, it prints a warning and carries on: the netrc keeps its old token and the push is skipped.
-A host without `pushToken` pushes with `CACHIX_AUTH_TOKEN` from the environment instead. Create
-both tokens on the [Cachix dashboard](https://app.cachix.org).
+Before building, `nix run .#switch` asks the hook for both tokens in one call, so a hook that
+unlocks a vault unlocks it once and can lock it again before the build starts. It writes the read
+token to the `machine <cache>.cachix.org` line of `/etc/nix/netrc`, which Nix uses to log in to the
+cache. Other lines in that file are kept, and it only asks for `sudo` when the token changed. After
+switching, it runs `cachix push` with the push token. Tokens are passed through pipes only, never
+as command arguments or exported variables.
+
+Nothing here is required. Without `readToken` the netrc is left as it is, and without `pushToken`
+the push uses `CACHIX_AUTH_TOKEN` from the environment, or is skipped. If reading fails, for example
+because the hook could not unlock anything or you cancelled a prompt, the switch prints a warning
+and carries on: the netrc keeps its old token and the push is skipped. Create both tokens on the
+[Cachix dashboard](https://app.cachix.org).
 
 `/etc/nix/netrc` is readable by every user (mode `0644`, not `0600`): a switch talks to the cache
 both as root and as your user, and with `0600` the user side gets `HTTP 401` errors. That is why
-the token written there should be read-only, with the write token kept only in the vault.
+the token written there should be read-only, with the write token kept only where the hook reads
+it.
 
 ## Repository layout
 
@@ -228,9 +238,11 @@ the token written there should be read-only, with the write token kept only in t
 | `modules/darwin/sensible.nix` | macOS defaults and the Homebrew setup. |
 | `modules/home-manager/darwin.nix` | home-manager setup for macOS. |
 | `modules/shared/nix.nix` | Nix settings every machine gets. |
+| `modules/shared/cachix.nix` | The `cachix.*` options `nix run .#switch` reads (see [Binary cache](#binary-cache-cachix)). |
 | `modules/flake-parts/` | Extra flake outputs, the dev shell, the script wiring, and `utils.nix` (helpers the modules use). |
 | `overlays/` | Changes to the package set, currently `pkgs.channels`. |
 | `templates/` | Project templates (a Zig flake). |
+| `tests/` | Tests for the secrets hook plumbing, run with `/bin/bash -e tests/secrets.sh`. |
 
 ### App modules
 

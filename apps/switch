@@ -39,28 +39,56 @@ function build() {
 		".#$attr"
 }
 
-# Cachix tokens are read from the host's vault references (modules/shared/cachix.nix) at switch time.
-# A failed read only warns, so a locked vault never blocks a switch.
+# Cachix tokens come from the host's secrets hook (modules/secrets/README.md), asked once before the
+# build. Any failure only warns: the netrc keeps its old token and the push is skipped.
 cachix_config=null
 if [[ $(uname -o) == Darwin ]]; then
-	cachix_config=$(nix eval --json "${override[@]}" ".#darwinConfigurations.$config_name.config.cachix.switchCommands" 2>/dev/null) || cachix_config=null
+	cachix_config=$(nix eval --json "${override[@]}" ".#darwinConfigurations.$config_name.config.cachix.switchConfig" 2>/dev/null) || cachix_config=null
 fi
 cachix_cache=$(jq -r '.cache // empty' <<<"$cachix_config")
 
-# read_secret <json command>: runs it and prints the secret; the value never appears in argv.
-function read_secret() {
-	local cmd=() arg
-	while IFS= read -r arg; do cmd+=("$arg"); done < <(jq -r '.[]' <<<"$1")
-	"${cmd[@]}"
+# The hook's answer. Values leave it only through pipes: bash 3.2 backs here-strings with temp files.
+secrets_response='{}'
+
+function read_secrets() {
+	local hook request interactive=false
+	jq -e '.refs | length > 0' <<<"$cachix_config" >/dev/null || return 0
+	hook=$(jq -r '.hook // empty' <<<"$cachix_config")
+	if [[ -z "$hook" ]]; then
+		echo "warning: cachix token references are set but there is no secrets hook; skipping them" >&2
+		return 0
+	fi
+	if ! nix build --no-link "${override[@]}" ".#darwinConfigurations.$config_name.config.cachix.hook"; then
+		echo "warning: could not build the secrets hook; skipping the Cachix tokens" >&2
+		return 0
+	fi
+	if [[ -t 0 && -t 2 ]]; then
+		interactive=true
+	fi
+	request=$(jq -c --argjson interactive "$interactive" \
+		'{version: 1, purpose: "switch", interactive: $interactive, refs: .refs}' <<<"$cachix_config")
+	if ! secrets_response=$(printf '%s' "$request" | "$hook") ||
+		! printf '%s' "$secrets_response" | jq -e 'type == "object"' >/dev/null 2>&1; then
+		echo "warning: the secrets hook failed; skipping the Cachix tokens" >&2
+		secrets_response='{}'
+	fi
+}
+
+# secret <label>: prints what the hook returned for <label>, or fails.
+function secret() {
+	printf '%s' "$secrets_response" | jq -je --arg k "$1" '.[$k] | strings'
 }
 
 # Rewrites only the cache's line in the netrc, and only when the token changed.
 function cachix_login() {
 	local netrc host token wanted
-	jq -e '.readToken' <<<"$cachix_config" >/dev/null || return 0
 	netrc=$(jq -r '.netrcFile' <<<"$cachix_config")
+	if ! jq -e '.refs.read' <<<"$cachix_config" >/dev/null; then
+		echo "no cachix.readToken; leaving $netrc as it is" >&2
+		return 0
+	fi
 	host="$cachix_cache.cachix.org"
-	if ! token=$(read_secret "$(jq -c '.readToken' <<<"$cachix_config")") || [[ -z "$token" ]]; then
+	if ! token=$(secret read) || [[ -z "$token" ]]; then
 		echo "warning: could not read the Cachix read token; leaving $netrc as it is" >&2
 		return 0
 	fi
@@ -70,33 +98,42 @@ function cachix_login() {
 	)
 	if ! cmp -s <(printf '%s\n' "$wanted") "$netrc"; then
 		echo "updating $host in $netrc"
-		printf '%s\n' "$wanted" | sudo tee "$netrc" >/dev/null
-		sudo chmod 0644 "$netrc"
+		if ! printf '%s\n' "$wanted" | sudo tee "$netrc" >/dev/null || ! sudo chmod 0644 "$netrc"; then
+			echo "warning: could not write $netrc; Nix keeps using the token already there" >&2
+		fi
 	fi
 }
 
-# CACHIX_AUTH_TOKEN is only a fallback for hosts without cachix.pushToken, so a stale value in the
-# environment can't hide a failing vault read.
-function cachix_push() {
-	local token=${CACHIX_AUTH_TOKEN:-}
-	if jq -e '.pushToken' <<<"$cachix_config" >/dev/null; then
-		if ! token=$(read_secret "$(jq -c '.pushToken' <<<"$cachix_config")") || [[ -z "$token" ]]; then
-			echo "warning: could not read the Cachix push token; skipping the push" >&2
-			return 0
-		fi
+# Read before the build with the read token, and kept unexported until the push. CACHIX_AUTH_TOKEN is
+# only a fallback for hosts without cachix.pushToken, so it can't hide a failing read.
+cachix_push_token=
+function cachix_read_push_token() {
+	if ! jq -e '.refs.push' <<<"$cachix_config" >/dev/null; then
+		cachix_push_token=${CACHIX_AUTH_TOKEN:-}
+		return 0
 	fi
-	if [[ -z "$token" ]]; then
+	if ! cachix_push_token=$(secret push) || [[ -z "$cachix_push_token" ]]; then
+		echo "warning: could not read the Cachix push token; the push will be skipped" >&2
+		cachix_push_token=
+	fi
+}
+
+function cachix_push() {
+	if [[ -z "$cachix_push_token" ]]; then
 		echo "no Cachix push token (set cachix.pushToken); skipping the push" >&2
 		return 0
 	fi
 	echo "pushing to $cachix_cache..."
-	CACHIX_AUTH_TOKEN=$token cachix push "$cachix_cache" ./result
+	CACHIX_AUTH_TOKEN=$cachix_push_token cachix push "$cachix_cache" ./result
 }
 
 case $(uname -o) in
 Darwin)
 	if [[ -n "$cachix_cache" ]]; then
+		read_secrets
 		cachix_login
+		cachix_read_push_token
+		secrets_response=
 	fi
 	build "darwinConfigurations.$config_name.system" "${override[@]}"
 
