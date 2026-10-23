@@ -1,19 +1,6 @@
 {
   description = "Nix system manager";
 
-  # Personal binary cache, scoped to this flake only. Kept out of the
-  # machine-wide nix-darwin substituters on purpose: as a global substituter
-  # it leaked into every unrelated project, whose cache probe hits this
-  # private cache unauthenticated and warns `HTTP error 401`. Scoping it here
-  # means only `nix run .#switch` (operations on this flake) uses it. The
-  # daemon authenticates via /etc/nix/netrc (see README).
-  nixConfig = {
-    extra-substituters = ["https://grady-saccullo.cachix.org"];
-    extra-trusted-public-keys = [
-      "grady-saccullo.cachix.org-1:eYGgNiaxvbtKg9XDaDw8POg+R92uwljqdlcE32nL9ts="
-    ];
-  };
-
   # Only what the framework's code is built on. App builds (nightlies, release pins) are the host's
   # call: an input in its own flake, fed in via mkDarwinHost's `overlays`/`channels` (README).
   inputs = {

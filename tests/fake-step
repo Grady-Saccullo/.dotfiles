@@ -1,0 +1,6 @@
+#!/bin/bash -e
+
+# The smallest switch step (modules/switch/README.md): appends its input, one JSON line, to
+# FAKE_STEP_LOG so tests can check what the switch sent, then exits with FAKE_STEP_RC.
+jq -c . >>"${FAKE_STEP_LOG:-/dev/null}"
+exit "${FAKE_STEP_RC:-0}"

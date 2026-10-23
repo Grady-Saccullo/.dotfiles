@@ -11,7 +11,12 @@
     PATH=${pkgs.jq}/bin:$PATH
     exec /bin/bash -e ${./.}/fake-secrets-hook
   '';
-  wrap = args: utils.secrets.mkEnvWrapper ({inherit pkgs; command = "/usr/bin/env";} // args);
+  wrap = args:
+    utils.secrets.mkEnvWrapper ({
+        inherit pkgs;
+        command = "/usr/bin/env";
+      }
+      // args);
 in {
   wrapped = wrap {
     name = "test";

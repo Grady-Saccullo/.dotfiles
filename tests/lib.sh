@@ -1,6 +1,8 @@
-# Helpers for testing a secrets hook (modules/secrets/README.md) and apps/switch without a password
-# manager, a Nix build or root. Source it from a script run with `/bin/bash -e`, as tests/secrets.sh
-# does; a consumer can source it from the framework input to test its own hook the same way.
+# shellcheck shell=bash disable=SC2016
+# Helpers for testing a secrets hook (modules/secrets/README.md), apps/switch and switch steps
+# (modules/switch/README.md) without a password manager, a Nix build or root. Source it from a script
+# run with `/bin/bash -e`, as tests/secrets.sh and tests/switch.sh do; a consumer can source it from
+# the framework input to test its own hook and steps the same way.
 
 tests_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 framework_dir=$(dirname "$tests_dir")
@@ -47,6 +49,21 @@ function with() { (
 	shift
 	"$@"
 ); }
+
+# capture <var> <command...>: sets <var> to the command's stdout. When the command fails, <var> is empty
+# and the run records a FAIL with its first error line, instead of stopping under -e.
+function capture() {
+	local var=$1 errors output
+	shift
+	errors=$(mktemp "${TMPDIR:-/tmp}/capture.XXXXXX")
+	if output=$("$@" 2>"$errors"); then
+		printf -v "$var" '%s' "$output"
+	else
+		printf -v "$var" '%s' ""
+		fail "$var: $* failed: $(awk '/^[[:space:]]*error: *[^[:space:]]/ { sub(/^[[:space:]]+/, ""); print; exit }' "$errors")"
+	fi
+	rm -f "$errors"
+}
 
 # A fresh $sandbox: bin/ holds the stubs (first on PATH in run_switch and run_spied), flake/ is where
 # apps/switch runs, log gets one line per stub call and leaks one line per secret a stub was given.
@@ -109,19 +126,35 @@ function stub() {
 	chmod +x "$sandbox/bin/$1"
 }
 
-# The commands apps/switch runs besides the hook. `nix eval` prints $sandbox/switch-config.json,
-# STUB_HOOK_BUILD_RC fails the hook build, and STUB_SUDO_FAIL=<command> fails `sudo <command>`.
+# Stubs nix, darwin-rebuild and sudo for apps/switch; `nix eval` of switch.plan prints what
+# switch_plan wrote. STUB_TOOLS_BUILD_RC fails the switch.tools build, STUB_LOCAL_SRC is the store
+# path --local resolves to, and STUB_SUDO_FAIL=<command> fails `sudo <command>`.
 function stub_switch_commands() {
 	stub nix '
-case "$1" in
-eval) cat "$SANDBOX/switch-config.json" ;;
-build)
-	for arg in "$@"; do installable=$arg; done
+for arg in "$@"; do installable=$arg; done
+printf "%s\n" "${NIX_CONFIG:-}" >"$SANDBOX/nix-config"
+case "$1 $2" in
+"flake metadata") printf "{\"path\":\"%s\"}\n" "${STUB_LOCAL_SRC:-}" ;;
+"store diff-closures") ;;
+eval*)
 	case "$installable" in
-	*.config.cachix.hook) exit "${STUB_HOOK_BUILD_RC:-0}" ;;
+	*.config.switch.plan)
+		if [[ ! -f "$SANDBOX/plan.json" ]]; then
+			echo "error: attribute '"'plan'"' missing" >&2
+			exit 1
+		fi
+		cat "$SANDBOX/plan.json"
+		;;
+	*) exit 1 ;;
+	esac
+	;;
+build*)
+	case "$installable" in
+	*.config.switch.tools) exit "${STUB_TOOLS_BUILD_RC:-0}" ;;
 	*.system)
-		mkdir -p result/sw/bin
-		cp "$SANDBOX/bin/darwin-rebuild" result/sw/bin/
+		mkdir -p "$SANDBOX/system/sw/bin"
+		cp "$SANDBOX/bin/darwin-rebuild" "$SANDBOX/system/sw/bin/"
+		ln -sfn "$SANDBOX/system" result
 		;;
 	esac
 	;;
@@ -129,11 +162,10 @@ esac'
 	stub darwin-rebuild ':'
 	stub sudo '[[ "${STUB_SUDO_FAIL:-}" != "$1" ]] || exit 1
 exec "$@"'
-	stub cachix 'printf "%s\n" "$CACHIX_AUTH_TOKEN" >"$SANDBOX/pushed-with"' CACHIX_AUTH_TOKEN
 }
 
-# switch_config <json>: what `nix eval ...cachix.switchConfig` prints for the next run_switch.
-function switch_config() { printf '%s' "$1" >"$sandbox/switch-config.json"; }
+# switch_plan <json>: what `nix eval ...switch.plan` prints for the next run_switch.
+function switch_plan() { printf '%s' "$1" >"$sandbox/plan.json"; }
 
 # run_switch <args...>: runs apps/switch with no terminal; its output goes to $sandbox/out.
 function run_switch() {
