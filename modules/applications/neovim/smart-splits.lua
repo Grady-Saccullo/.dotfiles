@@ -1,7 +1,11 @@
 -- [START] smart-splits.lua --
 require("smart-splits").setup({
-	at_edge = "stop",
-	multiplexer_integration = "wezterm",
+	move = {
+		at_edge = "stop",
+	},
+	mux = {
+		backend = "wezterm",
+	},
 })
 
 -- Navigation keymaps (Ctrl + Arrow keys)
