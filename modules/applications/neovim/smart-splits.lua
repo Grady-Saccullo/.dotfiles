@@ -4,7 +4,7 @@ require("smart-splits").setup({
 		at_edge = "stop",
 	},
 	mux = {
-		backend = "wezterm",
+		backend = "smart-splits-backend-wezterm",
 	},
 })
 

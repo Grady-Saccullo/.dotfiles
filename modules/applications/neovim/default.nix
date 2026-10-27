@@ -38,6 +38,19 @@ in {
         yaml
       ]);
     enable-nvim-ts-autotag = cfg.typescript.tsx.enable || cfg.html.enable;
+
+    # smart-splits v3 ships no backends and nixpkgs has no package for this one.
+    smart-splits-backend-wezterm = pkgs.vimUtils.buildVimPlugin {
+      pname = "smart-splits-backend-wezterm";
+      version = "0-unstable-2026-10-09";
+      src = pkgs.fetchFromGitHub {
+        owner = "smart-splits-nvim";
+        repo = "backend-wezterm";
+        rev = "ae840db696791f638c190c3e0534d2ddfcd5e6a7";
+        hash = "sha256-9kDZAoYqQMtSGAE9w70UtkW/DLUmmwVAwCxDxk8om1E=";
+      };
+      dependencies = [vimPlugins.smart-splits-nvim];
+    };
   in
     lib.mkIf cfg.enable (utils.mkHomeManagerUser {
       programs.neovim = {
@@ -196,6 +209,7 @@ in {
             vimPlugins.vim-fugitive
             vimPlugins.vim-rhubarb
             vimPlugins.vim-vinegar
+            smart-splits-backend-wezterm
             {
               plugin = vimPlugins.smart-splits-nvim;
               config = builtins.readFile ./smart-splits.lua;
