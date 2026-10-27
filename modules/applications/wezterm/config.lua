@@ -1,8 +1,8 @@
 local wezterm = require("wezterm")
 local act = wezterm.action
 
--- Smart splits plugin for seamless nvim/wezterm pane navigation
-local smart_splits = wezterm.plugin.require("https://github.com/mrjones2014/smart-splits.nvim")
+-- Smart splits plugin for seamless nvim/wezterm pane navigation; must pair with the nvim-side backend-wezterm
+local smart_splits = wezterm.plugin.require("https://github.com/smart-splits-nvim/backend-wezterm")
 
 -- Fuzzy workspace switcher (tmux-sessionizer equivalent, uses zoxide).
 local workspace_switcher = wezterm.plugin.require("https://github.com/MLFlexer/smart_workspace_switcher.wezterm")
