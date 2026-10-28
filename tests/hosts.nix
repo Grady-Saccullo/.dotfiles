@@ -1,5 +1,5 @@
-# Evaluated by tests/secrets.sh (`secrets`) and tests/switch.sh (`switch`): small hosts reduced to
-# plain values, so the tests compare them and build nothing.
+# Evaluated by tests/secrets.sh (`secrets`), tests/switch.sh (`switch`) and tests/codesign.sh
+# (`codesign`): small hosts reduced to plain values, so the tests compare them and build nothing.
 {flake}: let
   inherit (flake.inputs.nixpkgs-unstable) lib;
   host = modules:
@@ -151,5 +151,32 @@ in {
         };
       }
     ]);
+  };
+
+  codesign = let
+    summary = config: let
+      hm = config.home-manager.users.test;
+      named = name: lib.any (p: lib.getName p == name);
+    in {
+      after = hm.home.activation.codesignApps.after or null;
+      failing = map (a: a.message) (lib.filter (a: !a.assertion) config.assertions);
+      aerospace = lib.optionalAttrs config.applications.aerospace.enable {
+        command = lib.last config.launchd.user.agents.aerospace.serviceConfig.ProgramArguments;
+        app = {
+          home = named "aerospace" hm.home.packages;
+          system = named "aerospace" config.environment.systemPackages;
+        };
+        cli = named "aerospace-cli" config.environment.systemPackages;
+        restarts = hm.home.activation ? restartAerospace;
+      };
+    };
+    on.codesign.enable = true;
+    aerospace.applications.aerospace.enable = true;
+  in {
+    none = summary none;
+    on = summary (host [on]);
+    linkedApps = summary (host [on {home-manager.users.test.targets.darwin.copyApps.enable = false;}]);
+    aerospace = summary (host [aerospace]);
+    aerospaceSigned = summary (host [aerospace on]);
   };
 }

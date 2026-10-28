@@ -24,14 +24,15 @@ still builds.
 - **macOS defaults** (`modules/darwin/sensible.nix`). Nix settings (flakes, weekly garbage
   collection), Homebrew managed through nix-homebrew with pinned taps, Touch ID for `sudo`, zsh as
   the login shell, and preferences for the Dock, Finder, trackpad and keyboard.
-- **Shared settings between apps** (`modules/{ai,browser,identity,secrets,shell}/`). Values that
-  several apps need are set once and picked up by the app that uses them: your name and email
-  (git, jj), shell aliases (zsh), browser extensions (Brave), AI tool setup (Claude Code) and how
-  secrets are fetched at runtime. See [Shared settings](#shared-settings).
+- **Shared settings between apps** (`modules/{ai,browser,codesign,identity,secrets,shell}/`).
+  Values that several apps need are set once and picked up by the app that uses them: your name and
+  email (git, jj), shell aliases (zsh), browser extensions (Brave), AI tool setup (Claude Code), how
+  secrets are fetched at runtime and re-signing Nix-built apps so macOS keeps their privacy grants. See
+  [Shared settings](#shared-settings).
 - **`lib.mkDarwinHost`**, the function your own flake calls to build a Mac from all of the above.
-- **Scripts** to build, test and update a machine: `nix run .#switch`, `test`, `update` and
-  `format`. The switch also runs the [steps](#switch-steps) a host declares, before the build or
-  after switching.
+- **Scripts** to build, test and update a machine: `nix run .#switch`, `test`, `update`,
+  `format` and `codesign-setup`. The switch also runs the [steps](#switch-steps) a host declares,
+  before the build or after switching.
 
 It targets macOS on Apple Silicon. The modules have Linux and NixOS branches, but there is no host
 builder for those yet.
@@ -167,12 +168,14 @@ the one module that turns it into real config files. Hosts can turn off a single
 | --- | --- | --- | --- |
 | `ai.*` | app modules, files in `modules/ai/`, hosts | claude-code (MCP servers via `modules/ai/mcp.nix`) | skills, agents, commands, rules, hooks, plugins, `CLAUDE.md` context, MCP and LSP servers |
 | `browser.*` | 1password, bitwarden, raycast | brave | browser extensions to install |
+| `codesign.*` | hosts | `modules/codesign` (after home-manager copies the apps), aerospace | whether to re-sign ad-hoc signed apps with a local certificate, so macOS privacy grants survive rebuilds |
 | `identity.*` | hosts | git, jj | your name and email (the defaults are the author's, so set these) |
 | `secrets.*` | hosts | apps that need a token at startup, switch steps | the hook that reads secret values (any password manager, or none) |
 | `shell.*` | git, jj | zsh | shell aliases and startup snippets |
 
 Each one has a README with the full option list: [ai](modules/ai/README.md),
-[browser](modules/browser/README.md), [identity](modules/identity/README.md),
+[browser](modules/browser/README.md), [codesign](modules/codesign/README.md),
+[identity](modules/identity/README.md),
 [secrets](modules/secrets/README.md) and [shell](modules/shell/README.md).
 
 ### Secrets
@@ -217,10 +220,10 @@ the options, the input format and a complete example.
 | Path | Contents |
 | --- | --- |
 | `flake.nix` | Inputs, `lib.mkDarwinHost` and the `example` test host. |
-| `apps/` | The `switch`, `test`, `update` and `format` scripts, run with `nix run .#<name>`. |
+| `apps/` | The `switch`, `test`, `update`, `format` and `codesign-setup` scripts, run with `nix run .#<name>`. |
 | `hosts/example/` | A complete example: `flake.nix` uses the framework the way your own flake would, and `default.nix` is the machine. This repo also builds `default.nix` as its test (`nix run .#test example`). See [hosts/README.md](hosts/README.md). |
 | `modules/applications/` | One directory per app. See [App modules](#app-modules). |
-| `modules/{ai,browser,identity,secrets,shell}/` | The [shared settings](#shared-settings). |
+| `modules/{ai,browser,codesign,identity,secrets,shell}/` | The [shared settings](#shared-settings). |
 | `modules/switch/` | The `switch.*` options: the steps `nix run .#switch` runs (see [Switch steps](#switch-steps)). |
 | `modules/darwin/sensible.nix` | macOS defaults and the Homebrew setup. |
 | `modules/home-manager/darwin.nix` | home-manager setup for macOS. |
@@ -228,7 +231,7 @@ the options, the input format and a complete example.
 | `modules/flake-parts/` | Extra flake outputs, the dev shell, the script wiring, and `utils.nix` (helpers the modules use). |
 | `overlays/` | Changes to the package set, currently `pkgs.channels`. |
 | `templates/` | Project templates (a Zig flake). |
-| `tests/` | Tests for `nix run .#switch` and the secrets hook plumbing, run with `/bin/bash -e tests/switch.sh` and `/bin/bash -e tests/secrets.sh`. |
+| `tests/` | Tests for `nix run .#switch`, the secrets hook plumbing and app re-signing, run with `/bin/bash -e tests/switch.sh`, `/bin/bash -e tests/secrets.sh` and `/bin/bash -e tests/codesign.sh`. |
 
 ### App modules
 

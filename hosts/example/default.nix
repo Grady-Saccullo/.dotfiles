@@ -26,6 +26,10 @@ in {
     text = builtins.readFile ./secrets-hook.sh;
   };
 
+  # Re-signs ad-hoc signed apps such as WezTerm after every switch, so their macOS privacy grants
+  # survive rebuilds. Needs `nix run .#codesign-setup example` once (modules/codesign/README.md).
+  codesign.enable = true;
+
   # Runs after every `nix run .#switch`, with the step input as JSON on stdin
   # (modules/switch/README.md).
   switch.steps.notify = {

@@ -1,10 +1,11 @@
 {...}: {
   imports = [
-    # Cross-cutting buses (`ai.*`, `browser.*`, `identity.*`, `secrets.*`,
-    # `shell.*`) must exist whenever application modules exist: they contribute
-    # to and read from them.
+    # Cross-cutting buses (`ai.*`, `browser.*`, `codesign.*`, `identity.*`,
+    # `secrets.*`, `shell.*`) must exist whenever application modules exist:
+    # they contribute to and read from them.
     ../ai
     ../browser
+    ../codesign
     ../identity
     ../secrets
     ../shell

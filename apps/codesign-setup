@@ -1,0 +1,32 @@
+#!/bin/bash -e
+
+# Creates the host's code-signing identity if it is missing, then signs its `codesign.apps`
+# (modules/codesign/README.md). Needs no switch first, so it also fixes a switch that cannot run.
+if [[ $# == 0 ]]; then
+	echo "missing config name, usage codesign-setup <config name> [--local]"
+	exit 1
+fi
+
+config_name="$1"
+shift
+
+if [[ "${1:-}" == "--local" ]]; then
+	shift
+	DOTFILES_LOCAL="${DOTFILES_LOCAL:-$HOME/.dotfiles}"
+fi
+
+# `--local`: swap the `dotfiles` input for that checkout (README "Changing the framework").
+override=()
+if [[ -n "${DOTFILES_LOCAL:-}" ]]; then
+	if jq -e '.nodes[.root].inputs.dotfiles' flake.lock >/dev/null 2>&1; then
+		local_src=$(nix flake metadata --json "git+file://$DOTFILES_LOCAL" | jq -r .path)
+		echo "using local framework: $DOTFILES_LOCAL -> $local_src"
+		override=(--override-input dotfiles "path:$local_src")
+	else
+		echo "--local ignored: this flake has no 'dotfiles' input" >&2
+	fi
+fi
+
+setup=$(nix build --extra-experimental-features 'nix-command flakes' --no-link --print-out-paths \
+	"${override[@]}" ".#darwinConfigurations.$config_name.config.codesign.setup")
+exec "$setup/bin/codesign-setup"
