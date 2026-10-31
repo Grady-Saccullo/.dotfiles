@@ -35,18 +35,6 @@ local lspconfig_custom_attach = function(client, bufnr)
 	end
 end
 
--- nvim-cmp is lazy; the first client to start pulls it in and advertises its capabilities.
-local function with_cmp_capabilities(upstream)
-	return function(params, config)
-		if upstream then
-			upstream(params, config)
-		end
-		require("lz.n").trigger_load("nvim-cmp")
-		params.capabilities =
-			vim.tbl_deep_extend("force", params.capabilities or {}, require("cmp_nvim_lsp").default_capabilities())
-	end
-end
-
 for server, config in pairs(lsp_servers) do
 	if type(config) ~= "table" then
 		config = {}
@@ -59,12 +47,7 @@ for server, config in pairs(lsp_servers) do
 		end
 	end
 
-	-- Some lspconfig defaults (rust_analyzer) carry their own before_init; chain rather than replace it.
-	local before_init = with_cmp_capabilities(config.before_init or (vim.lsp.config[server] or {}).before_init)
-	vim.lsp.config(
-		server,
-		vim.tbl_deep_extend("force", { on_attach = wrapped_on_attach }, config, { before_init = before_init })
-	)
+	vim.lsp.config(server, vim.tbl_deep_extend("force", { on_attach = wrapped_on_attach }, config))
 	vim.lsp.enable(server)
 end
 -- [END] nvim-lspconfig.lua --

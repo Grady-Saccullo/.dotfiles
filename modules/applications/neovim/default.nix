@@ -144,6 +144,14 @@ in {
               config = readFile ./oxocarbon-nvim.lua;
               type = "lua";
             }
+            # blink reads friendly-snippets and the git source off the runtimepath on demand.
+            vimPlugins.friendly-snippets
+            vimPlugins.blink-cmp-git
+            {
+              plugin = vimPlugins.blink-cmp;
+              config = readFile ./blink-cmp.lua;
+              type = "lua";
+            }
             {
               plugin = vimPlugins.oil-nvim;
               config = readFile ./oil-nvim.lua;
@@ -171,12 +179,9 @@ in {
             config = readFile ./telescope-nvim.lua;
           }
           ++ lazy {
-            plugin = vimPlugins.nvim-cmp;
-            event = ["InsertEnter" "CmdlineEnter"];
-            before = [vimPlugins.luasnip vimPlugins.friendly-snippets vimPlugins.lspkind-nvim vimPlugins.nvim-autopairs];
-            # cmp sources register with cmp when they load, so they go after it.
-            after = [vimPlugins.cmp-nvim-lsp vimPlugins.cmp-buffer vimPlugins.cmp-path vimPlugins.cmp_luasnip vimPlugins.cmp-git];
-            config = readFile ./nvim-autopairs.lua + readFile ./nvim-cmp.lua;
+            plugin = vimPlugins.nvim-autopairs;
+            event = ["InsertEnter"];
+            config = readFile ./nvim-autopairs.lua;
           }
           ++ lazy {
             plugin = vimPlugins.fidget-nvim;
