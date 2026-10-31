@@ -32,8 +32,10 @@ utils.mkNeovimModule {
     (vimPlugins.go-nvim)
   ];
 
+  # gopls.go is the toolchain gopls was built with; a repo shell's go still wins on PATH.
   extraPackages = [
     pkgs.gopls
+    pkgs.gopls.go
   ];
 
   initLua = ''
