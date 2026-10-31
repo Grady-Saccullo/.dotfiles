@@ -28,7 +28,6 @@ in
 
     plugins = [
       (vimPlugins.nvim-treesitter.withPlugins (p: [p.elixir p.eex p.heex p.erlang]))
-      (vimPlugins.elixir-tools-nvim)
     ];
 
     initLua = ''

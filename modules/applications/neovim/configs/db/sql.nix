@@ -18,7 +18,8 @@ utils.mkNeovimModule {
   };
 } ({
   vimPlugins,
-  cfg,
+  lazy,
+  ...
 }: let
   sqls-nvim = pkgs.vimUtils.buildVimPlugin {
     name = "sqls.nvim";
@@ -30,13 +31,19 @@ utils.mkNeovimModule {
     };
   };
 in {
-  plugins = [
-    (vimPlugins.nvim-treesitter.withPlugins (p: [p.sql]))
-    sqls-nvim
-  ];
+  plugins =
+    [
+      (vimPlugins.nvim-treesitter.withPlugins (p: [p.sql]))
+    ]
+    ++ lazy {
+      plugin = sqls-nvim;
+      ft = ["sql"];
+    };
 
+  # conform's sqlfluff only runs where a .sqlfluff file sets the dialect.
   extraPackages = [
     pkgs.sqls
+    pkgs.sqlfluff
   ];
 
   initLua = ''

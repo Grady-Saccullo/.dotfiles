@@ -1,46 +1,56 @@
 -- [START] nvim-lspconfig.lua --
 
+local function telescope(picker)
+	return function()
+		require("lz.n").trigger_load("telescope.nvim")
+		require("telescope.builtin")[picker]()
+	end
+end
+
 local lspconfig_custom_attach = function(client, bufnr)
 	local nmap = function(keys, func, desc)
-		if desc then
-			desc = "LSP: " .. desc
-		end
-
-		vim.keymap.set("n", keys, func, { buffer = bufnr, desc = desc })
+		vim.keymap.set("n", keys, func, { buffer = bufnr, desc = desc and ("LSP: " .. desc) })
 	end
 
-	local telescope = vim.F.npcall(require, "telescope.builtin")
-
-	nmap("<leader>rn", vim.lsp.buf.rename, "[R]e[n]ame")
-	nmap("<leader>ca", vim.lsp.buf.code_action, "[C]ode [A]ction")
-
-	nmap("gd", telescope.lsp_definitions, "[G]oto [D]efinition")
-	nmap("gr", telescope.lsp_references, "[G]oto [R]eferences")
-	nmap("gI", telescope.lsp_implementations, "[G]oto [I]mplementation")
-	nmap("<leader>D", telescope.lsp_type_definitions, "Type [D]efinition")
-	nmap("<leader>ds", telescope.lsp_document_symbols, "[D]ocument [S]ymbols")
-	nmap("<leader>ws", telescope.lsp_dynamic_workspace_symbols, "[W]orkspace [S]ymbols")
-
-	-- See `:help K` for why this keymap
-	nmap("K", vim.lsp.buf.hover, "Hover Documentation")
-	nmap("<C-k>", vim.lsp.buf.signature_help, "Signature Documentation")
-
-	-- Lesser used LSP functionality
+	-- Core already maps grn, gra, grr, gri, grt, gO, K and insert <C-s>; telescope pickers ride the core keys.
+	nmap("gd", telescope("lsp_definitions"), "[G]oto [D]efinition")
 	nmap("gD", vim.lsp.buf.declaration, "[G]oto [D]eclaration")
+	nmap("grr", telescope("lsp_references"), "[G]oto [R]eferences")
+	nmap("gri", telescope("lsp_implementations"), "[G]oto [I]mplementation")
+	nmap("grt", telescope("lsp_type_definitions"), "[G]oto [T]ype definition")
+	nmap("gO", telescope("lsp_document_symbols"), "Document symbols")
+	nmap("<leader>ws", telescope("lsp_dynamic_workspace_symbols"), "[W]orkspace [S]ymbols")
+
 	nmap("<leader>wa", vim.lsp.buf.add_workspace_folder, "[W]orkspace [A]dd Folder")
 	nmap("<leader>wr", vim.lsp.buf.remove_workspace_folder, "[W]orkspace [R]emove Folder")
 	nmap("<leader>wl", function()
 		print(vim.inspect(vim.lsp.buf.list_workspace_folders()))
 	end, "[W]orkspace [L]ist Folders")
 
+	if client:supports_method("textDocument/inlayHint") then
+		vim.lsp.inlay_hint.enable(true, { bufnr = bufnr })
+		nmap("<leader>th", function()
+			vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled({ bufnr = bufnr }), { bufnr = bufnr })
+		end, "[T]oggle inlay [H]ints")
+	end
+end
+
+-- nvim-cmp is lazy; the first client to start pulls it in and advertises its capabilities.
+local function with_cmp_capabilities(upstream)
+	return function(params, config)
+		if upstream then
+			upstream(params, config)
+		end
+		require("lz.n").trigger_load("nvim-cmp")
+		params.capabilities =
+			vim.tbl_deep_extend("force", params.capabilities or {}, require("cmp_nvim_lsp").default_capabilities())
+	end
 end
 
 for server, config in pairs(lsp_servers) do
 	if type(config) ~= "table" then
 		config = {}
 	end
-
-	local capabilities = require("cmp_nvim_lsp").default_capabilities(vim.lsp.protocol.make_client_capabilities())
 
 	local wrapped_on_attach = function(client, bufnr)
 		lspconfig_custom_attach(client, bufnr)
@@ -49,12 +59,12 @@ for server, config in pairs(lsp_servers) do
 		end
 	end
 
-	local meshed_config = vim.tbl_deep_extend("force", {
-		on_attach = wrapped_on_attach,
-		capabilities = capabilities,
-	}, config)
-
-	vim.lsp.config(server, meshed_config)
+	-- Some lspconfig defaults (rust_analyzer) carry their own before_init; chain rather than replace it.
+	local before_init = with_cmp_capabilities(config.before_init or (vim.lsp.config[server] or {}).before_init)
+	vim.lsp.config(
+		server,
+		vim.tbl_deep_extend("force", { on_attach = wrapped_on_attach }, config, { before_init = before_init })
+	)
 	vim.lsp.enable(server)
 end
 -- [END] nvim-lspconfig.lua --

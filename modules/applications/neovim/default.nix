@@ -19,6 +19,8 @@ in {
 
   config = let
     vimPlugins = pkgs.vimPlugins;
+    lazy = import ./lazy.nix {inherit lib;};
+    readFile = builtins.readFile;
 
     treesitter-plugins = vimPlugins.nvim-treesitter.withPlugins (p:
       with p; [
@@ -66,6 +68,7 @@ in {
           bash-language-server
           lua-language-server
           nil
+          prettier
           ripgrep
           shellcheck
           shfmt
@@ -114,116 +117,136 @@ in {
 
         plugins =
           [
+            # lz.n drives every pack/*/opt plugin; `:checkhealth hm-lazy` shows what loads when.
+            {
+              plugin = vimPlugins.lz-n;
+              config = ''
+                vim.g.lz_n = { load = require("hm-lazy").packadd }
+              '';
+              type = "lua";
+              runtime = {
+                "lua/hm-lazy/init.lua".source = ./lua/hm-lazy/init.lua;
+                "lua/hm-lazy/health.lua".source = ./lua/hm-lazy/health.lua;
+              };
+            }
             {
               plugin = treesitter-plugins;
-              config = builtins.readFile ./nvim-treesitter.lua;
+              config = readFile ./nvim-treesitter.lua;
               type = "lua";
             }
             {
               plugin = vimPlugins.nvim-lspconfig;
-              config = builtins.readFile ./nvim-lspconfig.lua;
-              type = "lua";
-            }
-            {
-              plugin = vimPlugins.gitsigns-nvim;
-              config = builtins.readFile ./gitsigns-nvim.lua;
-              type = "lua";
-            }
-            {
-              plugin = vimPlugins.nvim-autopairs;
-              config = builtins.readFile ./nvim-autopairs.lua;
-              type = "lua";
-            }
-            {
-              plugin = vimPlugins.nvim-cmp;
-              config = builtins.readFile ./nvim-cmp.lua;
+              config = readFile ./nvim-lspconfig.lua;
               type = "lua";
             }
             {
               plugin = vimPlugins.oxocarbon-nvim;
-              config = builtins.readFile ./oxocarbon-nvim.lua;
+              config = readFile ./oxocarbon-nvim.lua;
               type = "lua";
             }
             {
-              plugin = vimPlugins.telescope-nvim;
-              config = builtins.readFile ./telescope-nvim.lua;
+              plugin = vimPlugins.oil-nvim;
+              config = readFile ./oil-nvim.lua;
               type = "lua";
             }
             {
-              plugin = vimPlugins.vim-slime;
-              config = builtins.readFile ./vim-slime.lua;
+              plugin = vimPlugins.direnv-nvim;
+              config = readFile ./direnv-nvim.lua;
               type = "lua";
             }
-            {
-              plugin = vimPlugins.ts-comments-nvim;
-              config = builtins.readFile ./ts-comments-nvim.lua;
-              type = "lua";
-            }
-            {
-              plugin = vimPlugins.todo-comments-nvim;
-              config = builtins.readFile ./todo-comments-nvim.lua;
-              type = "lua";
-            }
-
-            vimPlugins.cmp-buffer
-            vimPlugins.cmp-git
-            vimPlugins.cmp-nvim-lsp
-            vimPlugins.cmp-nvim-lua
-            vimPlugins.cmp-path
-            vimPlugins.cmp_luasnip
-            {
-              plugin = vimPlugins.fidget-nvim;
-              config = builtins.readFile ./fidget-nvim.lua;
-              type = "lua";
-            }
-            vimPlugins.friendly-snippets
-            {
-              plugin = vimPlugins.harpoon2;
-              config = builtins.readFile ./harpoon.lua;
-              type = "lua";
-            }
-            vimPlugins.lspkind-nvim
-            vimPlugins.luasnip
-            {
-              plugin = vimPlugins.conform-nvim;
-              config = builtins.readFile ./conform.lua;
-              type = "lua";
-            }
-            {
-              plugin = vimPlugins.nvim-treesitter-context;
-              config = "require('treesitter-context').setup()";
-              type = "lua";
-            }
-            {
-              plugin = vimPlugins.nvim-treesitter-textobjects;
-              config = builtins.readFile ./nvim-treesitter-textobjects.lua;
-              type = "lua";
-            }
-            {
-              plugin = vimPlugins.treesitter-modules-nvim;
-              config = builtins.readFile ./treesitter-modules.lua;
-              type = "lua";
-            }
-            vimPlugins.plenary-nvim
-            vimPlugins.telescope-fzf-native-nvim
-            vimPlugins.telescope-ui-select-nvim
-            vimPlugins.vim-fugitive
-            vimPlugins.vim-rhubarb
-            vimPlugins.vim-vinegar
             smart-splits-backend-wezterm
             {
               plugin = vimPlugins.smart-splits-nvim;
-              config = builtins.readFile ./smart-splits.lua;
+              config = readFile ./smart-splits.lua;
               type = "lua";
             }
           ]
-          ++ lib.optionals enable-nvim-ts-autotag [
-            {
-              plugin = vimPlugins.nvim-ts-autotag;
-              config = builtins.readFile ./nvim-ts-autotag.lua;
-              type = "lua";
-            }
-          ];
+          ++ lazy {
+            plugin = vimPlugins.telescope-nvim;
+            # LspAttach so ui-select owns vim.ui.select before the first code action.
+            event = ["LspAttach"];
+            cmd = ["Telescope"];
+            keys = ["<leader>?" "<leader><space>" "<leader>/" "<leader>gf" "<leader>sf" "<leader>sh" "<leader>sw" "<leader>sg" "<leader>sd" "<leader>sr"];
+            after = [vimPlugins.telescope-fzf-native-nvim vimPlugins.telescope-ui-select-nvim];
+            config = readFile ./telescope-nvim.lua;
+          }
+          ++ lazy {
+            plugin = vimPlugins.nvim-cmp;
+            event = ["InsertEnter" "CmdlineEnter"];
+            before = [vimPlugins.luasnip vimPlugins.friendly-snippets vimPlugins.lspkind-nvim vimPlugins.nvim-autopairs];
+            # cmp sources register with cmp when they load, so they go after it.
+            after = [vimPlugins.cmp-nvim-lsp vimPlugins.cmp-buffer vimPlugins.cmp-path vimPlugins.cmp_luasnip vimPlugins.cmp-git];
+            config = readFile ./nvim-autopairs.lua + readFile ./nvim-cmp.lua;
+          }
+          ++ lazy {
+            plugin = vimPlugins.fidget-nvim;
+            event = ["LspAttach"];
+            config = readFile ./fidget-nvim.lua;
+          }
+          ++ lazy {
+            plugin = vimPlugins.gitsigns-nvim;
+            event = ["BufReadPre" "BufNewFile"];
+            config = readFile ./gitsigns-nvim.lua;
+          }
+          ++ lazy {
+            plugin = vimPlugins.harpoon2;
+            keys = ["<leader>ha" "<leader>hs" "<leader>hf" "<leader>h1" "<leader>h2" "<leader>h3" "<leader>h4" "[h" "]h"];
+            config = readFile ./harpoon.lua;
+          }
+          ++ lazy {
+            plugin = vimPlugins.conform-nvim;
+            event = ["BufWritePre"];
+            cmd = ["Format" "ConformInfo"];
+            keys = ["<leader>f" "<leader>tf"];
+            config = readFile ./conform.lua;
+          }
+          ++ lazy {
+            plugin = vimPlugins.todo-comments-nvim;
+            event = ["BufReadPost" "BufNewFile"];
+            config = readFile ./todo-comments-nvim.lua;
+          }
+          ++ lazy {
+            plugin = vimPlugins.ts-comments-nvim;
+            event = ["BufReadPost" "BufNewFile"];
+            config = readFile ./ts-comments-nvim.lua;
+          }
+          ++ lazy {
+            plugin = vimPlugins.nvim-treesitter-context;
+            event = ["BufReadPost" "BufNewFile"];
+            config = "require('treesitter-context').setup()";
+          }
+          ++ lazy {
+            plugin = vimPlugins.nvim-treesitter-textobjects;
+            event = ["BufReadPost" "BufNewFile"];
+            config = readFile ./nvim-treesitter-textobjects.lua;
+          }
+          ++ lazy {
+            plugin = vimPlugins.treesitter-modules-nvim;
+            event = ["BufReadPost" "BufNewFile"];
+            config = readFile ./treesitter-modules.lua;
+          }
+          ++ lazy {
+            plugin = vimPlugins.vim-fugitive;
+            cmd = ["Git" "G" "Gedit" "Gsplit" "Gvsplit" "Gtabedit" "Gdiffsplit" "Gvdiffsplit" "Ghdiffsplit" "Gread" "Gwrite" "Gwq" "Ggrep" "Glgrep" "Gclog" "Gllog" "Gcd" "Glcd" "GMove" "GRename" "GDelete" "GRemove" "GUnlink" "GBrowse"];
+            after = [vimPlugins.vim-rhubarb];
+          }
+          ++ lazy {
+            plugin = vimPlugins.vim-slime;
+            keys = [
+              {
+                lhs = "<C-c><C-c>";
+                mode = ["n" "x"];
+              }
+              "<C-c>v"
+            ];
+            cmd = ["SlimeSend" "SlimeConfig" "SlimeResolvePane"];
+            config = readFile ./vim-slime.lua;
+          }
+          ++ lib.optionals enable-nvim-ts-autotag (lazy {
+            plugin = vimPlugins.nvim-ts-autotag;
+            event = ["InsertEnter"];
+            config = readFile ./nvim-ts-autotag.lua;
+          });
       };
 
       home.file."./.config/nvim/after/" = {

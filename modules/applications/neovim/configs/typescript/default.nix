@@ -43,6 +43,7 @@ utils.mkNeovimModule {
 } ({
   vimPlugins,
   cfg,
+  ...
 }: {
   plugins =
     [

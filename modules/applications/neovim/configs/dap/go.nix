@@ -7,14 +7,16 @@
 utils.mkNeovimModule {
   inherit config pkgs;
   path = ["dap" "go"];
-} ({vimPlugins, ...}: {
-  plugins = [
-    {
-      plugin = vimPlugins.nvim-dap-go;
-      config = builtins.readFile ./dap-go.lua;
-      type = "lua";
-    }
-  ];
+} ({
+  vimPlugins,
+  lazy,
+  ...
+}: {
+  plugins = lazy {
+    plugin = vimPlugins.nvim-dap-go;
+    event = ["User HmDapLoaded"];
+    config = builtins.readFile ./dap-go.lua;
+  };
 
   # dlv compiles the debuggee with the `go` on PATH.
   extraPackages = [
