@@ -67,6 +67,7 @@ in {
           lua-language-server
           nil
           ripgrep
+          shellcheck
           shfmt
           stylua
           yaml-language-server

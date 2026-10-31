@@ -18,8 +18,10 @@ utils.mkNeovimModule {
     };
   };
 } ({vimPlugins, ...}: {
+  # zls looks zig up in PATH; nixpkgs keeps the two on the same minor.
   extraPackages = [
     pkgs.zls
+    pkgs.zig
   ];
 
   plugins = [

@@ -19,8 +19,10 @@ utils.mkNeovimModule {
     };
   };
 } ({vimPlugins, ...}: {
+  # terraform-ls looks `terraform` up in PATH for fmt and validate.
   extraPackages = [
     pkgs.terraform-ls
+    pkgs.terraform
   ];
 
   plugins = [

@@ -16,7 +16,9 @@ utils.mkNeovimModule {
     }
   ];
 
+  # dlv compiles the debuggee with the `go` on PATH.
   extraPackages = [
     pkgs.delve
+    pkgs.delve.go
   ];
 })
