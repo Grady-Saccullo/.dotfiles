@@ -22,8 +22,11 @@ in
       };
     };
   } ({vimPlugins, ...}: {
+    # ocamllsp only reads artifacts built by the compiler it was built against.
     extraPackages = [
       ls
+      pkgs.ocamlPackages.ocaml
+      pkgs.ocamlPackages.dune_3
     ];
 
     plugins = [

@@ -218,6 +218,7 @@
           programs.neovim = neovimConfigFn {
             inherit cfg;
             vimPlugins = pkgs.vimPlugins;
+            lazy = import ../applications/neovim/lazy.nix {inherit lib;};
           };
         })
         (extraConfig cfg)

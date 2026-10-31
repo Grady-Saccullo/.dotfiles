@@ -22,9 +22,11 @@ utils.mkNeovimModule {
   plugins = [
     (vimPlugins.nvim-treesitter.withPlugins (p: [p.python]))
   ];
+  # basedpyright invokes `python` to resolve installed packages when no venv is configured.
   extraPackages = [
     pkgs.basedpyright
     pkgs.ruff
+    pkgs.python3
   ];
   initLua = ''
     addLspServer("basedpyright", {})

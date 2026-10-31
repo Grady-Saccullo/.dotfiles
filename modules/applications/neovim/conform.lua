@@ -17,7 +17,6 @@ conform.setup({
 		python = { "ruff_format", "ruff_organize_imports" },
 		sh = { "shfmt" },
 		sql = { "sqlfluff" },
-		swift = { "swiftformat" },
 		templ = { "templ" },
 		tsx = { "biome", "prettier", stop_after_first = true },
 		typescript = { "biome", "prettier", stop_after_first = true },

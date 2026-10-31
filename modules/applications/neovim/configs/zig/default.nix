@@ -17,15 +17,25 @@ utils.mkNeovimModule {
       description = "zig language server for AI tools";
     };
   };
-} ({vimPlugins, ...}: {
+} ({
+  vimPlugins,
+  lazy,
+  ...
+}: {
+  # zls looks zig up in PATH; nixpkgs keeps the two on the same minor.
   extraPackages = [
     pkgs.zls
+    pkgs.zig
   ];
 
-  plugins = [
-    (vimPlugins.nvim-treesitter.withPlugins (p: [p.zig]))
-    vimPlugins.zig-vim
-  ];
+  plugins =
+    [
+      (vimPlugins.nvim-treesitter.withPlugins (p: [p.zig]))
+    ]
+    ++ lazy {
+      plugin = vimPlugins.zig-vim;
+      ft = ["zig"];
+    };
 
   initLua = ''
     addLspServer("zls", {

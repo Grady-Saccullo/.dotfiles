@@ -17,8 +17,11 @@ utils.mkNeovimModule {
     };
   };
 } ({vimPlugins, ...}: {
+  # rust-analyzer runs `cargo metadata` in Cargo projects; its wrapper already sets RUST_SRC_PATH.
   extraPackages = [
     pkgs.rust-analyzer
+    pkgs.cargo
+    pkgs.rustc
   ];
 
   plugins = [
