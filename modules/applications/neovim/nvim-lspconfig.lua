@@ -33,7 +33,23 @@ local lspconfig_custom_attach = function(client, bufnr)
 			vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled({ bufnr = bufnr }), { bufnr = bufnr })
 		end, "[T]oggle inlay [H]ints")
 	end
+
+	if client:supports_method("textDocument/linkedEditingRange") then
+		vim.lsp.linked_editing_range.enable(true, { client_id = client.id })
+	end
+
+	if client:supports_method("textDocument/foldingRange") then
+		local win = vim.api.nvim_get_current_win()
+		vim.wo[win][0].foldexpr = "v:lua.vim.lsp.foldexpr()"
+		vim.wo[win][0].foldtext = "v:lua.vim.lsp.foldtext()"
+	end
 end
+
+-- Code lenses render as virtual lines; grx runs the one under the cursor (core default).
+vim.lsp.codelens.enable(true)
+vim.keymap.set("n", "<leader>tc", function()
+	vim.lsp.codelens.enable(not vim.lsp.codelens.is_enabled())
+end, { desc = "[T]oggle [C]ode lenses" })
 
 for server, config in pairs(lsp_servers) do
 	if type(config) ~= "table" then

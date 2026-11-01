@@ -67,7 +67,7 @@ in {
           alejandra
           bash-language-server
           lua-language-server
-          nil
+          nixd
           prettier
           ripgrep
           shellcheck
@@ -83,6 +83,7 @@ in {
           ${builtins.readFile ./globals.lua}
           ${builtins.readFile ./highlight.lua}
           ${builtins.readFile ./keymap.lua}
+          ${builtins.readFile ./diagnostic.lua}
           ${builtins.readFile ./opt.lua}
 
           -- [START] shared lsp serves table ---
@@ -104,14 +105,21 @@ in {
               },
             },
             jsonls = {},
-            nil_ls = {},
           }
 
           local function addLspServer(name, config)
             lsp_servers[name] = config
           end
 
+          -- neotest adapters, as constructors so the adapter plugin can stay lazy --
+          local neotest_adapters = {}
+          local function addNeotestAdapter(make)
+            table.insert(neotest_adapters, make)
+          end
+
           -- [END] shared lsp serves table ---
+
+          ${builtins.readFile ./nixd.lua}
 
         '';
 
@@ -137,6 +145,17 @@ in {
             {
               plugin = vimPlugins.nvim-lspconfig;
               config = readFile ./nvim-lspconfig.lua;
+              type = "lua";
+            }
+            # Eager: lazydev must see lua_ls's config before the first Lua buffer attaches.
+            {
+              plugin = vimPlugins.lazydev-nvim;
+              config = readFile ./lazydev.lua;
+              type = "lua";
+            }
+            {
+              plugin = vimPlugins.which-key-nvim;
+              config = readFile ./which-key.lua;
               type = "lua";
             }
             {
@@ -174,7 +193,48 @@ in {
             # LspAttach so ui-select owns vim.ui.select before the first code action.
             event = ["LspAttach"];
             cmd = ["Telescope"];
-            keys = ["<leader>?" "<leader><space>" "<leader>/" "<leader>gf" "<leader>sf" "<leader>sh" "<leader>sw" "<leader>sg" "<leader>sd" "<leader>sr"];
+            keys = [
+              {
+                lhs = "<leader>?";
+                desc = "[?] Find recently opened files";
+              }
+              {
+                lhs = "<leader><space>";
+                desc = "[ ] Find existing buffers";
+              }
+              {
+                lhs = "<leader>/";
+                desc = "[/] Fuzzily search in current buffer";
+              }
+              {
+                lhs = "<leader>gf";
+                desc = "Search [G]it [F]iles";
+              }
+              {
+                lhs = "<leader>sf";
+                desc = "[S]earch [F]iles";
+              }
+              {
+                lhs = "<leader>sh";
+                desc = "[S]earch [H]elp";
+              }
+              {
+                lhs = "<leader>sw";
+                desc = "[S]earch current [W]ord";
+              }
+              {
+                lhs = "<leader>sg";
+                desc = "[S]earch by [G]rep";
+              }
+              {
+                lhs = "<leader>sd";
+                desc = "[S]earch [D]iagnostics";
+              }
+              {
+                lhs = "<leader>sr";
+                desc = "[S]earch [R]esume";
+              }
+            ];
             after = [vimPlugins.telescope-fzf-native-nvim vimPlugins.telescope-ui-select-nvim];
             config = readFile ./telescope-nvim.lua;
           }
@@ -195,14 +255,60 @@ in {
           }
           ++ lazy {
             plugin = vimPlugins.harpoon2;
-            keys = ["<leader>ha" "<leader>hs" "<leader>hf" "<leader>h1" "<leader>h2" "<leader>h3" "<leader>h4" "[h" "]h"];
+            keys = [
+              {
+                lhs = "<leader>ha";
+                desc = "[H]arpoon [A]dd file";
+              }
+              {
+                lhs = "<leader>hs";
+                desc = "[H]arpoon [S]how quick menu";
+              }
+              {
+                lhs = "<leader>hf";
+                desc = "[H]arpoon [F]ind via telescope";
+              }
+              {
+                lhs = "<leader>h1";
+                desc = "[H]arpoon slot [1]";
+              }
+              {
+                lhs = "<leader>h2";
+                desc = "[H]arpoon slot [2]";
+              }
+              {
+                lhs = "<leader>h3";
+                desc = "[H]arpoon slot [3]";
+              }
+              {
+                lhs = "<leader>h4";
+                desc = "[H]arpoon slot [4]";
+              }
+              {
+                lhs = "[h";
+                desc = "[H]arpoon previous";
+              }
+              {
+                lhs = "]h";
+                desc = "[H]arpoon next";
+              }
+            ];
             config = readFile ./harpoon.lua;
           }
           ++ lazy {
             plugin = vimPlugins.conform-nvim;
             event = ["BufWritePre"];
             cmd = ["Format" "ConformInfo"];
-            keys = ["<leader>f" "<leader>tf"];
+            keys = [
+              {
+                lhs = "<leader>f";
+                desc = "LSP: [F]ormat";
+              }
+              {
+                lhs = "<leader>tf";
+                desc = "LSP: [T]oggle [F]ormat-on-save";
+              }
+            ];
             config = readFile ./conform.lua;
           }
           ++ lazy {
@@ -226,11 +332,6 @@ in {
             config = readFile ./nvim-treesitter-textobjects.lua;
           }
           ++ lazy {
-            plugin = vimPlugins.treesitter-modules-nvim;
-            event = ["BufReadPost" "BufNewFile"];
-            config = readFile ./treesitter-modules.lua;
-          }
-          ++ lazy {
             plugin = vimPlugins.vim-fugitive;
             cmd = ["Git" "G" "Gedit" "Gsplit" "Gvsplit" "Gtabedit" "Gdiffsplit" "Gvdiffsplit" "Ghdiffsplit" "Gread" "Gwrite" "Gwq" "Ggrep" "Glgrep" "Gclog" "Gllog" "Gcd" "Glcd" "GMove" "GRename" "GDelete" "GRemove" "GUnlink" "GBrowse"];
             after = [vimPlugins.vim-rhubarb];
@@ -241,11 +342,91 @@ in {
               {
                 lhs = "<C-c><C-c>";
                 mode = ["n" "x"];
+                desc = "Slime: send";
               }
-              "<C-c>v"
+              {
+                lhs = "<C-c>v";
+                desc = "Slime: config";
+              }
             ];
             cmd = ["SlimeSend" "SlimeConfig" "SlimeResolvePane"];
             config = readFile ./vim-slime.lua;
+          }
+          ++ lazy {
+            plugin = vimPlugins.diffview-plus-nvim;
+            cmd = ["DiffviewOpen" "DiffviewFileHistory" "DiffviewClose" "DiffviewToggleFiles" "DiffviewFocusFiles" "DiffviewRefresh" "DiffviewLog"];
+            keys = [
+              {
+                lhs = "<leader>vo";
+                desc = "Git: Diff[v]iew [O]pen (index)";
+              }
+              {
+                lhs = "<leader>vh";
+                desc = "Git: file [H]istory";
+              }
+              {
+                lhs = "<leader>vH";
+                desc = "Git: repo [H]istory";
+              }
+              {
+                lhs = "<leader>vc";
+                desc = "Git: Diffview [C]lose";
+              }
+            ];
+            config = readFile ./diffview.lua;
+          }
+          ++ lazy {
+            plugin = vimPlugins.quicker-nvim;
+            ft = ["qf"];
+            keys = [
+              {
+                lhs = "<leader>q";
+                desc = "Toggle [Q]uickfix";
+              }
+              {
+                lhs = "<leader>Q";
+                desc = "Toggle loclist";
+              }
+            ];
+            config = readFile ./quicker.lua;
+          }
+          ++ lazy {
+            plugin = vimPlugins.grug-far-nvim;
+            cmd = ["GrugFar" "GrugFarWithin"];
+            keys = [
+              {
+                lhs = "<leader>sR";
+                mode = ["n" "x"];
+                desc = "[S]earch and [R]eplace (grug-far)";
+              }
+            ];
+            config = readFile ./grug-far.lua;
+          }
+          ++ lazy {
+            plugin = vimPlugins.flash-nvim;
+            keys = [
+              {
+                lhs = "s";
+                mode = ["n" "x" "o"];
+                desc = "Flash jump";
+              }
+              {
+                lhs = "S";
+                mode = ["n" "x" "o"];
+                desc = "Flash treesitter select";
+              }
+              {
+                lhs = "r";
+                mode = ["o"];
+                desc = "Flash remote operator";
+              }
+              {
+                lhs = "R";
+                mode = ["o" "x"];
+                desc = "Flash treesitter search";
+              }
+            ];
+            config = readFile ./flash.lua;
           }
           ++ lib.optionals enable-nvim-ts-autotag (lazy {
             plugin = vimPlugins.nvim-ts-autotag;

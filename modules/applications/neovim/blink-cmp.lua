@@ -31,9 +31,11 @@ blink.setup({
 		default = { "lsp", "path", "snippets", "buffer" },
 		per_filetype = {
 			gitcommit = { inherit_defaults = true, "git" },
+			lua = { inherit_defaults = true, "lazydev" },
 		},
 		providers = {
 			git = { module = "blink-cmp-git", name = "Git" },
+			lazydev = { module = "lazydev.integrations.blink", score_offset = 100 },
 		},
 	},
 
