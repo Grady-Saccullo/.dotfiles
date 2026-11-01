@@ -249,6 +249,82 @@ in {
             cmd = ["SlimeSend" "SlimeConfig" "SlimeResolvePane"];
             config = readFile ./vim-slime.lua;
           }
+          ++ lazy {
+            plugin = vimPlugins.diffview-plus-nvim;
+            cmd = ["DiffviewOpen" "DiffviewFileHistory" "DiffviewClose" "DiffviewToggleFiles" "DiffviewFocusFiles" "DiffviewRefresh" "DiffviewLog"];
+            keys = [
+              {
+                lhs = "<leader>vo";
+                desc = "Git: Diff[v]iew [O]pen (index)";
+              }
+              {
+                lhs = "<leader>vh";
+                desc = "Git: file [H]istory";
+              }
+              {
+                lhs = "<leader>vH";
+                desc = "Git: repo [H]istory";
+              }
+              {
+                lhs = "<leader>vc";
+                desc = "Git: Diffview [C]lose";
+              }
+            ];
+            config = readFile ./diffview.lua;
+          }
+          ++ lazy {
+            plugin = vimPlugins.quicker-nvim;
+            ft = ["qf"];
+            keys = [
+              {
+                lhs = "<leader>q";
+                desc = "Toggle [Q]uickfix";
+              }
+              {
+                lhs = "<leader>Q";
+                desc = "Toggle loclist";
+              }
+            ];
+            config = readFile ./quicker.lua;
+          }
+          ++ lazy {
+            plugin = vimPlugins.grug-far-nvim;
+            cmd = ["GrugFar" "GrugFarWithin"];
+            keys = [
+              {
+                lhs = "<leader>sR";
+                mode = ["n" "x"];
+                desc = "[S]earch and [R]eplace (grug-far)";
+              }
+            ];
+            config = readFile ./grug-far.lua;
+          }
+          ++ lazy {
+            plugin = vimPlugins.flash-nvim;
+            keys = [
+              {
+                lhs = "s";
+                mode = ["n" "x" "o"];
+                desc = "Flash jump";
+              }
+              {
+                lhs = "S";
+                mode = ["n" "x" "o"];
+                desc = "Flash treesitter select";
+              }
+              {
+                lhs = "r";
+                mode = ["o"];
+                desc = "Flash remote operator";
+              }
+              {
+                lhs = "R";
+                mode = ["o" "x"];
+                desc = "Flash treesitter search";
+              }
+            ];
+            config = readFile ./flash.lua;
+          }
           ++ lib.optionals enable-nvim-ts-autotag (lazy {
             plugin = vimPlugins.nvim-ts-autotag;
             event = ["InsertEnter"];
