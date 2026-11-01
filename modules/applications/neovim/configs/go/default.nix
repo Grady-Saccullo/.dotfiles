@@ -39,7 +39,7 @@ utils.mkNeovimModule {
       plugin = vimPlugins.go-nvim;
       ft = ["go" "gomod" "gosum" "gowork" "gotmpl"];
       before = [vimPlugins.guihua-lua];
-      config = "require('go').setup()";
+      config = "require('go').setup({ lsp_codelens = false })";
     };
 
   # gopls.go is the toolchain gopls was built with; a repo shell's go still wins on PATH.

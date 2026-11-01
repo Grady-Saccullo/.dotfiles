@@ -83,6 +83,7 @@ in {
           ${builtins.readFile ./globals.lua}
           ${builtins.readFile ./highlight.lua}
           ${builtins.readFile ./keymap.lua}
+          ${builtins.readFile ./diagnostic.lua}
           ${builtins.readFile ./opt.lua}
 
           -- [START] shared lsp serves table ---
@@ -224,11 +225,6 @@ in {
             plugin = vimPlugins.nvim-treesitter-textobjects;
             event = ["BufReadPost" "BufNewFile"];
             config = readFile ./nvim-treesitter-textobjects.lua;
-          }
-          ++ lazy {
-            plugin = vimPlugins.treesitter-modules-nvim;
-            event = ["BufReadPost" "BufNewFile"];
-            config = readFile ./treesitter-modules.lua;
           }
           ++ lazy {
             plugin = vimPlugins.vim-fugitive;
