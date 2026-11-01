@@ -112,6 +112,12 @@ in {
             lsp_servers[name] = config
           end
 
+          -- neotest adapters, as constructors so the adapter plugin can stay lazy --
+          local neotest_adapters = {}
+          local function addNeotestAdapter(make)
+            table.insert(neotest_adapters, make)
+          end
+
           -- [END] shared lsp serves table ---
 
         '';

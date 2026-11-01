@@ -8,6 +8,7 @@
   keys ? [],
   before ? [],
   after ? [],
+  beforeConfig ? "",
   config ? "",
 }: let
   name = lib.getName plugin;
@@ -24,7 +25,7 @@
   key = k:
     if builtins.isString k
     then str k
-    else "{ ${str k.lhs}${lib.optionalString (k ? mode) ", mode = ${list k.mode}"} }";
+    else "{ ${str k.lhs}${lib.optionalString (k ? mode) ", mode = ${list k.mode}"}${lib.optionalString (k ? desc) ", desc = ${str k.desc}"} }";
   triggers = lib.concatStringsSep " " (
     map (e: "event:${e}") event
     ++ map (f: "ft:${f}") ft
@@ -45,6 +46,7 @@
       ${lib.optionalString (keys != []) "keys = { ${lib.concatMapStringsSep ", " key keys} },"}
       before = function()
         ${packadd deps}
+        ${beforeConfig}
       end,
       after = function()
         ${packadd afterDeps}

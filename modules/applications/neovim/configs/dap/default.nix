@@ -37,12 +37,13 @@ utils.mkNeovimModule {
         mode = ["n" "v"];
       }
     ];
-    after = [vimPlugins.nvim-nio vimPlugins.nvim-dap-ui];
+    after = [vimPlugins.nvim-nio vimPlugins.nvim-dap-ui vimPlugins.nvim-dap-virtual-text];
     # Adapters in other modules (dap.go) load on this event.
     config =
       builtins.readFile ./dap.lua
       + builtins.readFile ./dap-ui.lua
       + ''
+        require("nvim-dap-virtual-text").setup({})
         vim.api.nvim_exec_autocmds("User", { pattern = "HmDapLoaded" })
       '';
   };

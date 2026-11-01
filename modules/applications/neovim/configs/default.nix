@@ -13,6 +13,7 @@
     ./python
     ./rust
     ./terraform
+    ./test
     ./typescript
     ./zig
   ];
