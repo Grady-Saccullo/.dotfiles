@@ -46,4 +46,6 @@ o.smartcase = true
 o.signcolumn = "yes"
 o.scrolloff = 8
 o.updatetime = 250
+-- Prepended to the 0.12 default, which already shows diagnostics, LSP progress and busy state.
+vim.o.statusline = " %{get(b:,'gitsigns_head','')} " .. vim.o.statusline
 -- [END] opt.lua --
