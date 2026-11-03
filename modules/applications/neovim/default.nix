@@ -33,6 +33,8 @@ in {
         json
         lua
         make
+        markdown
+        markdown_inline
         nix
         regex
         sql
@@ -517,6 +519,16 @@ in {
               }
             ];
             config = readFile ./persistence.lua;
+          }
+          ++ lazy {
+            plugin = vimPlugins.hunk-nvim;
+            cmd = ["DiffEditor" "HunkDiffView"];
+            config = readFile ./hunk.lua;
+          }
+          ++ lazy {
+            plugin = vimPlugins.render-markdown-nvim;
+            ft = ["markdown"];
+            config = readFile ./render-markdown.lua;
           }
           ++ lib.optionals enable-nvim-ts-autotag (lazy {
             plugin = vimPlugins.nvim-ts-autotag;
