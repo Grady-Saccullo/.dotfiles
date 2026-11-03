@@ -7,14 +7,18 @@
 utils.mkNeovimModule {
   inherit config pkgs;
   path = ["http" "rest"];
-} ({vimPlugins, ...}: {
-  plugins = [
-    {
-      plugin = vimPlugins.rest-nvim;
-      config = builtins.readFile ./rest-nvim.lua;
-      type = "lua";
-    }
-  ];
+} ({
+  vimPlugins,
+  lazy,
+  ...
+}: {
+  plugins = lazy {
+    plugin = vimPlugins.rest-nvim;
+    ft = ["http"];
+    # Read by the plugin at load time.
+    beforeConfig = "vim.g.rest_nvim = {}";
+    config = builtins.readFile ./rest-nvim.lua;
+  };
 
   extraPackages = [
     pkgs.curl

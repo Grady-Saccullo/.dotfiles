@@ -46,6 +46,8 @@ o.smartcase = true
 o.signcolumn = "yes"
 o.scrolloff = 8
 o.updatetime = 250
--- Prepended to the 0.12 default, which already shows diagnostics, LSP progress and busy state.
-vim.o.statusline = " %{get(b:,'gitsigns_head','')} " .. vim.o.statusline
+-- The 0.12 default shows diagnostics and busy state but not LSP progress; g:lsp_progress is kept
+-- up to date by the LspProgress autocmd in nvim-lspconfig.lua.
+vim.o.statusline = " %{get(b:,'gitsigns_head','')} "
+	.. (vim.o.statusline:gsub("%%=", "%%{get(g:,'lsp_progress','')}%%=", 1))
 -- [END] opt.lua --

@@ -11,5 +11,7 @@ wk.add({
 	{ "<leader>w", group = "workspace" },
 	{ "<leader>x", group = "diagnostics" },
 	{ "<leader>d", group = "debug", mode = { "n", "v" } },
+	{ "<leader>c", group = "claude", mode = { "n", "x" } },
+	{ "<leader>m", group = "multicursor", mode = { "n", "x" } },
 })
 -- [END] which-key.lua --

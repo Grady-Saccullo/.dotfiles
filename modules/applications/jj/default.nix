@@ -68,8 +68,10 @@ in
             merge-editor = "mergiraf";
             diff-editor =
               if config.applications.neovim.enable
-              then ["nvim" "-c" "DiffEditor $left $right $output"]
+              then ["nvim" "-c" "HunkDiffEditor $left $right $output"]
               else ":builtin";
+            # hunk.nvim shows its own help; the JJ-INSTRUCTIONS file is noise in its tree.
+            diff-instructions = lib.mkIf config.applications.neovim.enable false;
           };
           # hunk.nvim as a directory diff tool: `jj diff --tool hunk`. Neovim is wrapped in sh so it
           # owns the tty while jj captures the tool's output.
@@ -79,6 +81,13 @@ in
             diff-do-chdir = false;
             conflict-marker-style = "snapshot";
             diff-args = ["-c" "exec nvim -c \"HunkDiffView $1 $2\" </dev/tty >/dev/tty" "hunk-difftool" "$left" "$right"];
+          };
+          # Interactive fallback when mergiraf cannot resolve: `jj resolve --tool diffview`.
+          merge-tools.diffview = lib.mkIf config.applications.neovim.enable {
+            program = "nvim";
+            merge-args = ["-c" "DiffviewMergeFiles $output $base $left $right"];
+            merge-tool-edits-conflict-markers = true;
+            conflict-marker-style = "git";
           };
           git = {
             push-bookmark-prefix = "gs/";
