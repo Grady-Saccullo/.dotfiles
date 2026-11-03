@@ -30,10 +30,8 @@ in
     ];
 
     plugins = [
-      (vimPlugins.nvim-treesitter.withPlugins (p: [p.ocaml]))
+      (vimPlugins.nvim-treesitter.withPlugins (p: [p.ocaml p.ocaml_interface p.ocamllex p.menhir]))
     ];
 
-    initLua = ''
-      addLspServer("ocamllsp", {})
-    '';
+    initLua = builtins.readFile ./ocaml-lsp.lua;
   })
