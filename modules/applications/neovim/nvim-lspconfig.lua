@@ -45,6 +45,15 @@ local lspconfig_custom_attach = function(client, bufnr)
 	end
 end
 
+-- vim.lsp.status() drains the progress ring buffer, so read it once per event for the statusline.
+vim.api.nvim_create_autocmd("LspProgress", {
+	callback = function()
+		local status = vim.lsp.status()
+		vim.g.lsp_progress = status ~= "" and (status .. " ") or ""
+		vim.cmd.redrawstatus()
+	end,
+})
+
 -- Code lenses render as virtual lines; grx runs the one under the cursor (core default).
 vim.lsp.codelens.enable(true)
 vim.keymap.set("n", "<leader>tc", function()

@@ -145,6 +145,7 @@ in {
               plugin = vimPlugins.lz-n;
               config = ''
                 vim.g.lz_n = { load = require("hm-lazy").packadd }
+                ${readFile ./core-plugins.lua}
               '';
               type = "lua";
               runtime = {
@@ -346,11 +347,6 @@ in {
             config = readFile ./todo-comments-nvim.lua;
           }
           ++ lazy {
-            plugin = vimPlugins.ts-comments-nvim;
-            event = ["BufReadPost" "BufNewFile"];
-            config = readFile ./ts-comments-nvim.lua;
-          }
-          ++ lazy {
             plugin = vimPlugins.nvim-treesitter-context;
             event = ["BufReadPost" "BufNewFile"];
             config = "require('treesitter-context').setup()";
@@ -522,13 +518,113 @@ in {
           }
           ++ lazy {
             plugin = vimPlugins.hunk-nvim;
-            cmd = ["DiffEditor" "HunkDiffView"];
+            cmd = ["HunkDiffEditor" "HunkDiffView"];
             config = readFile ./hunk.lua;
           }
           ++ lazy {
             plugin = vimPlugins.render-markdown-nvim;
             ft = ["markdown"];
             config = readFile ./render-markdown.lua;
+          }
+          ++ lazy {
+            # Serves the IDE protocol for the Claude Code pane; the lockfile must exist before `/ide` runs.
+            plugin = vimPlugins.claudecode-nvim;
+            event = ["DeferredUIEnter"];
+            keys = [
+              {
+                lhs = "<leader>cs";
+                mode = ["n" "x"];
+                desc = "[C]laude: [S]end selection";
+              }
+              {
+                lhs = "<leader>cf";
+                desc = "[C]laude: add current [F]ile";
+              }
+              {
+                lhs = "<leader>ca";
+                desc = "[C]laude: [A]ccept diff";
+              }
+              {
+                lhs = "<leader>cd";
+                desc = "[C]laude: [D]eny diff";
+              }
+              {
+                lhs = "<leader>ci";
+                desc = "[C]laude: connection [I]nfo";
+              }
+            ];
+            config = readFile ./claudecode.lua;
+          }
+          ++ lazy {
+            plugin = vimPlugins.octo-nvim;
+            cmd = ["Octo"];
+            beforeConfig = ''require("lz.n").trigger_load("telescope.nvim")'';
+            config = readFile ./octo.lua;
+          }
+          ++ lazy {
+            plugin = vimPlugins.multicursor-nvim;
+            keys = [
+              {
+                lhs = "<leader>mj";
+                mode = ["n" "x"];
+                desc = "Cursor: add below";
+              }
+              {
+                lhs = "<leader>mk";
+                mode = ["n" "x"];
+                desc = "Cursor: add above";
+              }
+              {
+                lhs = "<leader>mJ";
+                mode = ["n" "x"];
+                desc = "Cursor: skip below";
+              }
+              {
+                lhs = "<leader>mK";
+                mode = ["n" "x"];
+                desc = "Cursor: skip above";
+              }
+              {
+                lhs = "<leader>mn";
+                mode = ["n" "x"];
+                desc = "Cursor: add [N]ext match";
+              }
+              {
+                lhs = "<leader>mN";
+                mode = ["n" "x"];
+                desc = "Cursor: add previous match";
+              }
+              {
+                lhs = "<leader>ms";
+                mode = ["n" "x"];
+                desc = "Cursor: [S]kip next match";
+              }
+              {
+                lhs = "<leader>mS";
+                mode = ["n" "x"];
+                desc = "Cursor: skip previous match";
+              }
+              {
+                lhs = "<leader>ma";
+                mode = ["n" "x"];
+                desc = "Cursor: add [A]ll matches";
+              }
+              {
+                lhs = "<leader>mo";
+                mode = ["n" "x"];
+                desc = "Cursor: add per line of motion";
+              }
+              {
+                lhs = "<leader>mq";
+                mode = ["n" "x"];
+                desc = "Cursor: toggle";
+              }
+              {
+                lhs = "<leader>mr";
+                desc = "Cursor: [R]estore cleared cursors";
+              }
+            ];
+            config = readFile ./multicursor.lua;
           }
           ++ lib.optionals enable-nvim-ts-autotag (lazy {
             plugin = vimPlugins.nvim-ts-autotag;

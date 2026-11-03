@@ -20,37 +20,35 @@ utils.mkNeovimModule {
   vimPlugins,
   lazy,
   ...
-}: let
-  sqls-nvim = pkgs.vimUtils.buildVimPlugin {
-    name = "sqls.nvim";
-    src = pkgs.fetchFromGitHub {
-      owner = "nanotee";
-      repo = "sqls.nvim";
-      rev = "d1bc5421ef3e8edc5101e37edbb7de6639207a09";
-      sha256 = "bQKO5Kq4Jc8v7d6OSkkzjqYHzt8c5C71xzHHABErlsg=";
-    };
-  };
-in {
+}: {
   plugins =
     [
       (vimPlugins.nvim-treesitter.withPlugins (p: [p.sql]))
     ]
     ++ lazy {
-      plugin = sqls-nvim;
-      ft = ["sql"];
+      plugin = vimPlugins.vim-dadbod-ui;
+      cmd = ["DBUI" "DBUIToggle" "DBUIAddConnection" "DBUIFindBuffer"];
+      ft = ["sql" "mysql" "plsql"];
+      keys = [
+        {
+          lhs = "<leader>oo";
+          desc = "Database: t[O]ggle DBUI";
+        }
+        {
+          lhs = "<leader>of";
+          desc = "Database: [F]ind buffer";
+        }
+      ];
+      before = [vimPlugins.vim-dadbod];
+      after = [vimPlugins.vim-dadbod-completion];
+      beforeConfig = builtins.readFile ./dadbod-before.lua;
+      config = builtins.readFile ./dadbod.lua;
     };
 
-  # conform's sqlfluff only runs where a .sqlfluff file sets the dialect.
+  # dadbod shells out to the CLI client; psql comes from the repo's devshell, which is also where
+  # $DATABASE_URL comes from. conform's sqlfluff only runs where a .sqlfluff file sets the dialect.
   extraPackages = [
-    pkgs.sqls
+    pkgs.sqlite
     pkgs.sqlfluff
   ];
-
-  initLua = ''
-    addLspServer("sqls", {
-      on_attach = function(client, bufnr)
-        require('sqls').on_attach(client, bufnr)
-      end
-    })
-  '';
 })

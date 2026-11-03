@@ -4,68 +4,65 @@
   pkgs,
   utils,
   ...
-}:
-utils.mkNeovimModule {
-  inherit config pkgs;
-  imports = [./biome.nix ./tsx.nix];
-  path = "typescript";
-  extraOptions = {
-    lsp = lib.mkOption {
-      type = lib.types.enum ["tsls" "vtsls"];
-      default = "tsls";
-      description = "TypeScript LSP server to use (tsls, vtsls)";
+}: let
+  testEnabled = config.applications.neovim.test.enable;
+in
+  utils.mkNeovimModule {
+    inherit config pkgs;
+    imports = [./biome.nix ./tsx.nix];
+    path = "typescript";
+    extraOptions = {
+      # typescript-language-server went with nvim-lsp-ts-utils, which nixpkgs removed.
+      lsp = lib.mkOption {
+        type = lib.types.enum ["vtsls"];
+        default = "vtsls";
+        description = "TypeScript LSP server to use";
+      };
     };
-  };
-  # Mirrors the `lsp` choice above; tsx/jsx extensions only when tsx is on.
-  extraConfig = cfg: {
-    ai.lspServers.typescript = {
-      command =
-        if cfg.lsp == "vtsls"
-        then "${pkgs.vtsls}/bin/vtsls"
-        else "${pkgs.typescript-language-server}/bin/typescript-language-server";
-      args = ["--stdio"];
-      extensionToLanguage =
-        {
-          ".ts" = "typescript";
-          ".mts" = "typescript";
-          ".cts" = "typescript";
-          ".js" = "javascript";
-          ".mjs" = "javascript";
-          ".cjs" = "javascript";
-        }
-        // lib.optionalAttrs cfg.tsx.enable {
-          ".tsx" = "typescriptreact";
-          ".jsx" = "javascriptreact";
-        };
-      description = "typescript language server for AI tools";
+    # tsx/jsx extensions only when tsx is on.
+    extraConfig = cfg: {
+      ai.lspServers.typescript = {
+        command = "${pkgs.vtsls}/bin/vtsls";
+        args = ["--stdio"];
+        extensionToLanguage =
+          {
+            ".ts" = "typescript";
+            ".mts" = "typescript";
+            ".cts" = "typescript";
+            ".js" = "javascript";
+            ".mjs" = "javascript";
+            ".cjs" = "javascript";
+          }
+          // lib.optionalAttrs cfg.tsx.enable {
+            ".tsx" = "typescriptreact";
+            ".jsx" = "javascriptreact";
+          };
+        description = "typescript language server for AI tools";
+      };
     };
-  };
-} ({
-  vimPlugins,
-  cfg,
-  ...
-}: {
-  plugins =
-    [
-      (vimPlugins.nvim-treesitter.withPlugins (p: [p.typescript p.javascript]))
-    ]
-    ++ lib.optionals (cfg.lsp == "tsls") [
-      vimPlugins.nvim-lsp-ts-utils
-    ];
+  } ({
+    vimPlugins,
+    lazy,
+    ...
+  }: {
+    plugins =
+      [
+        (vimPlugins.nvim-treesitter.withPlugins (p: [p.typescript p.javascript]))
+      ]
+      ++ lib.optionals testEnabled (lazy {
+        plugin = vimPlugins.neotest-vitest.overrideAttrs (_: {
+          dependencies = [];
+          doCheck = false;
+        });
+        event = ["User HmNeotestAdapters"];
+        config = ''
+          addNeotestAdapter(function()
+            return require("neotest-vitest")({})
+          end)
+        '';
+      });
 
-  extraPackages =
-    lib.optionals (cfg.lsp == "tsls") [
-      pkgs.typescript-language-server
-    ]
-    ++ lib.optionals (cfg.lsp == "vtsls") [
-      pkgs.vtsls
-    ];
+    extraPackages = [pkgs.vtsls];
 
-  initLua =
-    lib.optionalString (cfg.lsp == "tsls") ''
-      ${builtins.readFile ./typescript-lsp-tsls.lua}
-    ''
-    + lib.optionalString (cfg.lsp == "vtsls") ''
-      ${builtins.readFile ./typescript-lsp-vtsls.lua}
-    '';
-})
+    initLua = builtins.readFile ./typescript-lsp-vtsls.lua;
+  })

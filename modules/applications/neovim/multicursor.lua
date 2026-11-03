@@ -1,0 +1,60 @@
+-- [START] multicursor.lua --
+local mc = require("multicursor-nvim")
+mc.setup()
+
+local kmap = vim.keymap.set
+kmap({ "n", "x" }, "<leader>mj", function()
+	mc.lineAddCursor(1)
+end, { desc = "Cursor: add below" })
+kmap({ "n", "x" }, "<leader>mk", function()
+	mc.lineAddCursor(-1)
+end, { desc = "Cursor: add above" })
+kmap({ "n", "x" }, "<leader>mJ", function()
+	mc.lineSkipCursor(1)
+end, { desc = "Cursor: skip below" })
+kmap({ "n", "x" }, "<leader>mK", function()
+	mc.lineSkipCursor(-1)
+end, { desc = "Cursor: skip above" })
+kmap({ "n", "x" }, "<leader>mn", function()
+	mc.matchAddCursor(1)
+end, { desc = "Cursor: add [N]ext match" })
+kmap({ "n", "x" }, "<leader>mN", function()
+	mc.matchAddCursor(-1)
+end, { desc = "Cursor: add previous match" })
+kmap({ "n", "x" }, "<leader>ms", function()
+	mc.matchSkipCursor(1)
+end, { desc = "Cursor: [S]kip next match" })
+kmap({ "n", "x" }, "<leader>mS", function()
+	mc.matchSkipCursor(-1)
+end, { desc = "Cursor: skip previous match" })
+kmap({ "n", "x" }, "<leader>ma", mc.matchAllAddCursors, { desc = "Cursor: add [A]ll matches" })
+kmap({ "n", "x" }, "<leader>mo", mc.addCursorOperator, { desc = "Cursor: add per line of motion" })
+kmap({ "n", "x" }, "<leader>mq", mc.toggleCursor, { desc = "Cursor: toggle (disable / add here)" })
+kmap("n", "<leader>mr", mc.restoreCursors, { desc = "Cursor: [R]estore cleared cursors" })
+kmap("n", "<C-LeftMouse>", mc.handleMouse)
+kmap("n", "<C-LeftDrag>", mc.handleMouseDrag)
+kmap("n", "<C-LeftRelease>", mc.handleMouseRelease)
+
+-- Only active while there is more than one cursor.
+mc.addKeymapLayer(function(layerSet)
+	layerSet({ "n", "x" }, "<Left>", mc.prevCursor)
+	layerSet({ "n", "x" }, "<Right>", mc.nextCursor)
+	layerSet({ "n", "x" }, "<leader>mx", mc.deleteCursor)
+	layerSet("n", "<Esc>", function()
+		if not mc.cursorsEnabled() then
+			mc.enableCursors()
+		else
+			mc.clearCursors()
+		end
+	end)
+end)
+
+local hl = vim.api.nvim_set_hl
+hl(0, "MultiCursorCursor", { reverse = true })
+hl(0, "MultiCursorVisual", { link = "Visual" })
+hl(0, "MultiCursorSign", { link = "SignColumn" })
+hl(0, "MultiCursorMatchPreview", { link = "Search" })
+hl(0, "MultiCursorDisabledCursor", { reverse = true })
+hl(0, "MultiCursorDisabledVisual", { link = "Visual" })
+hl(0, "MultiCursorDisabledSign", { link = "SignColumn" })
+-- [END] multicursor.lua --
