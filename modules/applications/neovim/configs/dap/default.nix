@@ -6,7 +6,7 @@
 }:
 utils.mkNeovimModule {
   inherit config pkgs;
-  imports = [./go.nix ./rust.nix];
+  imports = [./go.nix ./rust.nix ./typescript.nix];
   path = "dap";
 } ({
   vimPlugins,
