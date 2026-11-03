@@ -51,6 +51,7 @@ in
     };
   } (cfg:
     (utils.mkHomeManagerUser {
+      home.packages = [pkgs.mergiraf pkgs.jjui];
       programs.jujutsu = {
         enable = true;
         package = cfg.package;
@@ -63,11 +64,31 @@ in
             default-command = "log";
             diff-formatter = ":git";
             pager = "delta";
-            diff-editor = ":builtin";
-            merge-editor = ":builtin";
+            # jj ships the mergiraf tool definition; only the binary and the selection are ours.
+            merge-editor = "mergiraf";
+            diff-editor =
+              if config.applications.neovim.enable
+              then ["nvim" "-c" "DiffEditor $left $right $output"]
+              else ":builtin";
+          };
+          # hunk.nvim as a directory diff tool: `jj diff --tool hunk`. Neovim is wrapped in sh so it
+          # owns the tty while jj captures the tool's output.
+          merge-tools.hunk = lib.mkIf config.applications.neovim.enable {
+            program = "sh";
+            diff-invocation-mode = "dir";
+            diff-do-chdir = false;
+            conflict-marker-style = "snapshot";
+            diff-args = ["-c" "exec nvim -c \"HunkDiffView $1 $2\" </dev/tty >/dev/tty" "hunk-difftool" "$left" "$right"];
           };
           git = {
             push-bookmark-prefix = "gs/";
+          };
+          revset-aliases = {
+            "closest_bookmark(to)" = "heads(::to & bookmarks())";
+          };
+          aliases = {
+            # Moves the nearest bookmark up to the parent of the working copy, the usual pre-push step.
+            tug = ["bookmark" "move" "--from" "closest_bookmark(@-)" "--to" "@-"];
           };
         };
       };

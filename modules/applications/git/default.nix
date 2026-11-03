@@ -26,13 +26,54 @@ in
               email = config.identity.email;
               name = config.identity.name;
             };
+            init.defaultBranch = "main";
+            push = {
+              autoSetupRemote = true;
+              default = "simple";
+            };
+            pull.rebase = true;
+            rebase = {
+              autostash = true;
+              autosquash = true;
+              updateRefs = true;
+            };
+            rerere = {
+              enabled = true;
+              autoupdate = true;
+            };
+            diff = {
+              algorithm = "histogram";
+              colorMoved = "plain";
+              mnemonicPrefix = true;
+              renames = true;
+            };
+            merge.conflictStyle = "zdiff3";
+            commit.verbose = true;
+            fetch = {
+              prune = true;
+              prunetags = true;
+            };
+            branch.sort = "-committerdate";
+            tag.sort = "version:refname";
+            column.ui = "auto";
+            help.autocorrect = "prompt";
+            # mergiraf resolves syntax-aware merges before git falls back to textual conflict markers.
+            merge.mergiraf = {
+              name = "mergiraf";
+              driver = "${pkgs.mergiraf}/bin/mergiraf merge --git %O %A %B -s %S -x %X -y %Y -p %P -l %L";
+            };
           };
+          attributes = ["* merge=mergiraf"];
           lfs.enable = true;
         };
         delta = {
           enable = true;
           enableGitIntegration = true;
-          options.pager = "less -R --mouse";
+          options = {
+            pager = "less -R --mouse";
+            navigate = true;
+            line-numbers = true;
+          };
         };
       };
     })
