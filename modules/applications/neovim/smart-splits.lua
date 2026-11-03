@@ -5,6 +5,8 @@ require("smart-splits").setup({
 	},
 	mux = {
 		backend = "smart-splits-backend-wezterm",
+		-- Panes opened before the wezterm plugin set its handshake variable, and headless runs, have no backend.
+		warn_if_unusable = false,
 	},
 })
 

@@ -2,6 +2,8 @@
 local wk = require("which-key")
 wk.setup({ preset = "helix" })
 wk.add({
+	{ "gs", group = "surround" },
+	{ "<leader>S", group = "session" },
 	{ "<leader>s", group = "search" },
 	{ "<leader>h", group = "harpoon" },
 	{ "<leader>v", group = "git" },

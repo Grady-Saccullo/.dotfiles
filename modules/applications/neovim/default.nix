@@ -33,6 +33,8 @@ in {
         json
         lua
         make
+        markdown
+        markdown_inline
         nix
         regex
         sql
@@ -60,12 +62,12 @@ in {
         package = cfg.package;
 
         defaultEditor = true;
-        withNodeJs = true;
         vimAlias = true;
 
         extraPackages = with pkgs; [
           alejandra
           bash-language-server
+          fzf
           lua-language-server
           nixd
           prettier
@@ -99,12 +101,25 @@ in {
                 },
               },
             },
+            -- Schemas are resolved on first attach; the catalog walk is not worth paying on every startup.
             yamlls = {
+              before_init = function(_, cfg)
+                cfg.settings.yaml.schemas = require("schemastore").yaml.schemas({
+                  select = { "GitHub Workflow", "GitHub Action", "docker-compose.yml" },
+                })
+              end,
               settings = {
-                schemas = {},
+                yaml = { schemaStore = { enable = false, url = "" }, schemas = {} },
               },
             },
-            jsonls = {},
+            jsonls = {
+              before_init = function(_, cfg)
+                cfg.settings.json.schemas = require("schemastore").json.schemas({ select = { "package.json" } })
+              end,
+              settings = {
+                json = { schemas = {}, validate = { enable = true } },
+              },
+            },
           }
 
           local function addLspServer(name, config)
@@ -142,6 +157,8 @@ in {
               config = readFile ./nvim-treesitter.lua;
               type = "lua";
             }
+            # initLua builds the server table from its catalog, so it must be on the runtimepath at startup.
+            vimPlugins.SchemaStore-nvim
             {
               plugin = vimPlugins.nvim-lspconfig;
               config = readFile ./nvim-lspconfig.lua;
@@ -234,8 +251,20 @@ in {
                 lhs = "<leader>sr";
                 desc = "[S]earch [R]esume";
               }
+              {
+                lhs = "<leader>sF";
+                desc = "[S]earch [F]recent files";
+              }
             ];
-            after = [vimPlugins.telescope-fzf-native-nvim vimPlugins.telescope-ui-select-nvim];
+            # frecency keeps a pure-Lua store; nixpkgs still lists sqlite.lua, which would be dead weight in opt.
+            after = [
+              vimPlugins.telescope-fzf-native-nvim
+              vimPlugins.telescope-ui-select-nvim
+              (vimPlugins.telescope-frecency-nvim.overrideAttrs (_: {
+                dependencies = [];
+                doCheck = false;
+              }))
+            ];
             config = readFile ./telescope-nvim.lua;
           }
           ++ lazy {
@@ -427,6 +456,79 @@ in {
               }
             ];
             config = readFile ./flash.lua;
+          }
+          ++ lazy {
+            plugin = vimPlugins.mini-surround;
+            keys = [
+              {
+                lhs = "gsa";
+                mode = ["n" "x"];
+                desc = "Surround add";
+              }
+              {
+                lhs = "gsd";
+                desc = "Surround delete";
+              }
+              {
+                lhs = "gsr";
+                desc = "Surround replace";
+              }
+              {
+                lhs = "gsf";
+                desc = "Surround find right";
+              }
+              {
+                lhs = "gsF";
+                desc = "Surround find left";
+              }
+              {
+                lhs = "gsh";
+                desc = "Surround highlight";
+              }
+              {
+                lhs = "gsn";
+                desc = "Surround update n_lines";
+              }
+            ];
+            config = readFile ./mini-surround.lua;
+          }
+          ++ lazy {
+            plugin = vimPlugins.nvim-bqf;
+            ft = ["qf"];
+            config = readFile ./nvim-bqf.lua;
+          }
+          ++ lazy {
+            plugin = vimPlugins.persistence-nvim;
+            event = ["BufReadPre" "BufNewFile"];
+            keys = [
+              {
+                lhs = "<leader>Ss";
+                desc = "[S]ession [S]elect";
+              }
+              {
+                lhs = "<leader>Sl";
+                desc = "[S]ession [L]oad for cwd";
+              }
+              {
+                lhs = "<leader>SL";
+                desc = "[S]ession load [L]ast";
+              }
+              {
+                lhs = "<leader>Sd";
+                desc = "[S]ession [D]o not save on exit";
+              }
+            ];
+            config = readFile ./persistence.lua;
+          }
+          ++ lazy {
+            plugin = vimPlugins.hunk-nvim;
+            cmd = ["DiffEditor" "HunkDiffView"];
+            config = readFile ./hunk.lua;
+          }
+          ++ lazy {
+            plugin = vimPlugins.render-markdown-nvim;
+            ft = ["markdown"];
+            config = readFile ./render-markdown.lua;
           }
           ++ lib.optionals enable-nvim-ts-autotag (lazy {
             plugin = vimPlugins.nvim-ts-autotag;

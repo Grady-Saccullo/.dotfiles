@@ -8,7 +8,7 @@
 utils.mkAppModule {
   path = "tmux";
   inherit config;
-  default = true;
+  default = false;
   extraOptions = {
     package = lib.mkPackageOption pkgs "tmux" {};
   };

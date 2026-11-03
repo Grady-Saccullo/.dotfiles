@@ -19,6 +19,7 @@ telescope.setup({
 })
 telescope.load_extension("fzf")
 telescope.load_extension("ui-select")
+telescope.load_extension("frecency")
 
 local builtin = require("telescope.builtin")
 local kmap = vim.keymap.set
@@ -37,4 +38,7 @@ kmap("n", "<leader>sw", builtin.grep_string, { desc = "[S]earch current [W]ord" 
 kmap("n", "<leader>sg", builtin.live_grep, { desc = "[S]earch by [G]rep" })
 kmap("n", "<leader>sd", builtin.diagnostics, { desc = "[S]earch [D]iagnostics" })
 kmap("n", "<leader>sr", builtin.resume, { desc = "[S]earch [R]esume" })
+kmap("n", "<leader>sF", function()
+	telescope.extensions.frecency.frecency({ workspace = "CWD" })
+end, { desc = "[S]earch [F]recent files" })
 -- [END] telescope-nvim.lua --

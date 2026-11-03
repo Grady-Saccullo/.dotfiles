@@ -36,13 +36,15 @@ in
           p.gomod
           p.gosum
           p.gowork
+          p.gotmpl
         ]))
       ]
       ++ lazy {
         plugin = vimPlugins.go-nvim;
         ft = ["go" "gomod" "gosum" "gowork" "gotmpl"];
         before = [vimPlugins.guihua-lua];
-        config = "require('go').setup({ lsp_codelens = false })";
+        # Core inlay hints, diagnostics, conform and the dap module already cover these; go.nvim keeps GoIfErr, gotests, GoAlt, coverage.
+        config = builtins.readFile ./go-nvim.lua;
       }
       ++ lib.optionals testEnabled (lazy {
         # nixpkgs lists a bare nvim-treesitter as a dependency; the withPlugins build already provides it.
@@ -66,5 +68,5 @@ in
       ]
       ++ lib.optional testEnabled pkgs.gotestsum;
 
-    initLua = builtins.readFile ./go-lsp.lua;
+    initLua = builtins.readFile ./go-lsp.lua + builtins.readFile ./go-filetype.lua;
   })

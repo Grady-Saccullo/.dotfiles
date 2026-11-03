@@ -29,7 +29,5 @@ utils.mkNeovimModule {
     (vimPlugins.nvim-treesitter.withPlugins (p: [p.hcl p.terraform]))
   ];
 
-  initLua = ''
-    addLspServer("terraformls", {})
-  '';
+  initLua = builtins.readFile ./terraform-lsp.lua;
 })
